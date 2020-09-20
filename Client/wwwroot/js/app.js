@@ -142,7 +142,7 @@ window.App.Repl = window.App.Repl || (function () {
             // TODO: Abstract class names
             let height =
                 window.innerHeight -
-                document.getElementsByClassName('repl-navbar')[0].offsetHeight
+                document.getElementsByClassName('repl-navbar')[0].offsetHeight;
 
             if (excludeTabsHeight) {
                 height -= document.getElementsByClassName('tabs-wrapper')[0].offsetHeight;
