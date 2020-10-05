@@ -11,6 +11,7 @@
     using System.Runtime;
     using System.Text;
     using System.Threading.Tasks;
+    using BlazorRepl.Client.Pages;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Razor.Language;
     using Microsoft.CodeAnalysis;
@@ -45,6 +46,9 @@
 
         public static async Task InitAsync(HttpClient httpClient)
         {
+            var dllByres = Convert.FromBase64String(Dll.DllBase64);
+            var ass = System.Reflection.Assembly.Load(dllByres);
+
             var basicReferenceAssemblyRoots = new[]
             {
                 typeof(AssemblyTargetedPatchBandAttribute).Assembly, // System.Runtime
@@ -54,6 +58,7 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                ass, // Newtonsoft.Json
             };
 
             var assemblyNames = basicReferenceAssemblyRoots
@@ -63,6 +68,10 @@
                 .ToList();
 
             var assemblyStreams = await GetStreamFromHttpAsync(httpClient, assemblyNames);
+
+            var memStr = new MemoryStream(dllByres);
+
+            assemblyStreams.Add("Newtonsoft.Json", memStr);
 
             var allReferenceAssemblies = assemblyStreams.ToDictionary(a => a.Key, a => MetadataReference.CreateFromStream(a.Value));
 
@@ -108,6 +117,11 @@
             await Task.WhenAll(
                 assemblyNames.Select(async assemblyName =>
                 {
+                    if (assemblyName == "Newtonsoft.Json")
+                    {
+                        return;
+                    }
+
                     var result = await httpClient.GetAsync($"/_framework/_bin/{assemblyName}.dll");
 
                     result.EnsureSuccessStatusCode();
