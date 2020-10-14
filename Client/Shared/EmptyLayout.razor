@@ -35,10 +35,9 @@
     </div>
 </div>
 
-@code { protected override void OnInitialized()
+@code {
+    protected override void OnInitialized()
     {
-
-
         var dllByres = Convert.FromBase64String(Dll.DllBase64);
         System.Reflection.Assembly.Load(dllByres);
         base.OnInitialized();
