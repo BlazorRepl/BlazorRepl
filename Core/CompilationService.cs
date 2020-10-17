@@ -46,9 +46,6 @@
 
         public static async Task InitAsync(HttpClient httpClient)
         {
-            var dllByres = Convert.FromBase64String(Dll.DllBase64);
-            var ass = System.Reflection.Assembly.Load(dllByres);
-
             var basicReferenceAssemblyRoots = new[]
             {
                 typeof(AssemblyTargetedPatchBandAttribute).Assembly, // System.Runtime
@@ -58,7 +55,6 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
-                ass, // Blazored.Menu
             };
 
             var assemblyNames = basicReferenceAssemblyRoots
@@ -68,10 +64,6 @@
                 .ToList();
 
             var assemblyStreams = await GetStreamFromHttpAsync(httpClient, assemblyNames);
-
-            var memStr = new MemoryStream(dllByres);
-
-            assemblyStreams.Add("Blazored.Menu", memStr);
 
             var allReferenceAssemblies = assemblyStreams.ToDictionary(a => a.Key, a => MetadataReference.CreateFromStream(a.Value));
 
@@ -110,6 +102,15 @@
             return result;
         }
 
+        public void AddReference(MemoryStream dllStream)
+        {
+            var bytes = dllStream.ToArray();
+
+            // loading assembly dynamically needs to happenes from bytes, not memory stream;
+            var metadataReference = MetadataReference.CreateFromImage(bytes);
+            baseCompilation = baseCompilation.AddReferences(metadataReference);
+        }
+
         private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(HttpClient httpClient, IEnumerable<string> assemblyNames)
         {
             var streams = new ConcurrentDictionary<string, Stream>();
@@ -117,11 +118,6 @@
             await Task.WhenAll(
                 assemblyNames.Select(async assemblyName =>
                 {
-                    if (assemblyName == "Blazored.Menu")
-                    {
-                        return;
-                    }
-
                     var result = await httpClient.GetAsync($"/_framework/_bin/{assemblyName}.dll");
 
                     result.EnsureSuccessStatusCode();

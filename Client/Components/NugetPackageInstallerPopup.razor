@@ -8,12 +8,29 @@
         <h4 class="m-auto">Nuget Package Installer</h4>
     </div>
 
-    <input @bind="@NugetPackageName" class="form-control"/>
+    <input @bind="@NugetPackageName" class="form-control" />
     <button class="btn btn-primary" @onclick="@GetNugetPackages">Search</button>
 
-    @foreach(var nugetPackage in NugetPackages) 
+    @if (string.IsNullOrEmpty(SelectedNugetPackageName))
     {
-        <p>@nugetPackage</p>
+        @foreach (var nugetPackage in NugetPackages)
+        {
+            <button class="btn-link" @onclick="@(() => SelectNugetPackage(nugetPackage))">@nugetPackage</button>
+        }
     }
+    else
+    {
+        <label for="version-select">Version</label>
+        <select id="version-select" @bind="@SelectedNugetPackageVersion">
+            @foreach (var version in NugetPackageVersions)
+            {
+                <option value="@version">@version</option>
+            }
+        </select>
+
+        <button class="btn btn-primary" @onclick="@InstallNugetPackage">Install</button>
+
+    }
+
 
 </div>
