@@ -330,28 +330,53 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
     };
 }());
 
-(function () {
-    caches.open('nuget-content/').then(function (cache) {
-        if (!cache) {
-            // TODO: alert user
-            return;
+window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup || (function () {
+    let _dotNetInstance;
+    return {
+        init: function (dotNetInstance) {
+            _dotNetInstance = dotNetInstance;
+        },
+        dispose: function () {
+            _dotNetInstance = null;
         }
-
-        cache.keys().then(function (files) {
-            files.forEach(file => {
-                debugger;
-
-                file.arrayBuffer().then(arrayBuffer => {
-                    var base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)));
-                    debugger;
-
-                    var link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.type = 'text/css';
-                    link.href = `data:text/css;base64,${base64}`;
-                    document.head.appendChild(link);
-                });
-            });
-        });
-    });
+    };
 }());
+
+//(function () {
+//    caches.open('nuget-content/').then(function (cache) {
+//        if (!cache) {
+//            // TODO: alert user
+//            return;
+//        }
+
+//        cache.keys().then(function (files) {
+//            files.forEach(async file => {
+//                debugger;
+
+//                const response = await cache.match(file.url);
+
+//                let string = '';
+//                (new Uint8Array(await response.arrayBuffer())).forEach(
+//                    (byte) => { string += String.fromCharCode(byte) }
+//                )
+//                string = btoa(string);
+
+//                const link = document.createElement('link');
+//                link.rel = 'stylesheet';
+//                link.type = 'text/css';
+//                link.href = `data:text/css;base64,${string}`;
+//                document.head.appendChild(link);
+
+//                //file.arrayBuffer().then(arrayBuffer => {
+
+//                //    var intArray = new Uint8Array(arrayBuffer);
+
+//                //    var base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)));
+//                //    debugger;
+
+//                //    
+//                //});
+//            });
+//        });
+//    });
+//}());

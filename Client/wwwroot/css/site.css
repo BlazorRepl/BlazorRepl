@@ -321,6 +321,20 @@ app {
     }
 }
 
+
+/* Nuget Package Installer Popup */
+.nuget-package-installer-popup {
+    position: absolute;
+    top: 45%;
+    left: 40%;
+    width: 550px;
+    height: 300px;
+    z-index: 100;
+    padding: 5px 20px;
+    overflow: visible;
+    background-color: #FFF;
+}
+
 /* Save Snippet Popup */
 .save-snippets-popup {
     position: absolute;

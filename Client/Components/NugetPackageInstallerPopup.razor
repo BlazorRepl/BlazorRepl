@@ -1,0 +1,19 @@
+﻿<div id="nuget-package-installer-popup"
+     class="toast nuget-package-installer-popup @VisibleClass"
+     role="alert"
+     aria-live="assertive"
+     aria-atomic="true"
+     style="@DisplayStyle">
+    <div class="toast-header">
+        <h4 class="m-auto">Nuget Package Installer</h4>
+    </div>
+
+    <input @bind="@NugetPackageName" class="form-control"/>
+    <button class="btn btn-primary" @onclick="@GetNugetPackages">Search</button>
+
+    @foreach(var nugetPackage in NugetPackages) 
+    {
+        <p>@nugetPackage</p>
+    }
+
+</div>
