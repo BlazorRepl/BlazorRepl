@@ -13,6 +13,9 @@
             <button @onclick="@ShowSaveSnippetPopup" class="btn btn-link nav-action" id="save-snippet-btn" title="Save public snippet">
                 <i class="icon-floppy-disk"></i> SAVE
             </button>
+            <button @onclick="@ShowNugetPackageInstaller" class="btn btn-link nav-action" id="nuget-package-install-btn" title="Install Nuget Package">
+                <i class="icon-floppy-disk"></i> Install Nuget Package
+            </button>
         </div>
     </div>
 </nav>
@@ -21,6 +24,9 @@
                   InvokerId="save-snippet-btn"
                   CodeFiles="@CodeFiles.Values"
                   UpdateActiveCodeFileContentFunc="UpdateActiveCodeFileContentAsync"></SaveSnippetPopup>
+
+<NugetPackageInstallerPopup @bind-Visible="@NugetPackageInstallerPopupVisible">
+</NugetPackageInstallerPopup>
 
 <div class="row flex" style="margin: 0">
     <ReplLoader Show="@Loading"

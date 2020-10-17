@@ -46,6 +46,8 @@
 
         public bool SaveSnippetPopupVisible { get; set; }
 
+        public bool NugetPackageInstallerPopupVisible { get; set; }
+
         public string Preset { get; set; } = "basic";
 
         public IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
@@ -109,6 +111,8 @@
         }
 
         public void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
+
+        public void ShowNugetPackageInstaller() => this.NugetPackageInstallerPopupVisible = true;
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
