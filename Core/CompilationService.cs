@@ -58,7 +58,7 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
-                ass, // Newtonsoft.Json
+                ass, // Blazored.Menu
             };
 
             var assemblyNames = basicReferenceAssemblyRoots
@@ -71,7 +71,7 @@
 
             var memStr = new MemoryStream(dllByres);
 
-            assemblyStreams.Add("Newtonsoft.Json", memStr);
+            assemblyStreams.Add("Blazored.Menu", memStr);
 
             var allReferenceAssemblies = assemblyStreams.ToDictionary(a => a.Key, a => MetadataReference.CreateFromStream(a.Value));
 
@@ -117,7 +117,7 @@
             await Task.WhenAll(
                 assemblyNames.Select(async assemblyName =>
                 {
-                    if (assemblyName == "Newtonsoft.Json")
+                    if (assemblyName == "Blazored.Menu")
                     {
                         return;
                     }
