@@ -108,6 +108,8 @@
 
             Console.WriteLine(string.Join(',', archive.Entries.Select(e => e.FullName)));
 
+            // get only the dll that we need
+            // we could have more than one dll (netstandard2.0, netstandard2.1... folders)
             var dllEntry = archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(".dll"));
             if (dllEntry != null)
             {
