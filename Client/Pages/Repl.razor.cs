@@ -36,6 +36,8 @@
         [Parameter]
         public string SnippetId { get; set; }
 
+        public string SessionId { get; set; }
+
         public CodeEditor CodeEditorComponent { get; set; }
 
         public IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
@@ -106,7 +108,13 @@
                 await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
 
                 // TODO: Add error page in iframe
-                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", MainUserPagePath);
+                var userPagePath = MainUserPagePath;
+                if (true)
+                {
+                    userPagePath += string.IsNullOrWhiteSpace(this.SessionId) ? string.Empty : $"#{this.SessionId}";
+                }
+
+                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
 

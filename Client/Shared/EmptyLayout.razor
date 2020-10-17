@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
+
 @using BlazorRepl.Client.Pages
+@using Microsoft.JSInterop;
 
 <style>
     .main > div {
@@ -31,15 +33,41 @@
 
 <div class="main">
     <div class="content px-4">
-        @Body
+
+        @if (IsLoaded)
+        {
+            @Body
+        }
     </div>
 </div>
 
 @code {
-    protected override void OnInitialized()
+    [Inject]
+    public IJSRuntime JsRuntime { get; set; }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    public bool IsLoaded { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        var dllByres = Convert.FromBase64String(Dll.DllBase64);
-        System.Reflection.Assembly.Load(dllByres);
-        base.OnInitialized();
+        var url = this.NavigationManager.Uri.ToString();
+        var hashIndex = url.IndexOf('#');
+        if (hashIndex >= 0)
+        {
+            var timestamp = url.Substring(hashIndex + 1);
+            Console.WriteLine(timestamp);
+
+            var base64 = await JsRuntime.InvokeAsync<string>("App.getAvailableFiles", timestamp);
+
+            Console.WriteLine(base64);
+
+            var dllBytes = Convert.FromBase64String(base64);
+            System.Reflection.Assembly.Load(dllBytes);
+
+            IsLoaded = true;
+        }
+        await base.OnInitializedAsync();
     }
 }

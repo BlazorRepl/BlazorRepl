@@ -102,12 +102,10 @@
             return result;
         }
 
-        public void AddReference(MemoryStream dllStream)
+        public void AddReference(byte[] dllBytes)
         {
-            var bytes = dllStream.ToArray();
-
             // loading assembly dynamically needs to happenes from bytes, not memory stream;
-            var metadataReference = MetadataReference.CreateFromImage(bytes);
+            var metadataReference = MetadataReference.CreateFromImage(dllBytes);
             baseCompilation = baseCompilation.AddReferences(metadataReference);
         }
 

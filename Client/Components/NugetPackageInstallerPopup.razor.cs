@@ -39,6 +39,12 @@
         [Parameter]
         public EventCallback<bool> VisibleChanged { get; set; }
 
+        [Parameter]
+        public string SessionId { get; set; }
+
+        [Parameter]
+        public EventCallback<string> SessionIdChanged { get; set; }
+
         public string NugetPackageName { get; set; }
 
         public string SelectedNugetPackageName { get; set; }
@@ -70,14 +76,14 @@
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
 
-                await this.JsRuntime.InvokeVoidAsync(
+                this.SessionId = await this.JsRuntime.InvokeAsync<string>(
                     "App.NugetPackageInstallerPopup.init",
                     this.dotNetInstance);
+                await this.SessionIdChanged.InvokeAsync(this.SessionId);
             }
 
             await base.OnAfterRenderAsync(firstRender);
         }
-
 
         private async Task GetNugetPackages()
         {
@@ -113,11 +119,39 @@
             var dllEntry = archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(".dll"));
             if (dllEntry != null)
             {
+                // reuse AddZipEntryToCache
                 using var dllMemoryStream = new MemoryStream();
                 using var dllStream = dllEntry.Open();
                 dllStream.CopyTo(dllMemoryStream);
-                
-                this.CompilationService.AddReference(dllMemoryStream);
+
+                var dllBytes = dllMemoryStream.ToArray();
+                this.CompilationService.AddReference(dllBytes);
+
+                var dllBase64 = Convert.ToBase64String(dllBytes);
+                await this.JsRuntime.InvokeVoidAsync(
+                   "App.NugetPackageInstallerPopup.addNugetFileToCache",
+                   dllEntry.Name,
+                   dllBase64);
+
+                var cssEntries = archive.Entries.Where(e => e.FullName.EndsWith(".css"));
+                foreach (var cssEntry in cssEntries)
+                {
+                    // do we need this check?
+                    if (cssEntry != null)
+                    {
+                        await this.AddZipEntryToCache(cssEntry);
+                    }
+                }
+
+                var jsEntries = archive.Entries.Where(e => e.FullName.EndsWith(".js"));
+                foreach (var jsEntry in jsEntries)
+                {
+                    // do we need this check?
+                    if (jsEntry != null)
+                    {
+                        await this.AddZipEntryToCache(jsEntry);
+                    }
+                }
             }
         }
 
@@ -125,6 +159,21 @@
         {
             this.Visible = false;
             return this.VisibleChanged.InvokeAsync(this.Visible);
+        }
+
+        private async Task AddZipEntryToCache(ZipArchiveEntry entry)
+        {
+            using var memoryStream = new MemoryStream();
+            using var stream = entry.Open();
+            stream.CopyTo(memoryStream);
+
+            var bytes = memoryStream.ToArray();
+
+            var base64 = Convert.ToBase64String(bytes);
+            await this.JsRuntime.InvokeVoidAsync(
+               "App.NugetPackageInstallerPopup.addNugetFileToCache",
+               entry.Name,
+               base64);
         }
     }
 }
