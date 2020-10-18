@@ -33,7 +33,7 @@
 
 <div class="main">
     <div class="content px-4">
-        @if (IsLoaded)
+        @if (HasLoaded)
         {
             @Body
         }
@@ -47,26 +47,25 @@
     [Inject]
     public NavigationManager NavigationManager { get; set; }
 
-    public bool IsLoaded { get; set; }
+    private bool HasLoaded { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
-        var url = this.NavigationManager.Uri.ToString();
-        var hashIndex = url.IndexOf('#');
-        if (hashIndex >= 0)
+        var sessionId = new Uri(this.NavigationManager.Uri).Fragment;
+        if (!string.IsNullOrWhiteSpace(sessionId))
         {
-            var timestamp = url.Substring(hashIndex + 1);
-            Console.WriteLine(timestamp);
+            Console.WriteLine(sessionId);
 
-            var base64 = await JsRuntime.InvokeAsync<string>("App.getAvailableFiles", timestamp);
+            var base64 = await JsRuntime.InvokeAsync<string>("App.getAvailableFiles", sessionId);
 
             Console.WriteLine(base64);
 
             var dllBytes = Convert.FromBase64String(base64);
             System.Reflection.Assembly.Load(dllBytes);
 
-            IsLoaded = true;
+            HasLoaded = true;
         }
+
         await base.OnInitializedAsync();
     }
 }
