@@ -76,7 +76,11 @@
                         link.type = 'text/css';
                         link.href = `data:text/css;base64,${string}`;
                         document.head.appendChild(link);
-                    }
+                    } else if (file.url.endsWith('.js')) {
+                        const link = document.createElement('script');
+                        link.src = `data:text/javascript;base64,${string}`;
+                        document.body.appendChild(link);
+                    } 
                     else {
                         result = string;
                     }
