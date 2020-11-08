@@ -91,7 +91,7 @@ window.App.TabManager = window.App.TabManager || (function () {
     let _newTabInput;
 
     function onNewTabInputKeyDown(ev) {
-        if (ev.keyCode == ENTER_KEY_CODE) {
+        if (ev.keyCode === ENTER_KEY_CODE) {
             ev.preventDefault();
 
             if (_dotNetInstance && _dotNetInstance.invokeMethodAsync) {
@@ -119,6 +119,8 @@ window.App.TabManager = window.App.TabManager || (function () {
 }());
 
 window.App.Repl = window.App.Repl || (function () {
+    const S_KEY_CODE = 83;
+
     const throttleLastTimeFuncNameMappings = {};
 
     let _dotNetInstance;
@@ -186,8 +188,7 @@ window.App.Repl = window.App.Repl || (function () {
     }
 
     function onKeyDown(e) {
-        // CTRL + S
-        if (e.ctrlKey && e.keyCode === 83) {
+        if (e.ctrlKey && e.keyCode === S_KEY_CODE) {
             e.preventDefault();
 
             if (_dotNetInstance && _dotNetInstance.invokeMethodAsync) {
