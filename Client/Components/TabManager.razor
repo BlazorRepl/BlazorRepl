@@ -24,9 +24,10 @@
         <li class="nav-item" style="@TabCreatingDisplayStyle">
             <a class="nav-link tab-input">
                 <input id="new-tab-input"
+                       @ref="newTabInput"
                        @bind="@newTab"
                        @bind:event="oninput"
-                       @onblur="@CreateTabAsyncInternal"/>
+                       @onblur="@CreateTabAsyncInternal" />
             </a>
         </li>
 

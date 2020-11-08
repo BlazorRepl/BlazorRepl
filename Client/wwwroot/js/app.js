@@ -17,14 +17,6 @@
 
             window.history.pushState(null, null, url);
         },
-        focusElement: function (selector) {
-            if (!selector) {
-                return;
-            }
-
-            const element = document.querySelector(selector);
-            element && element.focus();
-        },
         copyToClipboard: function (text) {
             if (!text) {
                 return;
