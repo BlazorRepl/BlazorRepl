@@ -78,7 +78,10 @@
                 "BlazorRepl.UserComponents",
                 Array.Empty<SyntaxTree>(),
                 basicReferenceAssemblies,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary,
+                    optimizationLevel: OptimizationLevel.Release,
+                    concurrentBuild: false));
 
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
