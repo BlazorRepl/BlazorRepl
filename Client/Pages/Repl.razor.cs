@@ -12,7 +12,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class Repl : IDisposable
+    public partial class Repl : IAsyncDisposable
     {
         private const string MainComponentCodePrefix = "@page \"/__main\"\n";
         private const string MainUserPagePath = "/__main";
@@ -118,12 +118,12 @@
             this.StateHasChanged();
         }
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            _ = this.JsRuntime.InvokeVoidAsync("App.Repl.dispose");
+            return this.JsRuntime.InvokeVoidAsync("App.Repl.dispose");
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)

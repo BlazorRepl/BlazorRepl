@@ -6,7 +6,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class CodeEditor : IDisposable
+    public partial class CodeEditor : IAsyncDisposable
     {
         private const string EditorId = "user-code-editor";
 
@@ -32,7 +32,7 @@
             return base.SetParametersAsync(parameters);
         }
 
-        public void Dispose() => _ = this.JsRuntime.InvokeAsync<string>("App.CodeEditor.dispose");
+        public ValueTask DisposeAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.dispose");
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

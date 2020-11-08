@@ -8,7 +8,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class TabManager : IDisposable
+    public partial class TabManager : IAsyncDisposable
     {
         private const int DefaultActiveIndex = 0;
 
@@ -122,12 +122,12 @@
             await this.ActivateTabAsync(newTabIndex);
         }
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            _ = this.JsRuntime.InvokeVoidAsync("App.TabManager.dispose");
+            return this.JsRuntime.InvokeVoidAsync("App.TabManager.dispose");
         }
 
         [JSInvokable]
