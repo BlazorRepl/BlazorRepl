@@ -14,10 +14,7 @@
 
         public PageNotifications PageNotificationsComponent { get; set; }
 
-        public void Dispose()
-        {
-            this.PageNotificationsComponent?.Dispose();
-        }
+        public void Dispose() => this.PageNotificationsComponent?.Dispose();
 
         protected override async Task OnInitializedAsync()
         {
