@@ -52,6 +52,7 @@
                 typeof(IQueryable).Assembly, // System.Linq
                 typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(HttpClient).Assembly, // System.Net.Http
+                typeof(Uri).Assembly, // System.Private.Uri
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
             };
