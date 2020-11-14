@@ -14,16 +14,13 @@
 
         public PageNotifications PageNotificationsComponent { get; set; }
 
+        public void Dispose() => this.PageNotificationsComponent?.Dispose();
+
         protected override async Task OnInitializedAsync()
         {
             await CompilationService.InitAsync(this.HttpClient);
 
             await base.OnInitializedAsync();
-        }
-
-        public void Dispose()
-        {
-            this.PageNotificationsComponent?.Dispose();
         }
     }
 }

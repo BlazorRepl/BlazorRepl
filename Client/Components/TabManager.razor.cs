@@ -8,14 +8,14 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class TabManager : IDisposable
+    public partial class TabManager : IAsyncDisposable
     {
         private const int DefaultActiveIndex = 0;
-        private const string NewTabInputSelector = "#new-tab-input";
 
         private bool tabCreating;
         private bool shouldFocusNewTabInput;
         private string newTab;
+        private ElementReference newTabInput;
         private string previousInvalidTab;
         private DotNetObjectReference<TabManager> dotNetInstance;
 
@@ -106,7 +106,7 @@
                     this.previousInvalidTab = this.newTab;
                 }
 
-                await this.JsRuntime.InvokeVoidAsync("App.focusElement", NewTabInputSelector);
+                await this.newTabInput.FocusAsync();
                 return;
             }
 
@@ -122,12 +122,12 @@
             await this.ActivateTabAsync(newTabIndex);
         }
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            _ = this.JsRuntime.InvokeVoidAsync("App.TabManager.dispose");
+            return this.JsRuntime.InvokeVoidAsync("App.TabManager.dispose");
         }
 
         [JSInvokable]
@@ -151,7 +151,7 @@
             {
                 this.shouldFocusNewTabInput = false;
 
-                await this.JsRuntime.InvokeVoidAsync("App.focusElement", NewTabInputSelector);
+                await this.newTabInput.FocusAsync();
             }
 
             await base.OnAfterRenderAsync(firstRender);

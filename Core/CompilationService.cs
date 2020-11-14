@@ -53,6 +53,7 @@
                 typeof(IQueryable).Assembly, // System.Linq
                 typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(HttpClient).Assembly, // System.Net.Http
+                typeof(Uri).Assembly, // System.Private.Uri
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
             };
@@ -79,7 +80,10 @@
                 "BlazorRepl.UserComponents",
                 Array.Empty<SyntaxTree>(),
                 basicReferenceAssemblies,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary,
+                    optimizationLevel: OptimizationLevel.Release,
+                    concurrentBuild: false));
 
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
@@ -116,7 +120,7 @@
             await Task.WhenAll(
                 assemblyNames.Select(async assemblyName =>
                 {
-                    var result = await httpClient.GetAsync($"/_framework/_bin/{assemblyName}.dll");
+                    var result = await httpClient.GetAsync($"/_framework/{assemblyName}.dll");
 
                     result.EnsureSuccessStatusCode();
 

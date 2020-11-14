@@ -10,7 +10,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class SaveSnippetPopup : IDisposable
+    public partial class SaveSnippetPopup : IAsyncDisposable
     {
         private DotNetObjectReference<SaveSnippetPopup> dotNetInstance;
 
@@ -94,12 +94,12 @@
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            _ = this.JsRuntime.InvokeVoidAsync("App.SaveSnippetPopup.dispose");
+            return this.JsRuntime.InvokeVoidAsync("App.SaveSnippetPopup.dispose");
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
