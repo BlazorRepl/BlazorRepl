@@ -12,7 +12,17 @@
     using Microsoft.JSInterop;
     using System.IO.Compression;
     using System.IO;
+
     using BlazorRepl.Core;
+
+    using Microsoft.Extensions.Logging;
+
+    using NuGet.Common;
+    using NuGet.DependencyResolver;
+    using NuGet.Frameworks;
+    using NuGet.LibraryModel;
+    using NuGet.Protocol.Core.Types;
+    using NuGet.RuntimeModel;
 
     public partial class NugetPackageInstallerPopup : IDisposable
     {
@@ -87,7 +97,8 @@
 
         private async Task GetNugetPackages()
         {
-            var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>($"https://api-v2v3search-0.nuget.org/autocomplete?q={NugetPackageName}");
+            var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
+                $"https://api-v2v3search-0.nuget.org/autocomplete?q={NugetPackageName}");
 
             this.NugetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(5).ToList();
             this.SelectedNugetPackageName = null;
@@ -98,7 +109,8 @@
             this.SelectedNugetPackageName = selectedPackage;
 
             // populate versions dropdown
-            var versionsResult = await this.Http.GetFromJsonAsync<IDictionary<string, object>>($"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
+            var versionsResult = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
+                $"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
             this.NugetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
             this.NugetPackageVersions.Reverse();
             this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();
@@ -106,7 +118,23 @@
 
         private async Task InstallNugetPackage()
         {
-            var package = await this.Http.GetByteArrayAsync($"https://api.nuget.org/v3-flatcontainer/{SelectedNugetPackageName}/{SelectedNugetPackageVersion}/{SelectedNugetPackageName}.{SelectedNugetPackageVersion}.nupkg");
+            var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
+            // ctx.RemoteLibraryProviders.Add(new );
+            var walker = new RemoteDependencyWalker(ctx);
+
+            var res = await walker.WalkAsync(
+                new LibraryRange("NuGet.Packaging", LibraryDependencyTarget.All),
+                new NuGetFramework("net5.0"),
+                "net5.0",
+                new RuntimeGraph(),
+                recursive: true);
+
+            Console.WriteLine(JsonSerializer.Serialize(res));
+
+            return;
+
+            var package = await this.Http.GetByteArrayAsync(
+                $"https://api.nuget.org/v3-flatcontainer/{SelectedNugetPackageName}/{SelectedNugetPackageVersion}/{SelectedNugetPackageName}.{SelectedNugetPackageVersion}.nupkg");
 
             using var zippedStream = new MemoryStream(package);
             using var archive = new ZipArchive(zippedStream);
