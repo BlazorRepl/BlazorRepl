@@ -11,6 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorRepl.UserComponents",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorRepl.Core", "Core\BlazorRepl.Core.csproj", "{36E85EC5-C2F4-477B-A712-0AF04CFC05A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazoreRepl.Tester", "BlazoreRepl.Tester\BlazoreRepl.Tester.csproj", "{607EE30A-8EA3-4C38-9260-8B0A13063266}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.DependencyResolver.Core", "..\NuGet.Client\src\NuGet.Core\NuGet.DependencyResolver.Core\NuGet.DependencyResolver.Core.csproj", "{11C3879B-7C90-4459-A202-A1136531BBB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{36E85EC5-C2F4-477B-A712-0AF04CFC05A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36E85EC5-C2F4-477B-A712-0AF04CFC05A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36E85EC5-C2F4-477B-A712-0AF04CFC05A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{607EE30A-8EA3-4C38-9260-8B0A13063266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{607EE30A-8EA3-4C38-9260-8B0A13063266}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{607EE30A-8EA3-4C38-9260-8B0A13063266}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{607EE30A-8EA3-4C38-9260-8B0A13063266}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11C3879B-7C90-4459-A202-A1136531BBB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11C3879B-7C90-4459-A202-A1136531BBB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11C3879B-7C90-4459-A202-A1136531BBB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11C3879B-7C90-4459-A202-A1136531BBB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
