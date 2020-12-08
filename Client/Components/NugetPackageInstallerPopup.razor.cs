@@ -23,6 +23,7 @@
     using NuGet.LibraryModel;
     using NuGet.Protocol.Core.Types;
     using NuGet.RuntimeModel;
+    using NuGet.Versioning;
 
     public partial class NugetPackageInstallerPopup : IDisposable
     {
@@ -118,12 +119,23 @@
 
         private async Task InstallNugetPackage()
         {
+            var rp = new DepProvider(this.Http);
+            //var deps = await rp.GetDependenciesAsync(
+            //    new LibraryIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0), LibraryType.Package),
+            //    NuGetFramework.Parse("net5.0"),
+            //    new NullSourceCacheContext(),
+            //    new NullLogger(),
+            //    default);
+
+            //Console.WriteLine(JsonSerializer.Serialize(deps));
+            //return;
+
             var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
-            // ctx.RemoteLibraryProviders.Add(new );
+            ctx.RemoteLibraryProviders.Add(rp);
             var walker = new RemoteDependencyWalker(ctx);
 
             var res = await walker.WalkAsync(
-                new LibraryRange("NuGet.Packaging", LibraryDependencyTarget.All),
+                new LibraryRange("Blazored.Modal", LibraryDependencyTarget.All),
                 new NuGetFramework("net5.0"),
                 "net5.0",
                 new RuntimeGraph(),
