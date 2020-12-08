@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
     using System.Xml;
     using System.Xml.Linq;
+
     using NuGet.Common;
     using NuGet.Configuration;
     using NuGet.DependencyResolver;
@@ -38,7 +39,10 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            return Task.FromResult(new LibraryIdentity(
+                libraryRange.Name,
+                libraryRange.VersionRange.MinVersion,
+                LibraryType.Package));
         }
 
         public async Task<LibraryDependencyInfo> GetDependenciesAsync(
@@ -66,17 +70,18 @@
             //    lib.Dependencies);
 
             var dependencies = NuGetFrameworkUtility.GetNearest(
-                nr1.GetDependencyGroups(true),
+                nr1.GetDependencyGroups(false),
                 targetFramework,
+                // new FrameworkNameProvider(new IFrameworkMappings[]{ new DefaultFrameworkMappings(),  }, )
                 item => item.TargetFramework);
 
-            var deps = dependencies.Packages.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
+            var deps = dependencies?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
 
             var res = new LibraryDependencyInfo(
                 libraryIdentity,
                 true,
                 targetFramework,
-                deps);
+                deps ?? Array.Empty<LibraryDependency>());
 
             return res;
 

@@ -12,6 +12,7 @@
     using NuGet.LibraryModel;
     using NuGet.Protocol.Core.Types;
     using NuGet.RuntimeModel;
+    using NuGet.Versioning;
 
     class Program
     {
@@ -23,11 +24,22 @@
             ctx.RemoteLibraryProviders.Add(rp);
             var walker = new RemoteDependencyWalker(ctx);
 
+            var libRange = new LibraryRange(
+                "Blazored.Modal",
+                new VersionRange(new NuGetVersion(5, 1, 0)),
+                LibraryDependencyTarget.Package);
+            // var framework = new NuGetFramework(".NET", new Version(5, 0, 0));
+            var framework = FrameworkConstants.CommonFrameworks.Net50;
+            var graph = new RuntimeGraph(new[] { new RuntimeDescription("net5.0")
+            {
+                // RuntimeDependencySets = { ["Blazored.Modal"] = new RuntimeDependencySet("Blazored.Modal")  }
+            }, });
+
             var res = walker.WalkAsync(
-                new LibraryRange("Blazored.Modal", LibraryDependencyTarget.All),
-                new NuGetFramework("net5.0"),
+                libRange,
+                framework,
                 "net5.0",
-                new RuntimeGraph(),
+                graph,
                 recursive: true).GetAwaiter().GetResult();
 
             Console.WriteLine(JsonSerializer.Serialize(res));
