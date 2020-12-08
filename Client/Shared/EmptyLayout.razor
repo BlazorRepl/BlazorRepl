@@ -51,17 +51,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var sessionId = new Uri(this.NavigationManager.Uri).Fragment;
+        var sessionId = new Uri(this.NavigationManager.Uri).Fragment.Trim('#');
         if (!string.IsNullOrWhiteSpace(sessionId))
         {
             Console.WriteLine(sessionId);
 
             var base64 = await JsRuntime.InvokeAsync<string>("App.getAvailableFiles", sessionId);
 
-            Console.WriteLine(base64);
+            if (!string.IsNullOrWhiteSpace(base64))
+            {
+                Console.WriteLine(base64);
 
-            var dllBytes = Convert.FromBase64String(base64);
-            System.Reflection.Assembly.Load(dllBytes);
+                var dllBytes = Convert.FromBase64String(base64);
+                System.Reflection.Assembly.Load(dllBytes);
+            }
 
             HasLoaded = true;
         }

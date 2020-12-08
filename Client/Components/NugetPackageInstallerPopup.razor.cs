@@ -192,6 +192,9 @@
                         await this.AddZipEntryToCache(jsEntry);
                     }
                 }
+
+                this.Visible = false;
+                await this.VisibleChanged.InvokeAsync(this.Visible);
             }
         }
 
