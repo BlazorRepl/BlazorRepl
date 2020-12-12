@@ -30,10 +30,7 @@
                 LibraryDependencyTarget.Package);
             // var framework = new NuGetFramework(".NET", new Version(5, 0, 0));
             var framework = FrameworkConstants.CommonFrameworks.Net50;
-            var graph = new RuntimeGraph(new[] { new RuntimeDescription("net5.0")
-            {
-                // RuntimeDependencySets = { ["Blazored.Modal"] = new RuntimeDependencySet("Blazored.Modal")  }
-            }, });
+            var graph = new RuntimeGraph(new[] { new RuntimeDescription("net5.0") });
 
             var res = walker.WalkAsync(
                 libRange,
@@ -42,7 +39,16 @@
                 graph,
                 recursive: true).GetAwaiter().GetResult();
 
-            Console.WriteLine(JsonSerializer.Serialize(res));
+            PrintPackagesInfo(res);
+        }
+
+        private static void PrintPackagesInfo(GraphNode<RemoteResolveResult> graphNode, int nestLevel = 0)
+        {
+            Console.WriteLine($"{new string(' ', nestLevel * 4)} {graphNode.Item.Key.Name} [{graphNode.Item.Key.Version}]");
+            foreach (var innerNode in graphNode.InnerNodes)
+            {
+                PrintPackagesInfo(innerNode, nestLevel + 1);
+            }
         }
     }
 }
