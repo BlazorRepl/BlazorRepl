@@ -226,11 +226,9 @@ window.App.Repl = window.App.Repl || (function () {
             _originalHistoryPushStateFunction = originalHistoryPushStateFunction;
 
             const navigateAwayConfirmed = confirm('Are you sure you want to leave REPL page? Changes you made may not be saved.');
-            if (navigateAwayConfirmed) {
-                return originalHistoryPushStateFunction.apply(this, arguments);
-            }
-
-            return null;
+            return navigateAwayConfirmed
+                ? originalHistoryPushStateFunction.apply(this, arguments)
+                : null;
         })(window.history.pushState);
     }
 
