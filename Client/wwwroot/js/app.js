@@ -225,6 +225,11 @@ window.App.Repl = window.App.Repl || (function () {
         window.history.pushState = (originalHistoryPushStateFunction => function () {
             _originalHistoryPushStateFunction = originalHistoryPushStateFunction;
 
+            const newUrl = arguments[2] && arguments[2].toLowerCase();
+            if (newUrl && (newUrl.endsWith('/repl') || newUrl.includes('/repl/'))) {
+                return originalHistoryPushStateFunction.apply(this, arguments);
+            }
+
             const navigateAwayConfirmed = confirm('Are you sure you want to leave REPL page? Changes you made may not be saved.');
             return navigateAwayConfirmed
                 ? originalHistoryPushStateFunction.apply(this, arguments)
