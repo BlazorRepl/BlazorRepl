@@ -127,6 +127,7 @@ window.App.Repl = window.App.Repl || (function () {
     let _editorContainerId;
     let _resultContainerId;
     let _editorId;
+    let _originalHistoryPushStateFunction;
 
     function setElementHeight(elementId, excludeTabsHeight) {
         const element = document.getElementById(elementId);
@@ -218,6 +219,32 @@ window.App.Repl = window.App.Repl || (function () {
         return bytes;
     }
 
+    function enableNavigateAwayConfirmation() {
+        window.onbeforeunload = () => true;
+
+        window.history.pushState = (originalHistoryPushStateFunction => function () {
+            _originalHistoryPushStateFunction = originalHistoryPushStateFunction;
+
+            const newUrl = arguments[2] && arguments[2].toLowerCase();
+            if (newUrl && (newUrl.endsWith('/repl') || newUrl.includes('/repl/'))) {
+                return originalHistoryPushStateFunction.apply(this, arguments);
+            }
+
+            const navigateAwayConfirmed = confirm('Are you sure you want to leave REPL page? Changes you made may not be saved.');
+            return navigateAwayConfirmed
+                ? originalHistoryPushStateFunction.apply(this, arguments)
+                : null;
+        })(window.history.pushState);
+    }
+
+    function disableNavigateAwayConfirmation() {
+        window.onbeforeunload = null;
+
+        if (_originalHistoryPushStateFunction) {
+            window.history.pushState = _originalHistoryPushStateFunction;
+        }
+    }
+
     return {
         init: function (editorContainerId, resultContainerId, editorId, dotNetInstance) {
             _dotNetInstance = dotNetInstance;
@@ -234,6 +261,8 @@ window.App.Repl = window.App.Repl || (function () {
 
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('keydown', onKeyDown);
+
+            enableNavigateAwayConfirmation();
         },
         setCodeEditorContainerHeight: function () {
             if (setElementHeight(_editorContainerId, true)) {
@@ -267,6 +296,8 @@ window.App.Repl = window.App.Repl || (function () {
 
             window.removeEventListener('resize', onWindowResize);
             window.removeEventListener('keydown', onKeyDown);
+
+            disableNavigateAwayConfirmation();
         }
     };
 }());
