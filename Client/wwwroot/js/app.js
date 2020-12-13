@@ -222,9 +222,8 @@ window.App.Repl = window.App.Repl || (function () {
     function enableNavigateAwayConfirmation() {
         window.onbeforeunload = () => true;
 
+        _originalHistoryPushStateFunction = window.history.pushState;
         window.history.pushState = (originalHistoryPushStateFunction => function () {
-            _originalHistoryPushStateFunction = originalHistoryPushStateFunction;
-
             const newUrl = arguments[2] && arguments[2].toLowerCase();
             if (newUrl && (newUrl.endsWith('/repl') || newUrl.includes('/repl/'))) {
                 return originalHistoryPushStateFunction.apply(this, arguments);
