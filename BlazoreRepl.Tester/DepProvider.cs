@@ -26,10 +26,12 @@
     public class DepProvider : IRemoteDependencyProvider
     {
         private readonly HttpClient client;
+        private readonly Dictionary<string, LibraryDependencyInfo> libraryCache = new();
 
-        public DepProvider(HttpClient client)
+        public DepProvider(HttpClient client, Dictionary<string, LibraryDependencyInfo> libraryCache)
         {
             this.client = client;
+            this.libraryCache = libraryCache;
         }
 
         public Task<LibraryIdentity> FindLibraryAsync(
@@ -39,6 +41,8 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
+            // we are validating the version, name and target framework upoun getting them in the ui
+            // so we don't need second validation here
             return Task.FromResult(new LibraryIdentity(
                 libraryRange.Name,
                 libraryRange.VersionRange.MinVersion,
@@ -54,6 +58,29 @@
         {
             // throw new NotImplementedException();
             // var ldi = LibraryDependencyInfo.CreateUnresolved(libraryIdentity, targetFramework);
+
+            if (libraryCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            {
+                // handle the case when the constraint is not >=
+                if (dependencyInfo.Library.Version >= libraryIdentity.Version)
+                {
+                    return dependencyInfo;
+                }
+
+                // differentiate the deps which comes from the project from those which comes from the current waling 
+
+                // we should separate the cache in 3 different collection
+                // 1. libraries from project
+                // 2. libraries from different nuget instalations
+                // 3. libraries from current walking
+
+                // if we have downgrade from the versions in type 1 -> throw 
+                // if we have downgrade from the versions in type 2 -> check if the outside package can work with the current version that the current walking want to install. 
+                    // If yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
+                    // if not -> throw
+
+
+            }
 
             var nuspecStream = await this.client.GetStreamAsync(
                 $"https://api.nuget.org/v3-flatcontainer/{libraryIdentity.Name}/{libraryIdentity.Version}/{libraryIdentity.Name}.nuspec");
@@ -82,6 +109,8 @@
                 true,
                 targetFramework,
                 deps ?? Array.Empty<LibraryDependency>());
+
+            libraryCache.Add(libraryIdentity.Name, res);
 
             return res;
 

@@ -3,6 +3,7 @@
     using System;
     using System.Net.Http;
     using System.Text.Json;
+    using System.Collections.Generic;
 
     using BlazorRepl.Client.Components;
 
@@ -18,7 +19,18 @@
     {
         static void Main(string[] args)
         {
-            var rp = new DepProvider(new HttpClient());
+            var libraryIdentity = new LibraryIdentity(
+                "Microsoft.AspNetCore.Components",
+                new NuGetVersion(5, 0, 0),
+                LibraryType.Package);
+
+            var depInfo = new LibraryDependencyInfo(
+                libraryIdentity,
+                true,
+                FrameworkConstants.CommonFrameworks.Net50,
+                Array.Empty<LibraryDependency>());
+
+            var rp = new DepProvider(new HttpClient(), new Dictionary<string, LibraryDependencyInfo> { { "Microsoft.AspNetCore.Components", depInfo } });
 
             var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
             ctx.RemoteLibraryProviders.Add(rp);
