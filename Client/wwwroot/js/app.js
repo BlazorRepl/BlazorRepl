@@ -1,9 +1,13 @@
 ﻿window.App = window.App || (function () {
     return {
-        reloadIFrame: function (id) {
+        reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
             if (iFrame) {
-                iFrame.contentWindow.location.reload();
+                if (newSrc) {
+                    iFrame.src = newSrc;
+                } else {
+                    iFrame.contentWindow.location.reload();
+                }
             }
         },
         changeDisplayUrl: function (url) {
@@ -33,32 +37,22 @@
 
 window.App.CodeEditor = window.App.CodeEditor || (function () {
     let _editor;
+    let _overrideValue;
 
-    function initEditor(editorId, defaultValue) {
+    function initEditor(editorId, value) {
         if (!editorId) {
             return;
         }
 
         require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
         require(['vs/editor/editor.main'], () => {
-            const oldValue = getValue();
-            const oldEditorElement = document.getElementById(editorId);
-            if (oldEditorElement && oldEditorElement.childNodes) {
-                oldEditorElement.childNodes.forEach(c => oldEditorElement.removeChild(c));
-            }
-
-            const value = defaultValue || oldValue ||
-                `<h1>Hello World</h1>
-
-@code {
-
-}
-`;
             _editor = monaco.editor.create(document.getElementById(editorId), {
                 fontSize: '16px',
-                value: value,
+                value: _overrideValue || value || '',
                 language: 'razor'
             });
+
+            _overrideValue = null;
         });
     }
 
@@ -66,34 +60,96 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
         return _editor && _editor.getValue();
     }
 
+    function setValue(value) {
+        if (_editor) {
+            _editor.setValue(value || '');
+        } else {
+            _overrideValue = value;
+        }
+    }
+
+    function focus() {
+        return _editor && _editor.focus();
+    }
+
     return {
-        init: function (editorId, defaultValue) {
-            initEditor(editorId, defaultValue);
-        },
+        init: initEditor,
         initEditor: initEditor,
         getValue: getValue,
+        setValue: setValue,
+        focus: focus,
         dispose: function () {
             _editor = null;
         }
     };
 }());
 
+window.App.TabManager = window.App.TabManager || (function () {
+    const ENTER_KEY_CODE = 13;
+
+    let _dotNetInstance;
+    let _newTabInput;
+
+    function onNewTabInputKeyDown(ev) {
+        if (ev.keyCode === ENTER_KEY_CODE) {
+            ev.preventDefault();
+
+            if (_dotNetInstance && _dotNetInstance.invokeMethodAsync) {
+                _dotNetInstance.invokeMethodAsync('CreateTabAsync');
+            }
+        }
+    }
+
+    return {
+        init: function (newTabInputSelector, dotNetInstance) {
+            _dotNetInstance = dotNetInstance;
+            _newTabInput = document.querySelector(newTabInputSelector);
+            if (_newTabInput) {
+                _newTabInput.addEventListener('keydown', onNewTabInputKeyDown);
+            }
+        },
+        dispose: function () {
+            _dotNetInstance = null;
+
+            if (_newTabInput) {
+                _newTabInput.removeEventListener('keydown', onNewTabInputKeyDown);
+            }
+        }
+    };
+}());
+
 window.App.Repl = window.App.Repl || (function () {
+    const S_KEY_CODE = 83;
+
     const throttleLastTimeFuncNameMappings = {};
 
     let _dotNetInstance;
     let _editorContainerId;
     let _resultContainerId;
     let _editorId;
+    let _originalHistoryPushStateFunction;
 
-    function setElementHeight(elementId) {
+    function setElementHeight(elementId, excludeTabsHeight) {
         const element = document.getElementById(elementId);
         if (element) {
-            // TODO: Abstract class name
-            const height = window.innerHeight - document.getElementsByClassName('repl-navbar')[0].offsetHeight;
+            const oldHeight = element.style.height;
 
-            element.style.height = `${height}px`;
+            // TODO: Abstract class names
+            let height =
+                window.innerHeight -
+                document.getElementsByClassName('repl-navbar')[0].offsetHeight;
+
+            if (excludeTabsHeight) {
+                height -= document.getElementsByClassName('tabs-wrapper')[0].offsetHeight;
+            }
+
+            const heightString = `${height}px`;
+            element.style.height = heightString;
+
+            return oldHeight !== heightString;
         }
+
+        return false;
     }
 
     function initReplSplitter() {
@@ -128,14 +184,14 @@ window.App.Repl = window.App.Repl || (function () {
 
     function onWindowResize() {
         setElementHeight(_resultContainerId);
-        setElementHeight(_editorContainerId);
+        setElementHeight(_editorContainerId, true);
         resetEditor();
     }
 
     function onKeyDown(e) {
-        // CTRL + S
-        if (e.ctrlKey && e.keyCode === 83) {
+        if (e.ctrlKey && e.keyCode === S_KEY_CODE) {
             e.preventDefault();
+
             if (_dotNetInstance && _dotNetInstance.invokeMethodAsync) {
                 throttle(() => _dotNetInstance.invokeMethodAsync('TriggerCompileAsync'), 1000, 'compile');
             }
@@ -146,6 +202,7 @@ window.App.Repl = window.App.Repl || (function () {
         const now = new Date();
         if (now - throttleLastTimeFuncNameMappings[id] >= timeFrame) {
             func();
+
             throttleLastTimeFuncNameMappings[id] = now;
         }
     }
@@ -162,6 +219,31 @@ window.App.Repl = window.App.Repl || (function () {
         return bytes;
     }
 
+    function enableNavigateAwayConfirmation() {
+        window.onbeforeunload = () => true;
+
+        _originalHistoryPushStateFunction = window.history.pushState;
+        window.history.pushState = (originalHistoryPushStateFunction => function () {
+            const newUrl = arguments[2] && arguments[2].toLowerCase();
+            if (newUrl && (newUrl.endsWith('/repl') || newUrl.includes('/repl/'))) {
+                return originalHistoryPushStateFunction.apply(this, arguments);
+            }
+
+            const navigateAwayConfirmed = confirm('Are you sure you want to leave REPL page? Changes you made may not be saved.');
+            return navigateAwayConfirmed
+                ? originalHistoryPushStateFunction.apply(this, arguments)
+                : null;
+        })(window.history.pushState);
+    }
+
+    function disableNavigateAwayConfirmation() {
+        window.onbeforeunload = null;
+
+        if (_originalHistoryPushStateFunction) {
+            window.history.pushState = _originalHistoryPushStateFunction;
+        }
+    }
+
     return {
         init: function (editorContainerId, resultContainerId, editorId, dotNetInstance) {
             _dotNetInstance = dotNetInstance;
@@ -171,13 +253,20 @@ window.App.Repl = window.App.Repl || (function () {
 
             throttleLastTimeFuncNameMappings['compile'] = new Date();
 
-            setElementHeight(editorContainerId);
             setElementHeight(resultContainerId);
+            setElementHeight(editorContainerId, true);
 
             initReplSplitter();
 
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('keydown', onKeyDown);
+
+            enableNavigateAwayConfirmation();
+        },
+        setCodeEditorContainerHeight: function () {
+            if (setElementHeight(_editorContainerId, true)) {
+                resetEditor();
+            }
         },
         updateUserAssemblyInCacheStorage: function (file) {
             const response = new Response(new Blob([base64ToArrayBuffer(file)], { type: 'application/octet-stream' }));
@@ -206,6 +295,8 @@ window.App.Repl = window.App.Repl || (function () {
 
             window.removeEventListener('resize', onWindowResize);
             window.removeEventListener('keydown', onKeyDown);
+
+            disableNavigateAwayConfirmation();
         }
     };
 }());

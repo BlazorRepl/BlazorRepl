@@ -1,12 +1,16 @@
 ﻿namespace BlazorRepl.Client.Components
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
+    using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
+    using BlazorRepl.Core;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class SaveSnippetPopup : IDisposable
+    public partial class SaveSnippetPopup : IAsyncDisposable
     {
         private DotNetObjectReference<SaveSnippetPopup> dotNetInstance;
 
@@ -19,6 +23,9 @@
         [Inject]
         public NavigationManager NavigationManager { get; set; }
 
+        [CascadingParameter]
+        public PageNotifications PageNotificationsComponent { get; set; }
+
         [Parameter]
         public bool Visible { get; set; }
 
@@ -29,7 +36,10 @@
         public string InvokerId { get; set; }
 
         [Parameter]
-        public CodeEditor CodeEditor { get; set; }
+        public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
+
+        [Parameter]
+        public Func<Task> UpdateActiveCodeFileContentFunc { get; set; }
 
         public bool Loading { get; set; }
 
@@ -51,25 +61,29 @@
 
         public async Task SaveAsync()
         {
-            if (this.CodeEditor == null)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot use save snippet popup without specified {nameof(this.CodeEditor)} parameter.");
-            }
-
             this.Loading = true;
 
             try
             {
-                var content = await this.CodeEditor.GetCodeAsync();
+                await (this.UpdateActiveCodeFileContentFunc?.Invoke() ?? Task.CompletedTask);
 
-                var snippetId = await this.SnippetsService.SaveSnippetAsync(content);
+                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles);
 
                 var urlBuilder = new UriBuilder(this.NavigationManager.BaseUri) { Path = $"repl/{snippetId}" };
                 var url = urlBuilder.Uri.ToString();
                 this.SnippetLink = url;
 
                 await this.JsRuntime.InvokeVoidAsync("App.changeDisplayUrl", url);
+            }
+            catch (InvalidOperationException ex)
+            {
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: ex.Message);
+            }
+            catch (Exception)
+            {
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while saving snippet. Please try again later.");
             }
             finally
             {
@@ -80,10 +94,12 @@
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
-            _ = this.JsRuntime.InvokeVoidAsync("App.SaveSnippetPopup.dispose");
+            this.PageNotificationsComponent?.Dispose();
+
+            return this.JsRuntime.InvokeVoidAsync("App.SaveSnippetPopup.dispose");
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)

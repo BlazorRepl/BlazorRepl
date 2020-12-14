@@ -1,0 +1,22 @@
+﻿<div class="page-notifications-container">
+    @for (var i = notifications.Count - 1; i >= 0; i--)
+    {
+        var notification = notifications[i];
+        var alertClass = GetAlertClass(notification.Type);
+        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+            @if (!string.IsNullOrWhiteSpace(notification.Title))
+            {
+                <strong class="font-weight-bold">@(notification.Title)</strong> <br />
+            }
+
+            @notification.Content
+            <button type="button"
+                    class="close"
+                    aria-label="Close"
+                    @onclick="@(() => CloseNotification(notification))"
+                    @onclick:preventDefault>
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+</div>

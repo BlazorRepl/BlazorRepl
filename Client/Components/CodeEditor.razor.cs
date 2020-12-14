@@ -2,42 +2,50 @@
 {
     using System;
     using System.Threading.Tasks;
+    using BlazorRepl.Core;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class CodeEditor : IDisposable
+    public partial class CodeEditor : IAsyncDisposable
     {
         private const string EditorId = "user-code-editor";
 
-        private bool shouldReInitEditor;
+        private bool hasCodeChanged;
 
         [Inject]
         public IJSRuntime JsRuntime { get; set; }
 
         [Parameter]
-        public string DefaultCode { get; set; }
+        public string Code { get; set; }
+
+        public ValueTask FocusAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.focus");
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
-            if (parameters.TryGetValue<string>(nameof(this.DefaultCode), out var parameterValue))
+            if (parameters.TryGetValue<string>(nameof(this.Code), out var parameterValue))
             {
-                this.shouldReInitEditor = this.DefaultCode != parameterValue;
+                this.hasCodeChanged = this.Code != parameterValue;
             }
 
             return base.SetParametersAsync(parameters);
         }
 
-        public void Dispose() => _ = this.JsRuntime.InvokeAsync<string>("App.CodeEditor.dispose");
+        public ValueTask DisposeAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.dispose");
 
         internal ValueTask<string> GetCodeAsync() => this.JsRuntime.InvokeAsync<string>("App.CodeEditor.getValue");
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender || this.shouldReInitEditor)
+            if (firstRender)
             {
-                this.shouldReInitEditor = false;
-
-                await this.JsRuntime.InvokeVoidAsync("App.CodeEditor.init", EditorId, this.DefaultCode);
+                await this.JsRuntime.InvokeVoidAsync(
+                   "App.CodeEditor.init",
+                   EditorId,
+                   this.Code ?? CoreConstants.MainComponentDefaultFileContent);
+            }
+            else if (this.hasCodeChanged)
+            {
+                await this.JsRuntime.InvokeVoidAsync("App.CodeEditor.setValue", this.Code);
             }
 
             await base.OnAfterRenderAsync(firstRender);
