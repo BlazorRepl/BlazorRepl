@@ -19,17 +19,11 @@
         [Parameter]
         public EventCallback<bool> ShowChanged { get; set; }
 
-        private int ErrorsCount { get; set; }
+        private int ErrorsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
 
-        private int WarningsCount { get; set; }
+        private int WarningsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Warning);
 
         private bool ShowIcon => this.Diagnostics.Any();
-
-        protected override void OnInitialized()
-        {
-            this.ErrorsCount = this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
-            this.WarningsCount = this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Warning);
-        }
 
         private Task ToggleDiagnosticsAsync()
         {
