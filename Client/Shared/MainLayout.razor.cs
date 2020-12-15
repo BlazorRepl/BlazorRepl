@@ -12,7 +12,7 @@
         [Inject]
         public HttpClient HttpClient { get; set; }
 
-        public PageNotifications PageNotificationsComponent { get; set; }
+        private PageNotifications PageNotificationsComponent { get; set; }
 
         public void Dispose() => this.PageNotificationsComponent?.Dispose();
 
