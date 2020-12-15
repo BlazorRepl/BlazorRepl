@@ -23,9 +23,6 @@
         [Inject]
         public NavigationManager NavigationManager { get; set; }
 
-        [CascadingParameter]
-        public PageNotifications PageNotificationsComponent { get; set; }
-
         [Parameter]
         public bool Visible { get; set; }
 
@@ -40,6 +37,9 @@
 
         [Parameter]
         public Func<Task> UpdateActiveCodeFileContentFunc { get; set; }
+
+        [CascadingParameter]
+        private PageNotifications PageNotificationsComponent { get; set; }
 
         private bool Loading { get; set; }
 
