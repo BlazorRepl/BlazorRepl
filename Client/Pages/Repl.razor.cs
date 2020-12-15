@@ -40,75 +40,21 @@
 
         public IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
 
-        public IList<string> CodeFileNames => this.CodeFiles.Keys.ToList();
+        private IList<string> CodeFileNames => this.CodeFiles.Keys.ToList();
 
-        public string CodeEditorContent => this.activeCodeFile?.Content;
+        private string CodeEditorContent => this.activeCodeFile?.Content;
 
-        public bool SaveSnippetPopupVisible { get; set; }
+        private bool SaveSnippetPopupVisible { get; set; }
 
-        public string Preset { get; set; } = "basic";
+        private string Preset { get; set; } = "basic";
 
-        public IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
+        private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
-        public bool AreDiagnosticsShown { get; set; }
+        private bool AreDiagnosticsShown { get; set; }
 
-        public string LoaderText { get; set; }
+        private string LoaderText { get; set; }
 
-        public bool Loading { get; set; }
-
-        public async Task CompileAsync()
-        {
-            this.Loading = true;
-            this.LoaderText = "Processing";
-
-            await Task.Delay(10); // Ensure rendering has time to be called
-
-            CompileToAssemblyResult compilationResult = null;
-            CodeFile mainComponent = null;
-            string originalMainComponentContent = null;
-            try
-            {
-                await this.UpdateActiveCodeFileContentAsync();
-
-                // Add the necessary main component code prefix and store the original content so we can revert right after compilation.
-                if (this.CodeFiles.TryGetValue(CoreConstants.MainComponentFilePath, out mainComponent))
-                {
-                    originalMainComponentContent = mainComponent.Content;
-                    mainComponent.Content = MainComponentCodePrefix + originalMainComponentContent;
-                }
-
-                compilationResult = await this.CompilationService.CompileToAssemblyAsync(
-                    this.CodeFiles.Values,
-                    this.Preset,
-                    this.UpdateLoaderTextAsync);
-
-                this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
-                this.AreDiagnosticsShown = true;
-            }
-            catch (Exception)
-            {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
-            }
-            finally
-            {
-                if (mainComponent != null)
-                {
-                    mainComponent.Content = originalMainComponentContent;
-                }
-
-                this.Loading = false;
-            }
-
-            if (compilationResult?.AssemblyBytes?.Length > 0)
-            {
-                await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
-
-                // TODO: Add error page in iframe
-                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", MainUserPagePath);
-            }
-        }
-
-        public void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
+        private bool Loading { get; set; }
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
@@ -190,6 +136,60 @@
 
             await base.OnInitializedAsync();
         }
+
+        private async Task CompileAsync()
+        {
+            this.Loading = true;
+            this.LoaderText = "Processing";
+
+            await Task.Delay(10); // Ensure rendering has time to be called
+
+            CompileToAssemblyResult compilationResult = null;
+            CodeFile mainComponent = null;
+            string originalMainComponentContent = null;
+            try
+            {
+                await this.UpdateActiveCodeFileContentAsync();
+
+                // Add the necessary main component code prefix and store the original content so we can revert right after compilation.
+                if (this.CodeFiles.TryGetValue(CoreConstants.MainComponentFilePath, out mainComponent))
+                {
+                    originalMainComponentContent = mainComponent.Content;
+                    mainComponent.Content = MainComponentCodePrefix + originalMainComponentContent;
+                }
+
+                compilationResult = await this.CompilationService.CompileToAssemblyAsync(
+                    this.CodeFiles.Values,
+                    this.Preset,
+                    this.UpdateLoaderTextAsync);
+
+                this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
+                this.AreDiagnosticsShown = true;
+            }
+            catch (Exception)
+            {
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
+            }
+            finally
+            {
+                if (mainComponent != null)
+                {
+                    mainComponent.Content = originalMainComponentContent;
+                }
+
+                this.Loading = false;
+            }
+
+            if (compilationResult?.AssemblyBytes?.Length > 0)
+            {
+                await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
+
+                // TODO: Add error page in iframe
+                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", MainUserPagePath);
+            }
+        }
+
+        private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
 
         private async Task HandleTabActivateAsync(string name)
         {
