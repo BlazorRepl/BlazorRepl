@@ -40,7 +40,7 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        private IList<string> CodeFileNames => this.CodeFiles.Keys.ToList();
+        private IList<string> CodeFileNames { get; set; }
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
@@ -133,6 +133,8 @@
                 };
                 this.CodeFiles.Add(CoreConstants.MainComponentFilePath, this.activeCodeFile);
             }
+
+            this.CodeFileNames = this.CodeFiles.Keys.ToList();
 
             await base.OnInitializedAsync();
         }
