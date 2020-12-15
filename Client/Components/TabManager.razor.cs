@@ -35,7 +35,7 @@
         public EventCallback<string> OnTabCreate { get; set; }
 
         [CascadingParameter]
-        public PageNotifications PageNotificationsComponent { get; set; }
+        private PageNotifications PageNotificationsComponent { get; set; }
 
         private int ActiveIndex { get; set; } = DefaultActiveIndex;
 

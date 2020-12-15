@@ -30,15 +30,15 @@
         [Inject]
         public IJSRuntime JsRuntime { get; set; }
 
-        [CascadingParameter]
-        public PageNotifications PageNotificationsComponent { get; set; }
-
         [Parameter]
         public string SnippetId { get; set; }
 
         public CodeEditor CodeEditorComponent { get; set; }
 
         public IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
+
+        [CascadingParameter]
+        private PageNotifications PageNotificationsComponent { get; set; }
 
         private IList<string> CodeFileNames => this.CodeFiles.Keys.ToList();
 
