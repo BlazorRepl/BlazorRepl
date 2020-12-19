@@ -4,8 +4,10 @@
     using System.Net.Http;
     using System.Text.Json;
     using System.Collections.Generic;
+    using System.Linq;
 
     using BlazorRepl.Client.Components;
+    using BlazorRepl.Core;
 
     using NuGet.Common;
     using NuGet.DependencyResolver;
@@ -17,20 +19,29 @@
 
     class Program
     {
+        private static IDictionary<string, LibraryDependencyInfo> initialCache;
+
         static void Main(string[] args)
         {
-            var libraryIdentity = new LibraryIdentity(
-                "Microsoft.AspNetCore.Components",
-                new NuGetVersion(5, 0, 0),
-                LibraryType.Package);
+            CompilationService.InitAsync(new HttpClient { BaseAddress = new Uri("https://localhost:44347") }).GetAwaiter().GetResult();
 
-            var depInfo = new LibraryDependencyInfo(
-                libraryIdentity,
-                true,
-                FrameworkConstants.CommonFrameworks.Net50,
-                Array.Empty<LibraryDependency>());
+            initialCache = CompilationService.BaseAssemblyNames
+                .Select(x =>
+                {
+                    var libIdentity = new LibraryIdentity(
+                        x.Name,
+                        new NuGetVersion(x.Version),
+                        LibraryType.Assembly);
 
-            var rp = new DepProvider(new HttpClient(), new Dictionary<string, LibraryDependencyInfo> { { "Microsoft.AspNetCore.Components", depInfo } });
+                    return new LibraryDependencyInfo(
+                        libIdentity,
+                        resolved: true,
+                        FrameworkConstants.CommonFrameworks.Net50,
+                        Array.Empty<LibraryDependency>());
+                })
+                .ToDictionary(x => x.Library.Name, x => x);
+
+            var rp = new DepProvider(new HttpClient(), new Dictionary<string, LibraryDependencyInfo>(initialCache));
 
             var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
             ctx.RemoteLibraryProviders.Add(rp);
@@ -56,7 +67,8 @@
 
         private static void PrintPackagesInfo(GraphNode<RemoteResolveResult> graphNode, int nestLevel = 0)
         {
-            Console.WriteLine($"{new string(' ', nestLevel * 4)} {graphNode.Item.Key.Name} [{graphNode.Item.Key.Version}]");
+            var cachedString = initialCache.ContainsKey(graphNode.Item.Key.Name) ? "[cache hit]" : "[cache miss]";
+            Console.WriteLine($"{new string(' ', nestLevel * 4)} {graphNode.Item.Key.Name} {cachedString} [{graphNode.Item.Key.Version}]");
             foreach (var innerNode in graphNode.InnerNodes)
             {
                 PrintPackagesInfo(innerNode, nestLevel + 1);

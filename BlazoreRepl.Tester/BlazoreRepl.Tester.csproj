@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\NuGet.Client\src\NuGet.Core\NuGet.DependencyResolver.Core\NuGet.DependencyResolver.Core.csproj" />
+	  <ProjectReference Include="..\Core\BlazorRepl.Core.csproj" />
 	</ItemGroup>
 
 </Project>

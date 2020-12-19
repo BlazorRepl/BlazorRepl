@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Json;
+    using System.Reflection;
     using System.Runtime;
     using System.Text;
     using System.Threading.Tasks;
@@ -88,6 +89,8 @@
 
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
+
+        public static IEnumerable<AssemblyIdentity> BaseAssemblyNames => baseCompilation.ReferencedAssemblyNames;
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(
             ICollection<CodeFile> codeFiles,
