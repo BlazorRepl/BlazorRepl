@@ -16,6 +16,7 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.RuntimeModel;
     using NuGet.Versioning;
+    using NuGet.Packaging.Core;
 
     class Program
     {
@@ -64,11 +65,19 @@
                 graph,
                 recursive: true).GetAwaiter().GetResult();
 
-            //var downloader = rp.GetPackageDownloaderAsync(
-            //    new PackageIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0)),
-            //    cache,
-            //    logger,
-            //    default).GetAwaiter().GetResult();
+            // should we create new downloader for each of the not cached walked items?
+            // can we force downloader to automatically walk the package identity deps?
+            var downloader = rp.GetPackageDownloaderAsync(
+                new PackageIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0)),
+                cache,
+                logger,
+                default).GetAwaiter().GetResult();
+
+            // get target framework from PackagesForInstall
+
+            //var targetFramework = 
+
+            //downloader.CoreReader.GetStreamAsync()
 
             //Console.WriteLine(downloader.);
 

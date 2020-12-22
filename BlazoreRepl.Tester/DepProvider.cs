@@ -34,6 +34,8 @@
             this.libraryCache = libraryCache;
         }
 
+        public Dictionary<string, LibraryDependencyInfo> PackagesForInstall { get; set; }
+
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
             NuGetFramework targetFramework,
@@ -65,6 +67,10 @@
                 if (dependencyInfo.Library.Version >= libraryIdentity.Version)
                 {
                     return dependencyInfo;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
 
                 // differentiate the deps which comes from the project from those which comes from the current waling 
@@ -106,6 +112,8 @@
                 resolved: true,
                 dependencies?.TargetFramework ?? targetFramework,
                 deps ?? Array.Empty<LibraryDependency>());
+
+            PackagesForInstall.Add(libraryIdentity.Name, res);
 
             libraryCache.Add(libraryIdentity.Name, res);
 
