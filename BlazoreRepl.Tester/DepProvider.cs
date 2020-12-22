@@ -76,10 +76,8 @@
 
                 // if we have downgrade from the versions in type 1 -> throw 
                 // if we have downgrade from the versions in type 2 -> check if the outside package can work with the current version that the current walking want to install. 
-                    // If yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
-                    // if not -> throw
-
-
+                // If yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
+                // if not -> throw
             }
 
             var nuspecStream = await this.client.GetStreamAsync(
@@ -99,15 +97,14 @@
             var dependencies = NuGetFrameworkUtility.GetNearest(
                 nr1.GetDependencyGroups(false),
                 targetFramework,
-                // new FrameworkNameProvider(new IFrameworkMappings[]{ new DefaultFrameworkMappings(),  }, )
                 item => item.TargetFramework);
 
             var deps = dependencies?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
 
             var res = new LibraryDependencyInfo(
                 libraryIdentity,
-                true,
-                targetFramework,
+                resolved: true,
+                dependencies?.TargetFramework ?? targetFramework,
                 deps ?? Array.Empty<LibraryDependency>());
 
             libraryCache.Add(libraryIdentity.Name, res);
@@ -142,7 +139,6 @@
             var ngrp4 = new RemoteV3FindPackageByIdResourceProvider();
             var ngrp5 = new DependencyInfoResourceV3Provider();
 
-
             var resourceProviders = new INuGetResourceProvider[] { ngrp1, ngrp2, ngrp3, ngrp4, ngrp5 };
 
             var sr = new SourceRepository(ps, resourceProviders);
@@ -150,7 +146,13 @@
             var httpSource = HttpSource.Create(sr);
 
             var remoteResource = new RemoteV3FindPackageByIdResource(sr, httpSource);
-            IPackageDownloader downloader = new RemotePackageArchiveDownloader("https://api.nuget.org/v3/index.json", remoteResource, packageIdentity, cacheContext, logger);
+            IPackageDownloader downloader = new RemotePackageArchiveDownloader(
+                "https://api.nuget.org/v3/index.json",
+                remoteResource,
+                packageIdentity,
+                cacheContext,
+                logger);
+
             return Task.FromResult(downloader);
         }
 

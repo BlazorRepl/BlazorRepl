@@ -19,31 +19,34 @@
 
     class Program
     {
-        private static IDictionary<string, LibraryDependencyInfo> initialCache;
+        private static IDictionary<string, LibraryDependencyInfo> initialCache =
+            new Dictionary<string, LibraryDependencyInfo>();
 
         static void Main(string[] args)
         {
-            CompilationService.InitAsync(new HttpClient { BaseAddress = new Uri("https://localhost:44347") }).GetAwaiter().GetResult();
+            //CompilationService.InitAsync(new HttpClient { BaseAddress = new Uri("https://localhost:44347") }).GetAwaiter().GetResult();
 
-            initialCache = CompilationService.BaseAssemblyNames
-                .Select(x =>
-                {
-                    var libIdentity = new LibraryIdentity(
-                        x.Name,
-                        new NuGetVersion(x.Version),
-                        LibraryType.Assembly);
+            //initialCache = CompilationService.BaseAssemblyNames
+            //    .Select(x =>
+            //    {
+            //        var libIdentity = new LibraryIdentity(
+            //            x.Name,
+            //            new NuGetVersion(x.Version),
+            //            LibraryType.Assembly);
 
-                    return new LibraryDependencyInfo(
-                        libIdentity,
-                        resolved: true,
-                        FrameworkConstants.CommonFrameworks.Net50,
-                        Array.Empty<LibraryDependency>());
-                })
-                .ToDictionary(x => x.Library.Name, x => x);
+            //        return new LibraryDependencyInfo(
+            //            libIdentity,
+            //            resolved: true,
+            //            FrameworkConstants.CommonFrameworks.Net50,
+            //            Array.Empty<LibraryDependency>());
+            //    })
+            //    .ToDictionary(x => x.Library.Name, x => x);
 
-            var rp = new DepProvider(new HttpClient(), new Dictionary<string, LibraryDependencyInfo>(initialCache));
+            var rp = new DepProvider(new HttpClient(), new Dictionary<string, LibraryDependencyInfo>());
 
-            var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
+            var cache = new NullSourceCacheContext();
+            var logger = new NullLogger();
+            var ctx = new RemoteWalkContext(cache, logger);
             ctx.RemoteLibraryProviders.Add(rp);
             var walker = new RemoteDependencyWalker(ctx);
 
@@ -51,7 +54,6 @@
                 "Blazored.Modal",
                 new VersionRange(new NuGetVersion(5, 1, 0)),
                 LibraryDependencyTarget.Package);
-            // var framework = new NuGetFramework(".NET", new Version(5, 0, 0));
             var framework = FrameworkConstants.CommonFrameworks.Net50;
             var graph = new RuntimeGraph(new[] { new RuntimeDescription("net5.0") });
 
@@ -61,6 +63,14 @@
                 "net5.0",
                 graph,
                 recursive: true).GetAwaiter().GetResult();
+
+            //var downloader = rp.GetPackageDownloaderAsync(
+            //    new PackageIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0)),
+            //    cache,
+            //    logger,
+            //    default).GetAwaiter().GetResult();
+
+            //Console.WriteLine(downloader.);
 
             PrintPackagesInfo(res);
         }
