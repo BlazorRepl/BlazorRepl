@@ -45,6 +45,8 @@
             configurationName: "Blazor",
             extensions: Array.Empty<RazorExtension>());
 
+        public static IEnumerable<AssemblyIdentity> BaseAssemblyNames => baseCompilation.ReferencedAssemblyNames;
+
         public static async Task InitAsync(HttpClient httpClient)
         {
             var basicReferenceAssemblyRoots = new[]
@@ -90,7 +92,12 @@
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
 
-        public static IEnumerable<AssemblyIdentity> BaseAssemblyNames => baseCompilation.ReferencedAssemblyNames;
+        public static void AddReference(byte[] dllBytes)
+        {
+            // loading assembly dynamically needs to happenes from bytes, not memory stream;
+            var metadataReference = MetadataReference.CreateFromImage(dllBytes);
+            baseCompilation = baseCompilation.AddReferences(metadataReference);
+        }
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(
             ICollection<CodeFile> codeFiles,
@@ -108,13 +115,6 @@
             var result = CompileToAssembly(cSharpResults);
 
             return result;
-        }
-
-        public void AddReference(byte[] dllBytes)
-        {
-            // loading assembly dynamically needs to happenes from bytes, not memory stream;
-            var metadataReference = MetadataReference.CreateFromImage(dllBytes);
-            baseCompilation = baseCompilation.AddReferences(metadataReference);
         }
 
         private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(HttpClient httpClient, IEnumerable<string> assemblyNames)

@@ -34,7 +34,7 @@
             this.libraryCache = libraryCache;
         }
 
-        public Dictionary<string, LibraryDependencyInfo> PackagesForInstall { get; set; }
+        public Dictionary<string, LibraryDependencyInfo> PackagesForInstall { get; set; } = new();
 
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
