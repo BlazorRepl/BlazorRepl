@@ -1,6 +1,7 @@
 ﻿namespace BlazorRepl.Client.Components
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
@@ -26,15 +27,15 @@
     public class DepProvider : IRemoteDependencyProvider
     {
         private readonly HttpClient client;
-        private readonly Dictionary<string, LibraryDependencyInfo> libraryCache = new();
+        private readonly ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache = new();
 
-        public DepProvider(HttpClient client, Dictionary<string, LibraryDependencyInfo> libraryCache)
+        public DepProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
         {
             this.client = client;
             this.libraryCache = libraryCache;
         }
 
-        public Dictionary<string, LibraryDependencyInfo> PackagesForInstall { get; set; } = new();
+        public ConcurrentDictionary<string, LibraryDependencyInfo> PackagesForInstall { get; set; } = new();
 
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
@@ -113,9 +114,15 @@
                 dependencies?.TargetFramework ?? targetFramework,
                 deps ?? Array.Empty<LibraryDependency>());
 
-            PackagesForInstall.Add(libraryIdentity.Name, res);
+            if (!PackagesForInstall.TryAdd(libraryIdentity.Name, res))
+            {
+                Console.WriteLine($"Package {libraryIdentity.Name} already has been added to packages to install");
+            }
 
-            libraryCache.Add(libraryIdentity.Name, res);
+            if (!libraryCache.TryAdd(libraryIdentity.Name, res))
+            {
+                Console.WriteLine($"Package {libraryIdentity.Name} already has been added to cache");
+            }
 
             return res;
 

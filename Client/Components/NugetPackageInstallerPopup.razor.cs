@@ -165,7 +165,7 @@
                 dllStream.CopyTo(dllMemoryStream);
 
                 var dllBytes = dllMemoryStream.ToArray();
-                this.CompilationService.AddReference(dllBytes);
+                //this.CompilationService.AddReference(dllBytes);
 
                 var dllBase64 = Convert.ToBase64String(dllBytes);
                 await this.JsRuntime.InvokeVoidAsync(
