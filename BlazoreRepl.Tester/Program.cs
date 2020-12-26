@@ -2,13 +2,11 @@
 {
     using System;
     using System.Net.Http;
-    using System.Text.Json;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
 
     using BlazorRepl.Client.Components;
-    using BlazorRepl.Core;
 
     using NuGet.Common;
     using NuGet.DependencyResolver;
@@ -51,7 +49,7 @@
             //    })
             //    .ToDictionary(x => x.Library.Name, x => x);
 
-            var rp = new DepProvider(new HttpClient(), new ConcurrentDictionary<string, LibraryDependencyInfo>());
+            var rp = new RemoteDependencyProvider(new HttpClient(), new ConcurrentDictionary<string, LibraryDependencyInfo>());
 
             var cache = new NullSourceCacheContext();
             var logger = new NullLogger();

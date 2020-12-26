@@ -119,29 +119,29 @@
 
         private async Task InstallNugetPackage()
         {
-            var rp = new DepProvider(this.Http);
-            //var deps = await rp.GetDependenciesAsync(
-            //    new LibraryIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0), LibraryType.Package),
-            //    NuGetFramework.Parse("net5.0"),
-            //    new NullSourceCacheContext(),
-            //    new NullLogger(),
-            //    default);
+            ////var rp = new DepProvider(this.Http);
+            //////var deps = await rp.GetDependenciesAsync(
+            //////    new LibraryIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0), LibraryType.Package),
+            //////    NuGetFramework.Parse("net5.0"),
+            //////    new NullSourceCacheContext(),
+            //////    new NullLogger(),
+            //////    default);
 
-            //Console.WriteLine(JsonSerializer.Serialize(deps));
-            //return;
+            //////Console.WriteLine(JsonSerializer.Serialize(deps));
+            //////return;
 
-            var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
-            ctx.RemoteLibraryProviders.Add(rp);
-            var walker = new RemoteDependencyWalker(ctx);
+            ////var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
+            ////ctx.RemoteLibraryProviders.Add(rp);
+            ////var walker = new RemoteDependencyWalker(ctx);
 
-            var res = await walker.WalkAsync(
-                new LibraryRange("Blazored.Modal", LibraryDependencyTarget.All),
-                new NuGetFramework("net5.0"),
-                "net5.0",
-                new RuntimeGraph(),
-                recursive: true);
+            ////var res = await walker.WalkAsync(
+            ////    new LibraryRange("Blazored.Modal", LibraryDependencyTarget.All),
+            ////    new NuGetFramework("net5.0"),
+            ////    "net5.0",
+            ////    new RuntimeGraph(),
+            ////    recursive: true);
 
-            Console.WriteLine(JsonSerializer.Serialize(res));
+            ////Console.WriteLine(JsonSerializer.Serialize(res));
 
             return;
 

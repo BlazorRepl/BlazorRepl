@@ -9,8 +9,6 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Xml;
-    using System.Xml.Linq;
 
     using NuGet.Common;
     using NuGet.Configuration;
@@ -19,17 +17,15 @@
     using NuGet.LibraryModel;
     using NuGet.Packaging;
     using NuGet.Packaging.Core;
-    //using NuGet.ProjectModel;
-    using NuGet.Protocol;
     using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
-    public class DepProvider : IRemoteDependencyProvider
+    public class RemoteDependencyProvider : IRemoteDependencyProvider
     {
         private readonly HttpClient client;
         private readonly ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache = new();
 
-        public DepProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
+        public RemoteDependencyProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
         {
             this.client = client;
             this.libraryCache = libraryCache;
@@ -59,9 +55,6 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            // throw new NotImplementedException();
-            // var ldi = LibraryDependencyInfo.CreateUnresolved(libraryIdentity, targetFramework);
-
             if (libraryCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
                 // handle the case when the constraint is not >=
@@ -89,17 +82,7 @@
 
             var nuspecStream = await this.client.GetStreamAsync(
                 $"https://api.nuget.org/v3-flatcontainer/{libraryIdentity.Name}/{libraryIdentity.Version}/{libraryIdentity.Name}.nuspec");
-            //var nr = new NuspecCoreReader(nuspecStream);
             var nr1 = new NuspecReader(nuspecStream);
-
-            //var epr = new ExternalProjectReference(
-
-            //var a = new PackageSpecReferenceDependencyProvider(Enumerable.Empty<ExternalProjectReference>(), logger);
-            //var lib = a.GetLibrary(libraryIdentity, targetFramework);
-            //var dependencyInfo = LibraryDependencyInfo.Create(
-            //    lib.Identity,
-            //    targetFramework,
-            //    lib.Dependencies);
 
             var dependencies = NuGetFrameworkUtility.GetNearest(
                 nr1.GetDependencyGroups(false),
@@ -116,29 +99,17 @@
 
             if (!PackagesForInstall.TryAdd(libraryIdentity.Name, res))
             {
+                // should we log this in prod?
                 Console.WriteLine($"Package {libraryIdentity.Name} already has been added to packages to install");
             }
 
             if (!libraryCache.TryAdd(libraryIdentity.Name, res))
             {
+                // should we log this in prod?
                 Console.WriteLine($"Package {libraryIdentity.Name} already has been added to cache");
             }
 
             return res;
-
-            //return Task.FromResult(dependencyInfo)
-
-            //var group = nr1.GetDependencyGroups(true).FirstOrDefault(g => g.TargetFramework == targetFramework);
-            //if (group != null)
-            //{
-            //    group.Packages.Select(x => x.)
-
-            //    //ldi.Resolved = true;
-            //    //ldi. Dependencies = group.Packages.Select(x => new LibraryDependency(x.VersionRange, LibraryDependencyType.Default, LibraryIncludeFlags.Compile, LibraryIncludeFlags.Compile, null, true, false))
-            //}
-            //group.Packages.Select(x => LibraryDependencyInfo.Create())
-
-            //var versions = XDocument.Parse<Nuspec>(versionsResult["versions"].ToString()).Select(x => new NuGetVersion(x)).ToList();
         }
 
         public Task<IPackageDownloader> GetPackageDownloaderAsync(
@@ -147,28 +118,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            var ps = new PackageSource("https://api.nuget.org/v3/index.json");
-            var ngrp1 = new PackageSearchResourceV3Provider();
-            var ngrp2 = new DownloadResourceV3Provider();
-            var ngrp3 = new HttpSourceResourceProvider();
-            var ngrp4 = new RemoteV3FindPackageByIdResourceProvider();
-            var ngrp5 = new DependencyInfoResourceV3Provider();
-
-            var resourceProviders = new INuGetResourceProvider[] { ngrp1, ngrp2, ngrp3, ngrp4, ngrp5 };
-
-            var sr = new SourceRepository(ps, resourceProviders);
-
-            var httpSource = HttpSource.Create(sr);
-
-            var remoteResource = new RemoteV3FindPackageByIdResource(sr, httpSource);
-            IPackageDownloader downloader = new RemotePackageArchiveDownloader(
-                "https://api.nuget.org/v3/index.json",
-                remoteResource,
-                packageIdentity,
-                cacheContext,
-                logger);
-
-            return Task.FromResult(downloader);
+            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<NuGetVersion>> GetAllVersionsAsync(string id, SourceCacheContext cacheContext, ILogger logger, CancellationToken token)
