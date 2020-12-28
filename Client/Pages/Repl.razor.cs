@@ -107,20 +107,16 @@
             {
                 await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
 
-                // TODO: Add error page in iframe
-                var userPagePath = MainUserPagePath;
-                if (true)
-                {
-                    userPagePath += string.IsNullOrWhiteSpace(this.SessionId) ? string.Empty : $"#{this.SessionId}";
-                }
+                var userPagePath = string.IsNullOrWhiteSpace(this.SessionId)
+                    ? MainUserPagePath
+                    : $"{MainUserPagePath}#{this.SessionId}";
 
+                // TODO: Add error page in iframe
                 await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
 
         public void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
-
-        public void ShowNugetPackageInstaller() => this.NugetPackageInstallerPopupVisible = true;
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
@@ -202,6 +198,8 @@
 
             await base.OnInitializedAsync();
         }
+
+        private void ShowNugetPackageInstaller() => this.NugetPackageInstallerPopupVisible = true;
 
         private async Task HandleTabActivateAsync(string name)
         {
