@@ -44,7 +44,7 @@
             return bytes;
         },
         getAvailableFiles: async function getAvailableFiles(timestamp) {
-            var result = '';
+            var result = [];
 
             await caches.open(`nuget-content-${timestamp}/`).then(async function (cache) {
                 if (!cache) {
@@ -56,25 +56,25 @@
                 for await (const file of files) {
                     const response = await cache.match(file.url);
 
-                    let string = '';
+                    let fileContent = '';
                     (new Uint8Array(await response.arrayBuffer())).forEach(
-                        (byte) => { string += String.fromCharCode(byte) }
+                        (byte) => { fileContent += String.fromCharCode(byte) }
                     )
-                    string = btoa(string);
+                    fileContent = btoa(fileContent);
 
                     if (file.url.endsWith(".css")) {
                         const link = document.createElement('link');
                         link.rel = 'stylesheet';
                         link.type = 'text/css';
-                        link.href = `data:text/css;base64,${string}`;
+                        link.href = `data:text/css;base64,${fileContent}`;
                         document.head.appendChild(link);
                     } else if (file.url.endsWith('.js')) {
                         const link = document.createElement('script');
-                        link.src = `data:text/javascript;base64,${string}`;
+                        link.src = `data:text/javascript;base64,${fileContent}`;
                         document.body.appendChild(link);
                     } 
                     else {
-                        result = string;
+                        result.push(fileContent);
                     }
                 }
             });
@@ -355,16 +355,19 @@ window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup ||
             _sessionId = new Date().getTime();
             return _sessionId.toString();
         },
-        addNugetFileToCache: function (fileName, fileBase64) {
+        addPackageFilesToCache: function (packageFiles) {
             caches.open(`nuget-content-${_sessionId}/`).then(function (cache) {
                 if (!cache) {
                     // TODO: do we need that?
                     return;
                 }
 
-                var arrBuffer = window.App.base64ToArrayBuffer(fileBase64);
-                const response = new Response(new Blob([arrBuffer]));
-                cache.put(fileName, response).then(x => console.log(x));
+                Object.getOwnPropertyNames(packageFiles).forEach(fileName => {
+                    var fileBase64 = packageFiles[fileName];
+                    var arrBuffer = window.App.base64ToArrayBuffer(fileBase64);
+                    const response = new Response(new Blob([arrBuffer]));
+                    cache.put(fileName, response).then(x => console.log(x));
+                })
             });
         },
         dispose: function () {
@@ -373,42 +376,3 @@ window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup ||
         }
     };
 }());
-
-//(function () {
-//    caches.open('nuget-content/').then(function (cache) {
-//        if (!cache) {
-//            // TODO: alert user
-//            return;
-//        }
-
-//        cache.keys().then(function (files) {
-//            files.forEach(async file => {
-//                debugger;
-
-//                const response = await cache.match(file.url);
-
-//                let string = '';
-//                (new Uint8Array(await response.arrayBuffer())).forEach(
-//                    (byte) => { string += String.fromCharCode(byte) }
-//                )
-//                string = btoa(string);
-
-//                const link = document.createElement('link');
-//                link.rel = 'stylesheet';
-//                link.type = 'text/css';
-//                link.href = `data:text/css;base64,${string}`;
-//                document.head.appendChild(link);
-
-//                //file.arrayBuffer().then(arrayBuffer => {
-
-//                //    var intArray = new Uint8Array(arrayBuffer);
-
-//                //    var base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)));
-//                //    debugger;
-
-//                //    
-//                //});
-//            });
-//        });
-//    });
-//}());

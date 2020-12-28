@@ -93,16 +93,21 @@
         }
 
         // TODO: think about removal of packages
-        public void AddReference(byte[] dllBytes)
+        public void AddReferences(IEnumerable<byte[]> dllsBytes)
         {
-            if (dllBytes == null)
+            if (dllsBytes == null)
             {
-                throw new ArgumentNullException(nameof(dllBytes));
+                throw new ArgumentNullException(nameof(dllsBytes));
             }
 
             // Loading assembly dynamically needs to be from bytes not memory stream because it's not supported in browser.
-            var metadataReference = MetadataReference.CreateFromImage(dllBytes);
-            baseCompilation = baseCompilation.AddReferences(metadataReference);
+            var references = new List<MetadataReference>();
+            foreach (var dllbytes in dllsBytes)
+            {
+                references.Add(MetadataReference.CreateFromImage(dllbytes));
+            }
+
+            baseCompilation = baseCompilation.AddReferences(references);
         }
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(

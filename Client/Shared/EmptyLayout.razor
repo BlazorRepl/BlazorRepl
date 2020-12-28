@@ -56,14 +56,18 @@
         {
             Console.WriteLine(sessionId);
 
-            var base64 = await JsRuntime.InvokeAsync<string>("App.getAvailableFiles", sessionId);
+            // TODO: Rename
+            var dllContents = await JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
 
-            if (!string.IsNullOrWhiteSpace(base64))
+            foreach (var dll in dllContents)
             {
-                Console.WriteLine(base64);
+                if (!string.IsNullOrWhiteSpace(dll))
+                {
+                    Console.WriteLine(dll);
 
-                var dllBytes = Convert.FromBase64String(base64);
-                System.Reflection.Assembly.Load(dllBytes);
+                    var dllBytes = Convert.FromBase64String(dll);
+                    System.Reflection.Assembly.Load(dllBytes);
+                }
             }
 
             HasLoaded = true;

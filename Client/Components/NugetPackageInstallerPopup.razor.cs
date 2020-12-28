@@ -2,28 +2,19 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Compression;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Json;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
+    using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
-    using System.IO.Compression;
-    using System.IO;
-
-    using BlazorRepl.Core;
-
-    using Microsoft.Extensions.Logging;
-
-    using NuGet.Common;
-    using NuGet.DependencyResolver;
-    using NuGet.Frameworks;
-    using NuGet.LibraryModel;
-    using NuGet.Protocol.Core.Types;
-    using NuGet.RuntimeModel;
-    using NuGet.Versioning;
 
     public partial class NugetPackageInstallerPopup : IDisposable
     {
@@ -40,6 +31,9 @@
 
         [Inject]
         public SnippetsService SnippetsService { get; set; }
+
+        [Inject]
+        public NuGetPackageManager NuGetPackageManager { get; set; }
 
         [CascadingParameter]
         public PageNotifications PageNotificationsComponent { get; set; }
@@ -119,104 +113,31 @@
 
         private async Task InstallNugetPackage()
         {
-            ////var rp = new DepProvider(this.Http);
-            //////var deps = await rp.GetDependenciesAsync(
-            //////    new LibraryIdentity("Blazored.Modal", new NuGetVersion(5, 1, 0), LibraryType.Package),
-            //////    NuGetFramework.Parse("net5.0"),
-            //////    new NullSourceCacheContext(),
-            //////    new NullLogger(),
-            //////    default);
+            // extract custom object for the package contents
+            var packageContents = await this.NuGetPackageManager.DownloadPackageContentsAsync(
+                this.SelectedNugetPackageName,
+                this.SelectedNugetPackageVersion);
 
-            //////Console.WriteLine(JsonSerializer.Serialize(deps));
-            //////return;
+            var dllsBytes = packageContents.Where(x => Path.GetExtension(x.Key) == ".dll").Select(x => x.Value);
+            this.CompilationService.AddReferences(dllsBytes);
 
-            ////var ctx = new RemoteWalkContext(new NullSourceCacheContext(), new NullLogger());
-            ////ctx.RemoteLibraryProviders.Add(rp);
-            ////var walker = new RemoteDependencyWalker(ctx);
+            var packageContentsToAdd = packageContents.ToDictionary(x => x.Key, x => Convert.ToBase64String(x.Value));
 
-            ////var res = await walker.WalkAsync(
-            ////    new LibraryRange("Blazored.Modal", LibraryDependencyTarget.All),
-            ////    new NuGetFramework("net5.0"),
-            ////    "net5.0",
-            ////    new RuntimeGraph(),
-            ////    recursive: true);
+            await this.JsRuntime.InvokeVoidAsync(
+                "App.NugetPackageInstallerPopup.addPackageFilesToCache",
+                packageContentsToAdd);
 
-            ////Console.WriteLine(JsonSerializer.Serialize(res));
+            this.PageNotificationsComponent.AddNotification(
+                NotificationType.Info,
+                $"{this.SelectedNugetPackageName} package is successfully installed.");
 
-            return;
-
-            var package = await this.Http.GetByteArrayAsync(
-                $"https://api.nuget.org/v3-flatcontainer/{SelectedNugetPackageName}/{SelectedNugetPackageVersion}/{SelectedNugetPackageName}.{SelectedNugetPackageVersion}.nupkg");
-
-            using var zippedStream = new MemoryStream(package);
-            using var archive = new ZipArchive(zippedStream);
-            var entry = archive.Entries.FirstOrDefault();
-
-            Console.WriteLine(string.Join(',', archive.Entries.Select(e => e.FullName)));
-
-            // get only the dll that we need
-            // we could have more than one dll (netstandard2.0, netstandard2.1... folders)
-            var dllEntry = archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(".dll"));
-            if (dllEntry != null)
-            {
-                // reuse AddZipEntryToCache
-                using var dllMemoryStream = new MemoryStream();
-                using var dllStream = dllEntry.Open();
-                dllStream.CopyTo(dllMemoryStream);
-
-                var dllBytes = dllMemoryStream.ToArray();
-                //this.CompilationService.AddReference(dllBytes);
-
-                var dllBase64 = Convert.ToBase64String(dllBytes);
-                await this.JsRuntime.InvokeVoidAsync(
-                   "App.NugetPackageInstallerPopup.addNugetFileToCache",
-                   dllEntry.Name,
-                   dllBase64);
-
-                var cssEntries = archive.Entries.Where(e => e.FullName.EndsWith(".css"));
-                foreach (var cssEntry in cssEntries)
-                {
-                    // do we need this check?
-                    if (cssEntry != null)
-                    {
-                        await this.AddZipEntryToCache(cssEntry);
-                    }
-                }
-
-                var jsEntries = archive.Entries.Where(e => e.FullName.EndsWith(".js"));
-                foreach (var jsEntry in jsEntries)
-                {
-                    // do we need this check?
-                    if (jsEntry != null)
-                    {
-                        await this.AddZipEntryToCache(jsEntry);
-                    }
-                }
-
-                this.Visible = false;
-                await this.VisibleChanged.InvokeAsync(this.Visible);
-            }
+            await this.CloseInternalAsync();
         }
 
         private Task CloseInternalAsync()
         {
             this.Visible = false;
             return this.VisibleChanged.InvokeAsync(this.Visible);
-        }
-
-        private async Task AddZipEntryToCache(ZipArchiveEntry entry)
-        {
-            using var memoryStream = new MemoryStream();
-            using var stream = entry.Open();
-            stream.CopyTo(memoryStream);
-
-            var bytes = memoryStream.ToArray();
-
-            var base64 = Convert.ToBase64String(bytes);
-            await this.JsRuntime.InvokeVoidAsync(
-               "App.NugetPackageInstallerPopup.addNugetFileToCache",
-               entry.Name,
-               base64);
         }
     }
 }

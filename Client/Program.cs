@@ -27,7 +27,7 @@ namespace BlazorRepl.Client
             builder.Services.AddSingleton<CompilationService>();
             builder.Services.AddSingleton<RemoteDependencyProvider>();
             builder.Services.AddScoped<NuGetPackageManager>();
-            builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient(); // configure logging severity
             builder.Services.AddScoped(serviceProvider =>
             {
                 var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);

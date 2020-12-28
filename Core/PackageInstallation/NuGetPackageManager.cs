@@ -98,14 +98,19 @@
 
         private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)
         {
+            // TODO: cache targetFrameworkFolderNames
             // sometimes the packages comes with folder name netcoreapp5.0 instead of net5.0
             var targetFrameworkFolderNames = framework == FrameworkConstants.CommonFrameworks.Net50
-                ? new[] { framework.GetShortFolderName(), "netcoreapp5.0" }
-                : new[] { framework.GetShortFolderName() };
+                ? new[]
+                {
+                    $"lib{Path.DirectorySeparatorChar}{framework.GetShortFolderName()}",
+                    $"lib{Path.DirectorySeparatorChar}netcoreapp5.0",
+                }
+                : new[] { $"lib{Path.DirectorySeparatorChar}{framework.GetShortFolderName()}" };
 
             var dllEntries = entries.Where(e =>
                 Path.GetExtension(e.FullName) == ".dll" &&
-                targetFrameworkFolderNames.Contains(Path.GetDirectoryName(e.FullName).Replace("lib\\", string.Empty)));
+                targetFrameworkFolderNames.Contains(Path.GetDirectoryName(e.FullName)));
 
             return GetEntriesContent(dllEntries);
         }
