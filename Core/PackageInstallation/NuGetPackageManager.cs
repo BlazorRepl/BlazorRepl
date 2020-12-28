@@ -46,16 +46,13 @@
                 new VersionRange(new NuGetVersion(packageVersion)),
                 LibraryDependencyTarget.Package);
 
-            var framework = FrameworkConstants.CommonFrameworks.Net50;
-            var graph = new RuntimeGraph(new[] { new RuntimeDescription(framework.DotNetFrameworkName) }); // TODO: do we need that?
-
             try
             {
                 await this.remoteDependencyWalker.WalkAsync(
                     libraryRange,
-                    framework,
-                    framework.DotNetFrameworkName, // TODO: check if it actually returns net5.0
-                    graph,
+                    framework: FrameworkConstants.CommonFrameworks.Net50,
+                    runtimeIdentifier: null,
+                    runtimeGraph: null,
                     recursive: true);
 
                 var packageContents = new Dictionary<string, byte[]>();
