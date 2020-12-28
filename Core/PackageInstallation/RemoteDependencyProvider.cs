@@ -9,6 +9,7 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using NuGet.Common;
     using NuGet.Configuration;
     using NuGet.DependencyResolver;
@@ -21,21 +22,40 @@
 
     public class RemoteDependencyProvider : IRemoteDependencyProvider
     {
-        private readonly HttpClient client;
-        private readonly ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache = new();
+        private static readonly ConcurrentDictionary<string, LibraryDependencyInfo> LibraryDependencyCache = new();
+
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly ConcurrentDictionary<string, LibraryDependencyInfo> packagesToInstall = new();
 
-        public RemoteDependencyProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
+        public RemoteDependencyProvider(IHttpClientFactory httpClientFactory)
         {
-            this.client = client;
-            this.libraryCache = libraryCache;
+            this.httpClientFactory = httpClientFactory;
         }
 
         public bool IsHttp { get; } = true;
 
-        public PackageSource Source { get; }
+        public PackageSource Source { get; } = new("https://api.nuget.org/v3/index.json");
 
         internal ICollection<LibraryDependencyInfo> PackagesToInstall => this.packagesToInstall.Values;
+
+        public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
+        {
+            foreach (var assemblyName in assemblyNames ?? Enumerable.Empty<AssemblyIdentity>())
+            {
+                var libraryIdentity = new LibraryIdentity(
+                    assemblyName.Name,
+                    new NuGetVersion(assemblyName.Version),
+                    LibraryType.Assembly);
+
+                var libraryDependencyInfo = new LibraryDependencyInfo(
+                    libraryIdentity,
+                    resolved: true,
+                    FrameworkConstants.CommonFrameworks.Net50,
+                    Array.Empty<LibraryDependency>());
+
+                LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
+            }
+        }
 
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
@@ -44,7 +64,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            // we are validating the version, name and target framework upoun getting them in the ui
+            // we are validating the version, name and target framework upon getting them in the ui
             // so we don't need second validation here
             return Task.FromResult(new LibraryIdentity(
                 libraryRange.Name,
@@ -59,61 +79,54 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            if (this.libraryCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            if (LibraryDependencyCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
                 // handle the case when the constraint is not >=
                 if (dependencyInfo.Library.Version >= libraryIdentity.Version)
                 {
                     return dependencyInfo;
                 }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
 
-                // differentiate the deps which comes from the project from those which comes from the current waling 
+                throw new InvalidOperationException();
+
+                // differentiate the deps which comes from the project from those which comes from the current walking
 
                 // we should separate the cache in 3 different collection
                 // 1. libraries from project
-                // 2. libraries from different nuget instalations
+                // 2. libraries from different nuget installations
                 // 3. libraries from current walking
 
-                // if we have downgrade from the versions in type 1 -> throw 
-                // if we have downgrade from the versions in type 2 -> check if the outside package can work with the current version that the current walking want to install. 
-                // If yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
-                // if not -> throw
+                // if we have downgrade from the versions in type 1 -> throw
+                // if we have downgrade from the versions in type 2 -> check if the outside package can work with the current version that the current walking want to install.
+                //    if yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
+                //    if not -> throw
             }
 
-            var nuspecStream = await this.client.GetStreamAsync(
-                $"https://api.nuget.org/v3-flatcontainer/{libraryIdentity.Name}/{libraryIdentity.Version}/{libraryIdentity.Name}.nuspec");
-            var nr1 = new NuspecReader(nuspecStream);
+            var httpClient = this.httpClientFactory.CreateClient(nameof(RemoteDependencyProvider));
+            var nuspecStream = await httpClient.GetStreamAsync(
+                $"https://api.nuget.org/v3-flatcontainer/{libraryIdentity.Name}/{libraryIdentity.Version}/{libraryIdentity.Name}.nuspec",
+                cancellationToken);
 
-            var dependencies = NuGetFrameworkUtility.GetNearest(
-                nr1.GetDependencyGroups(false),
+            var nuspecReader = new NuspecReader(nuspecStream);
+
+            var dependencyGroup = NuGetFrameworkUtility.GetNearest(
+                nuspecReader.GetDependencyGroups(false),
                 targetFramework,
                 item => item.TargetFramework);
 
-            var deps = dependencies?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
+            var dependencies = dependencyGroup?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
 
-            var res = new LibraryDependencyInfo(
+            var libraryDependencyInfo = new LibraryDependencyInfo(
                 libraryIdentity,
                 resolved: true,
-                dependencies?.TargetFramework ?? targetFramework,
-                deps ?? Array.Empty<LibraryDependency>());
+                dependencyGroup?.TargetFramework ?? targetFramework,
+                dependencies ?? Array.Empty<LibraryDependency>());
 
-            if (!this.packagesToInstall.TryAdd(libraryIdentity.Name, res))
-            {
-                // should we log this in prod?
-                Console.WriteLine($"Package {libraryIdentity.Name} already has been added to packages to install");
-            }
+            LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
 
-            if (!this.libraryCache.TryAdd(libraryIdentity.Name, res))
-            {
-                // should we log this in prod?
-                Console.WriteLine($"Package {libraryIdentity.Name} already has been added to cache");
-            }
+            this.packagesToInstall.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
 
-            return res;
+            return libraryDependencyInfo;
         }
 
         public Task<IPackageDownloader> GetPackageDownloaderAsync(
@@ -125,11 +138,22 @@
             throw new NotSupportedException();
         }
 
-        public async Task<IEnumerable<NuGetVersion>> GetAllVersionsAsync(string id, SourceCacheContext cacheContext, ILogger logger, CancellationToken token)
+        public async Task<IEnumerable<NuGetVersion>> GetAllVersionsAsync(
+            string id,
+            SourceCacheContext cacheContext,
+            ILogger logger,
+            CancellationToken cancellationToken)
         {
-            var versionsResult = await this.client.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api.nuget.org/v3-flatcontainer/{id}/index.json");
-            var versions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString()).Select(x => new NuGetVersion(x)).ToList();
+            // TODO: Try using strongly-typed object from NuGet.Client lib
+            var httpClient = this.httpClientFactory.CreateClient(nameof(RemoteDependencyProvider));
+            var versionsResult = await httpClient.GetFromJsonAsync<IDictionary<string, object>>(
+                $"https://api.nuget.org/v3-flatcontainer/{id}/index.json",
+                cancellationToken);
+
+            var versions = JsonSerializer
+                .Deserialize<IEnumerable<string>>(versionsResult["versions"].ToString())
+                .Select(x => new NuGetVersion(x))
+                .ToList();
 
             return versions;
         }

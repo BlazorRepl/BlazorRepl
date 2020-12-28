@@ -6,10 +6,14 @@ namespace BlazorRepl.Client
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using NuGet.Common;
+    using NuGet.DependencyResolver;
+    using NuGet.Protocol.Core.Types;
 
     public class Program
     {
@@ -20,7 +24,19 @@ namespace BlazorRepl.Client
 
             builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<SnippetsService>();
-            builder.Services.AddSingleton(new CompilationService());
+            builder.Services.AddSingleton<CompilationService>();
+            builder.Services.AddSingleton<RemoteDependencyProvider>();
+            builder.Services.AddScoped<NuGetPackageManager>();
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped(serviceProvider =>
+            {
+                var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
+
+                var remoteDependencyProvider = serviceProvider.GetRequiredService<RemoteDependencyProvider>();
+                remoteWalkContext.RemoteLibraryProviders.Add(remoteDependencyProvider);
+
+                return new RemoteDependencyWalker(remoteWalkContext);
+            });
 
             builder.Services
                 .AddOptions<SnippetsOptions>()

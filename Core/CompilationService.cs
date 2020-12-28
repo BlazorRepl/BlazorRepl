@@ -92,9 +92,15 @@
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
 
-        public static void AddReference(byte[] dllBytes)
+        // TODO: think about removal of packages
+        public void AddReference(byte[] dllBytes)
         {
-            // loading assembly dynamically needs to happenes from bytes, not memory stream;
+            if (dllBytes == null)
+            {
+                throw new ArgumentNullException(nameof(dllBytes));
+            }
+
+            // Loading assembly dynamically needs to be from bytes not memory stream because it's not supported in browser.
             var metadataReference = MetadataReference.CreateFromImage(dllBytes);
             baseCompilation = baseCompilation.AddReferences(metadataReference);
         }

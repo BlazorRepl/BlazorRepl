@@ -1,69 +1,72 @@
 ﻿namespace BlazorRepl.Core.PackageInstallation
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
-    using NuGet.Common;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
-    using NuGet.Protocol.Core.Types;
     using NuGet.RuntimeModel;
     using NuGet.Versioning;
 
-    public class PackageManager
+    public class NuGetPackageManager
     {
-        private readonly RemoteDependencyWalker dependencyWalker;
-        private readonly RemoteDependencyProvider dependencyProvider;
+        private readonly RemoteDependencyWalker remoteDependencyWalker;
+        private readonly RemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
 
-        public PackageManager(HttpClient httpClient)
+        public NuGetPackageManager(
+            RemoteDependencyWalker remoteDependencyWalker,
+            RemoteDependencyProvider remoteDependencyProvider,
+            HttpClient httpClient)
         {
-            // TODO: DI
-            // TODO: use factory for http
-            this.dependencyProvider = new RemoteDependencyProvider(new HttpClient(), new ConcurrentDictionary<string, LibraryDependencyInfo>());
-
-            var cache = new NullSourceCacheContext();
-            var logger = new NullLogger();
-            var ctx = new RemoteWalkContext(cache, logger);
-            ctx.RemoteLibraryProviders.Add(this.dependencyProvider);
-
-            // it should be scoped
-            this.dependencyWalker = new RemoteDependencyWalker(ctx);
+            this.remoteDependencyWalker = remoteDependencyWalker;
+            this.remoteDependencyProvider = remoteDependencyProvider;
             this.httpClient = httpClient;
         }
 
-        public async Task InstallPackage(string packageName, string packageVersion)
+        public async Task<IDictionary<string, byte[]>> DownloadPackageContentsAsync(string packageName, string packageVersion)
         {
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageName));
+            }
+
+            if (string.IsNullOrWhiteSpace(packageVersion))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageVersion));
+            }
+
             var libraryRange = new LibraryRange(
                 packageName,
                 new VersionRange(new NuGetVersion(packageVersion)),
                 LibraryDependencyTarget.Package);
+
             var framework = FrameworkConstants.CommonFrameworks.Net50;
             var graph = new RuntimeGraph(new[] { new RuntimeDescription(framework.DotNetFrameworkName) }); // TODO: do we need that?
 
             try
             {
-                await this.dependencyWalker.WalkAsync(
+                await this.remoteDependencyWalker.WalkAsync(
                     libraryRange,
                     framework,
-                    framework.DotNetFrameworkName, // check if it actually returns net5.0
+                    framework.DotNetFrameworkName, // TODO: check if it actually returns net5.0
                     graph,
                     recursive: true);
 
                 var packageContents = new Dictionary<string, byte[]>();
 
-                foreach (var package in this.dependencyProvider.PackagesToInstall)
+                foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
+                    var lib = package.Library;
                     var packageBytes = await this.httpClient.GetByteArrayAsync(
-                        $"https://api.nuget.org/v3-flatcontainer/{package.Library.Name}/{package.Library.Version}/{package.Library.Name}.{package.Library.Version}.nupkg");
+                        $"https://api.nuget.org/v3-flatcontainer/{lib.Name}/{lib.Version}/{lib.Name}.{lib.Version}.nupkg");
 
-                    using var zippedStream = new MemoryStream(packageBytes);
+                    await using var zippedStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(zippedStream);
 
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
@@ -84,10 +87,12 @@
                         packageContents.Add(key, value);
                     }
                 }
+
+                return packageContents;
             }
             finally
             {
-                this.dependencyProvider.ClearPackagesToInstall();
+                this.remoteDependencyProvider.ClearPackagesToInstall();
             }
         }
 
@@ -98,20 +103,18 @@
                 ? new[] { framework.GetShortFolderName(), "netcoreapp5.0" }
                 : new[] { framework.GetShortFolderName() };
 
-            var dllEntries = entries
-                .Where(e =>
-                    Path.GetExtension(e.FullName) == ".dll" &&
-                    targetFrameworkFolderNames.Contains(Path.GetDirectoryName(e.FullName).Replace("lib\\", string.Empty)))
-                .ToList();
+            var dllEntries = entries.Where(e =>
+                Path.GetExtension(e.FullName) == ".dll" &&
+                targetFrameworkFolderNames.Contains(Path.GetDirectoryName(e.FullName).Replace("lib\\", string.Empty)));
 
-            return GetEntriesContent(entries);
+            return GetEntriesContent(dllEntries);
         }
 
         private static IDictionary<string, byte[]> ExtractStaticContents(IEnumerable<ZipArchiveEntry> entries, string extension)
         {
             var staticContentEntries = entries.Where(e => Path.GetExtension(e.Name) == extension);
 
-            return GetEntriesContent(entries);
+            return GetEntriesContent(staticContentEntries);
         }
 
         private static IDictionary<string, byte[]> GetEntriesContent(IEnumerable<ZipArchiveEntry> entries)
@@ -121,8 +124,8 @@
             {
                 using var memoryStream = new MemoryStream();
                 using var entryStream = entry.Open();
-                entryStream.CopyTo(memoryStream);
 
+                entryStream.CopyTo(memoryStream);
                 var entryBytes = memoryStream.ToArray();
 
                 result.Add(entry.Name, entryBytes);
