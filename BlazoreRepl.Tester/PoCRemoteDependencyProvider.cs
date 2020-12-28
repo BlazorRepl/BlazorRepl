@@ -1,4 +1,4 @@
-﻿namespace BlazorRepl.Client.Components
+﻿namespace BlazoreRepl.Tester
 {
     using System;
     using System.Collections.Concurrent;
@@ -9,7 +9,6 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-
     using NuGet.Common;
     using NuGet.Configuration;
     using NuGet.DependencyResolver;
@@ -20,12 +19,12 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
-    public class RemoteDependencyProvider : IRemoteDependencyProvider
+    public class PoCRemoteDependencyProvider : IRemoteDependencyProvider
     {
         private readonly HttpClient client;
         private readonly ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache = new();
 
-        public RemoteDependencyProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
+        public PoCRemoteDependencyProvider(HttpClient client, ConcurrentDictionary<string, LibraryDependencyInfo> libraryCache)
         {
             this.client = client;
             this.libraryCache = libraryCache;
@@ -55,7 +54,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            if (libraryCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            if (this.libraryCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
                 // handle the case when the constraint is not >=
                 if (dependencyInfo.Library.Version >= libraryIdentity.Version)
@@ -97,13 +96,13 @@
                 dependencies?.TargetFramework ?? targetFramework,
                 deps ?? Array.Empty<LibraryDependency>());
 
-            if (!PackagesForInstall.TryAdd(libraryIdentity.Name, res))
+            if (!this.PackagesForInstall.TryAdd(libraryIdentity.Name, res))
             {
                 // should we log this in prod?
                 Console.WriteLine($"Package {libraryIdentity.Name} already has been added to packages to install");
             }
 
-            if (!libraryCache.TryAdd(libraryIdentity.Name, res))
+            if (!this.libraryCache.TryAdd(libraryIdentity.Name, res))
             {
                 // should we log this in prod?
                 Console.WriteLine($"Package {libraryIdentity.Name} already has been added to cache");

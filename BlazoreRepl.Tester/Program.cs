@@ -5,9 +5,6 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-
-    using BlazorRepl.Client.Components;
-
     using NuGet.Common;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
@@ -15,7 +12,6 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.RuntimeModel;
     using NuGet.Versioning;
-    using NuGet.Packaging.Core;
     using System.Threading.Tasks;
     using System.IO;
     using System.IO.Compression;
@@ -49,7 +45,7 @@
             //    })
             //    .ToDictionary(x => x.Library.Name, x => x);
 
-            var rp = new RemoteDependencyProvider(new HttpClient(), new ConcurrentDictionary<string, LibraryDependencyInfo>());
+            var rp = new PoCRemoteDependencyProvider(new HttpClient(), new ConcurrentDictionary<string, LibraryDependencyInfo>());
 
             var cache = new NullSourceCacheContext();
             var logger = new NullLogger();
