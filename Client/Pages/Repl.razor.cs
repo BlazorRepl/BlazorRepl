@@ -48,8 +48,6 @@
 
         public bool SaveSnippetPopupVisible { get; set; }
 
-        public bool NugetPackageInstallerPopupVisible { get; set; }
-
         public string Preset { get; set; } = "basic";
 
         public IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
@@ -59,6 +57,8 @@
         public string LoaderText { get; set; }
 
         public bool Loading { get; set; }
+
+        private bool NugetPackageInstallerPopupVisible { get; set; }
 
         public async Task CompileAsync()
         {
