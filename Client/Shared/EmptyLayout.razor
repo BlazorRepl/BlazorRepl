@@ -47,7 +47,7 @@
     [Inject]
     public NavigationManager NavigationManager { get; set; }
 
-    private bool HasLoaded { get; set; } = false;
+    private bool HasLoaded { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,15 +58,18 @@
 
             // TODO: Rename
             var dllContents = await this.JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
+            Console.WriteLine($"DLLs: {dllContents.Count()}");
 
             foreach (var dll in dllContents)
             {
                 if (!string.IsNullOrWhiteSpace(dll))
                 {
-                    Console.WriteLine(dll);
+                    //Console.WriteLine(dll);
 
+                    Console.WriteLine($"start loading dll - {DateTime.Now}");
                     var dllBytes = Convert.FromBase64String(dll);
                     System.Reflection.Assembly.Load(dllBytes);
+                    Console.WriteLine($"end loading dll - {DateTime.Now}");
                 }
             }
         }

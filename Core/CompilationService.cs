@@ -100,12 +100,7 @@
                 throw new ArgumentNullException(nameof(dllsBytes));
             }
 
-            // Loading assembly dynamically needs to be from bytes not memory stream because it's not supported in browser.
-            var references = new List<MetadataReference>();
-            foreach (var dllbytes in dllsBytes)
-            {
-                references.Add(MetadataReference.CreateFromImage(dllbytes));
-            }
+            var references = dllsBytes.Select(x => MetadataReference.CreateFromImage(x, MetadataReferenceProperties.Assembly));
 
             baseCompilation = baseCompilation.AddReferences(references);
         }

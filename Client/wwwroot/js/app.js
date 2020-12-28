@@ -44,25 +44,24 @@
             return bytes;
         },
         getAvailableFiles: async function getAvailableFiles(timestamp) {
-            var result = [];
+            const result = [];
 
             await caches.open(`nuget-content-${timestamp}/`).then(async function (cache) {
                 if (!cache) {
                     // TODO: alert user
-                    return;
+                    return result;
                 }
 
-                var files = await cache.keys();
+                const files = await cache.keys();
                 for await (const file of files) {
                     const response = await cache.match(file.url);
 
                     let fileContent = '';
                     (new Uint8Array(await response.arrayBuffer())).forEach(
-                        (byte) => { fileContent += String.fromCharCode(byte) }
-                    )
+                        (byte) => { fileContent += String.fromCharCode(byte) });
                     fileContent = btoa(fileContent);
 
-                    if (file.url.endsWith(".css")) {
+                    if (file.url.endsWith('.css')) {
                         const link = document.createElement('link');
                         link.rel = 'stylesheet';
                         link.type = 'text/css';
@@ -72,8 +71,7 @@
                         const link = document.createElement('script');
                         link.src = `data:text/javascript;base64,${fileContent}`;
                         document.body.appendChild(link);
-                    } 
-                    else {
+                    } else {
                         result.push(fileContent);
                     }
                 }
@@ -349,6 +347,7 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
 window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup || (function () {
     let _dotNetInstance;
     let _sessionId;
+
     return {
         init: function (dotNetInstance) {
             _dotNetInstance = dotNetInstance;
@@ -366,13 +365,13 @@ window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup ||
                     var fileBase64 = packageFiles[fileName];
                     var arrBuffer = window.App.base64ToArrayBuffer(fileBase64);
                     const response = new Response(new Blob([arrBuffer]));
-                    cache.put(fileName, response).then(x => console.log(x));
-                })
+                    cache.put(fileName, response).then(function () { });
+                });
             });
         },
         dispose: function () {
             _dotNetInstance = null;
-            _sessionId = null
+            _sessionId = null;
         }
     };
 }());
