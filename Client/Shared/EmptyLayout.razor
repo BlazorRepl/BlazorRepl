@@ -57,7 +57,7 @@
             Console.WriteLine(sessionId);
 
             // TODO: Rename
-            var dllContents = await JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
+            var dllContents = await this.JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
 
             foreach (var dll in dllContents)
             {
@@ -69,9 +69,9 @@
                     System.Reflection.Assembly.Load(dllBytes);
                 }
             }
-
-            HasLoaded = true;
         }
+
+        HasLoaded = true;
 
         await base.OnInitializedAsync();
     }

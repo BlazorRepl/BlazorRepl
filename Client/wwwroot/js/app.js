@@ -3,7 +3,7 @@
         reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
             if (iFrame) {
-                if (newSrc) {
+                if (newSrc && iFrame.src !== `${window.location.origin}${newSrc}`) {
                     iFrame.src = newSrc;
                 } else {
                     iFrame.contentWindow.location.reload();
