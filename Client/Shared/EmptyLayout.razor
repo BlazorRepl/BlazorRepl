@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
 
-@using BlazorRepl.Client.Pages
-@using Microsoft.JSInterop;
+@using Microsoft.JSInterop
+@using System.IO
+@using System.Runtime.Loader
 
 <style>
     .main > div {
@@ -68,7 +69,7 @@
 
                     Console.WriteLine($"start loading dll - {DateTime.Now}");
                     var dllBytes = Convert.FromBase64String(dll);
-                    System.Reflection.Assembly.Load(dllBytes);
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
                     Console.WriteLine($"end loading dll - {DateTime.Now}");
                 }
             }
