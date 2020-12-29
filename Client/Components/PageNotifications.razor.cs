@@ -12,7 +12,15 @@
         private readonly IList<PageNotification> notifications = new List<PageNotification>();
         private readonly IList<Timer> autoCloseNotificationTimers = new List<Timer>();
 
-        public void AddNotification(NotificationType type, string content, string title = null)
+        public void Dispose()
+        {
+            foreach (var timer in this.autoCloseNotificationTimers)
+            {
+                timer.Dispose();
+            }
+        }
+
+        internal void AddNotification(NotificationType type, string content, string title = null)
         {
             if (!string.IsNullOrWhiteSpace(content))
             {
@@ -25,19 +33,11 @@
             }
         }
 
-        public void Clear()
+        internal void Clear()
         {
             this.notifications.Clear();
 
             this.StateHasChanged();
-        }
-
-        public void Dispose()
-        {
-            foreach (var timer in this.autoCloseNotificationTimers)
-            {
-                timer.Dispose();
-            }
         }
 
         private static string GetAlertClass(NotificationType type) =>

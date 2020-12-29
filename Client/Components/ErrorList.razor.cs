@@ -19,13 +19,13 @@
         [Parameter]
         public EventCallback<bool> ShowChanged { get; set; }
 
-        public int ErrorsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
+        private int ErrorsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
 
-        public int WarningsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Warning);
+        private int WarningsCount => this.Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Warning);
 
-        public bool ShowIcon => this.Diagnostics.Any();
+        private bool ShowIcon => this.Diagnostics.Any();
 
-        public Task ToggleDiagnosticsAsync()
+        private Task ToggleDiagnosticsAsync()
         {
             this.Show = !this.Show;
             return this.ShowChanged.InvokeAsync(this.Show);

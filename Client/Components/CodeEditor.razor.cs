@@ -18,10 +18,6 @@
         [Parameter]
         public string Code { get; set; }
 
-        public ValueTask<string> GetCodeAsync() => this.JsRuntime.InvokeAsync<string>("App.CodeEditor.getValue");
-
-        public ValueTask FocusAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.focus");
-
         public override Task SetParametersAsync(ParameterView parameters)
         {
             if (parameters.TryGetValue<string>(nameof(this.Code), out var parameterValue))
@@ -33,6 +29,10 @@
         }
 
         public ValueTask DisposeAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.dispose");
+
+        internal ValueTask FocusAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.focus");
+
+        internal ValueTask<string> GetCodeAsync() => this.JsRuntime.InvokeAsync<string>("App.CodeEditor.getValue");
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
