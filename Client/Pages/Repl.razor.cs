@@ -56,6 +56,10 @@
 
         private bool Loading { get; set; }
 
+        private bool NugetPackageInstallerPopupVisible { get; set; }
+
+        private string SessionId { get; set; }
+
         [JSInvokable]
         public async Task TriggerCompileAsync()
         {
@@ -186,8 +190,12 @@
             {
                 await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
 
+                var userPagePath = string.IsNullOrWhiteSpace(this.SessionId)
+                    ? MainUserPagePath
+                    : $"{MainUserPagePath}#{this.SessionId}";
+
                 // TODO: Add error page in iframe
-                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", MainUserPagePath);
+                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
 
@@ -253,5 +261,7 @@
 
             return Task.Delay(10); // Ensure rendering has time to be called
         }
+
+        private void ShowNugetPackageInstaller() => this.NugetPackageInstallerPopupVisible = true;
     }
 }
