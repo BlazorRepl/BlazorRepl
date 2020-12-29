@@ -98,12 +98,8 @@
             // TODO: cache targetFrameworkFolderNames
             // sometimes the packages comes with folder name netcoreapp5.0 instead of net5.0
             var targetFrameworkFolderNames = framework == FrameworkConstants.CommonFrameworks.Net50
-                ? new[]
-                {
-                    $"lib{Path.DirectorySeparatorChar}{framework.GetShortFolderName()}",
-                    $"lib{Path.DirectorySeparatorChar}netcoreapp5.0",
-                }
-                : new[] { $"lib{Path.DirectorySeparatorChar}{framework.GetShortFolderName()}" };
+                ? new[] { Path.Combine("lib", framework.GetShortFolderName()), Path.Combine("lib", "netcoreapp5.0") }
+                : new[] { Path.Combine("lib", framework.GetShortFolderName()) };
 
             var dllEntries = entries.Where(e =>
                 Path.GetExtension(e.FullName) == ".dll" &&
