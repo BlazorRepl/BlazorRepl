@@ -93,7 +93,7 @@
         private async Task GetNugetPackages()
         {
             var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api-v2v3search-0.nuget.org/autocomplete?q={NugetPackageName}");
+                $"https://api-v2v3search-0.nuget.org/autocomplete?q={this.NugetPackageName}");
 
             this.NugetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(5).ToList();
             this.SelectedNugetPackageName = null;
