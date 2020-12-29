@@ -8,11 +8,9 @@
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Json;
-    using System.Reflection;
     using System.Runtime;
     using System.Text;
     using System.Threading.Tasks;
-    using BlazorRepl.Client.Pages;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Razor.Language;
     using Microsoft.CodeAnalysis;

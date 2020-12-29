@@ -10,7 +10,6 @@
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
-    using NuGet.RuntimeModel;
     using NuGet.Versioning;
 
     public class NuGetPackageManager
