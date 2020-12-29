@@ -5,13 +5,10 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="NuGet.DependencyResolver.Core" Version="5.8.0" />
-		<PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\Core\BlazorRepl.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="NuGet.DependencyResolver.Core" Version="5.8.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
+  </ItemGroup>
 
 </Project>

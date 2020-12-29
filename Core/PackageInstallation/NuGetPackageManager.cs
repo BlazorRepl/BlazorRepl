@@ -10,10 +10,13 @@
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
+    using NuGet.Packaging;
     using NuGet.Versioning;
 
     public class NuGetPackageManager
     {
+        private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
+
         private readonly RemoteDependencyWalker remoteDependencyWalker;
         private readonly RemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
@@ -66,21 +69,21 @@
                     using var archive = new ZipArchive(zippedStream);
 
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
-                    foreach (var (key, value) in dlls)
+                    foreach (var (fileName, fileBytes) in dlls)
                     {
-                        packageContents.Add(key, value);
+                        packageContents.Add(fileName, fileBytes);
                     }
 
                     var scripts = ExtractStaticContents(archive.Entries, ".js");
-                    foreach (var (key, value) in scripts)
+                    foreach (var (fileName, fileBytes) in scripts)
                     {
-                        packageContents.Add(key, value);
+                        packageContents.Add(fileName, fileBytes);
                     }
 
                     var styles = ExtractStaticContents(archive.Entries, ".css");
-                    foreach (var (key, value) in styles)
+                    foreach (var (fileName, fileBytes) in styles)
                     {
-                        packageContents.Add(key, value);
+                        packageContents.Add(fileName, fileBytes);
                     }
                 }
 
@@ -94,15 +97,19 @@
 
         private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)
         {
-            // TODO: cache targetFrameworkFolderNames
-            // sometimes the packages comes with folder name netcoreapp5.0 instead of net5.0
-            var targetFrameworkFolderNames = framework == FrameworkConstants.CommonFrameworks.Net50
-                ? new[] { Path.Combine("lib", framework.GetShortFolderName()), Path.Combine("lib", "netcoreapp5.0") }
-                : new[] { Path.Combine("lib", framework.GetShortFolderName()) };
-
             var dllEntries = entries.Where(e =>
-                Path.GetExtension(e.FullName) == ".dll" &&
-                targetFrameworkFolderNames.Contains(Path.GetDirectoryName(e.FullName)));
+            {
+                if (Path.GetExtension(e.FullName) != ".dll" ||
+                    !e.FullName.StartsWith(LibFolderPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                var path = e.FullName[LibFolderPrefix.Length..];
+                var parsedFramework = FrameworkNameUtility.ParseNuGetFrameworkFolderName(path, strictParsing: true, out _);
+
+                return parsedFramework == framework;
+            });
 
             return GetEntriesContent(dllEntries);
         }
