@@ -27,7 +27,7 @@ namespace BlazorRepl.Client
             builder.Services.AddSingleton<CompilationService>();
             builder.Services.AddSingleton<RemoteDependencyProvider>();
             builder.Services.AddScoped<NuGetPackageManager>();
-            builder.Services.AddHttpClient(); // configure logging severity
+            builder.Services.AddHttpClient();
             builder.Services.AddScoped(serviceProvider =>
             {
                 var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
@@ -42,6 +42,7 @@ namespace BlazorRepl.Client
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));
 
+            builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
             await builder.Build().RunAsync();
