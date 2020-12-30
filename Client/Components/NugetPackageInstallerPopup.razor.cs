@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -113,19 +114,26 @@
 
         private async Task InstallNugetPackage()
         {
+            var sw = Stopwatch.StartNew();
+
             // extract custom object for the package contents
             var packageContents = await this.NuGetPackageManager.DownloadPackageContentsAsync(
                 this.SelectedNugetPackageName,
                 this.SelectedNugetPackageVersion);
+            Console.WriteLine($"NuGetPackageManager.DownloadPackageContentsAsync - {sw.Elapsed}");
 
+            sw.Restart();
             var dllsBytes = packageContents.Where(x => Path.GetExtension(x.Key) == ".dll").Select(x => x.Value);
             this.CompilationService.AddReferences(dllsBytes);
+            Console.WriteLine($"CompilationService.AddReferences - {sw.Elapsed}");
 
             var packageContentsToAdd = packageContents.ToDictionary(x => x.Key, x => Convert.ToBase64String(x.Value));
 
+            sw.Restart();
             await this.JsRuntime.InvokeVoidAsync(
                 "App.NugetPackageInstallerPopup.addPackageFilesToCache",
                 packageContentsToAdd);
+            Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,

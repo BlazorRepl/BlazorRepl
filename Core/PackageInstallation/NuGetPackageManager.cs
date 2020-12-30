@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -51,41 +52,51 @@
 
             try
             {
+                var sw = Stopwatch.StartNew();
                 await this.remoteDependencyWalker.WalkAsync(
                     libraryRange,
                     framework: FrameworkConstants.CommonFrameworks.Net50,
                     runtimeIdentifier: null,
                     runtimeGraph: null,
                     recursive: true);
+                Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
                 var packageContents = new Dictionary<string, byte[]>();
 
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
                     var lib = package.Library;
+                    sw.Restart();
                     var packageBytes = await this.httpClient.GetByteArrayAsync(
                         $"https://api.nuget.org/v3-flatcontainer/{lib.Name}/{lib.Version}/{lib.Name}.{lib.Version}.nupkg");
+                    Console.WriteLine($"nupkg download - {sw.Elapsed}");
 
-                    await using var zippedStream = new MemoryStream(packageBytes);
+                    using var zippedStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(zippedStream);
 
+                    sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
                     foreach (var (fileName, fileBytes) in dlls)
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+                    Console.WriteLine($"ExtractDlls - {sw.Elapsed}");
 
+                    sw.Restart();
                     var scripts = ExtractStaticContents(archive.Entries, ".js");
                     foreach (var (fileName, fileBytes) in scripts)
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+                    Console.WriteLine($"ExtractStaticContents JS - {sw.Elapsed}");
 
+                    sw.Restart();
                     var styles = ExtractStaticContents(archive.Entries, ".css");
                     foreach (var (fileName, fileBytes) in styles)
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+                    Console.WriteLine($"ExtractStaticContents CSS - {sw.Elapsed}");
                 }
 
                 return packageContents;

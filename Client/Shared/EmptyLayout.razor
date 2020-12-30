@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @using System.IO
 @using System.Runtime.Loader
+@using System.Diagnostics
 
 <style>
     .main > div {
@@ -55,22 +56,22 @@
         var sessionId = new Uri(this.NavigationManager.Uri).Fragment.Trim('#');
         if (!string.IsNullOrWhiteSpace(sessionId))
         {
-            Console.WriteLine(sessionId);
-
             // TODO: Rename
             var dllContents = await this.JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
-            Console.WriteLine($"DLLs: {dllContents.Count()}");
+
+            var sw = new Stopwatch();
 
             foreach (var dll in dllContents)
             {
                 if (!string.IsNullOrWhiteSpace(dll))
                 {
-                    //Console.WriteLine(dll);
-
-                    Console.WriteLine($"start loading dll - {DateTime.Now}");
+                    sw.Restart();
                     var dllBytes = Convert.FromBase64String(dll);
+                    Console.WriteLine($"base64 to bytes DLL: {sw.Elapsed}");
+
+                    sw.Restart();
                     AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
-                    Console.WriteLine($"end loading dll - {DateTime.Now}");
+                    Console.WriteLine($"loading DLL - {sw.Elapsed}");
                 }
             }
         }
