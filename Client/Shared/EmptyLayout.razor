@@ -1,10 +1,5 @@
 ﻿@inherits LayoutComponentBase
 
-@using Microsoft.JSInterop
-@using System.IO
-@using System.Runtime.Loader
-@using System.Diagnostics
-
 <style>
     .main > div {
         padding-left: 2rem !important;
@@ -35,49 +30,9 @@
 
 <div class="main">
     <div class="content px-4">
-        @if (HasLoaded)
+        @if (RenderBody)
         {
             @Body
         }
     </div>
 </div>
-
-@code {
-    [Inject]
-    public IJSRuntime JsRuntime { get; set; }
-
-    [Inject]
-    public NavigationManager NavigationManager { get; set; }
-
-    private bool HasLoaded { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var sessionId = new Uri(this.NavigationManager.Uri).Fragment.Trim('#');
-        if (!string.IsNullOrWhiteSpace(sessionId))
-        {
-            // TODO: Rename
-            var dllContents = await this.JsRuntime.InvokeAsync<IEnumerable<string>>("App.getAvailableFiles", sessionId);
-
-            var sw = new Stopwatch();
-
-            foreach (var dll in dllContents)
-            {
-                if (!string.IsNullOrWhiteSpace(dll))
-                {
-                    sw.Restart();
-                    var dllBytes = Convert.FromBase64String(dll);
-                    Console.WriteLine($"base64 to bytes DLL: {sw.Elapsed}");
-
-                    sw.Restart();
-                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
-                    Console.WriteLine($"loading DLL - {sw.Elapsed}");
-                }
-            }
-        }
-
-        HasLoaded = true;
-
-        await base.OnInitializedAsync();
-    }
-}
