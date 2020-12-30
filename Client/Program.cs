@@ -11,6 +11,8 @@ namespace BlazorRepl.Client
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.JSInterop;
+
     using NuGet.Common;
     using NuGet.DependencyResolver;
     using NuGet.Protocol.Core.Types;
@@ -22,6 +24,7 @@ namespace BlazorRepl.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 
+            builder.Services.AddSingleton(serviceProvider => (IJSUnmarshalledRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
             builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<SnippetsService>();
             builder.Services.AddSingleton<CompilationService>();

@@ -21,6 +21,9 @@
         private DotNetObjectReference<NugetPackageInstallerPopup> dotNetInstance;
 
         [Inject]
+        public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
+
+        [Inject]
         public IJSRuntime JsRuntime { get; set; }
 
         [Inject]
@@ -131,9 +134,13 @@
 
             sw.Restart();
             // TODO: Move function to another JS module (+ the function for updating user components DLL) [proposal: ExecutionEngine]
-            await this.JsRuntime.InvokeVoidAsync(
-                "App.NugetPackageInstallerPopup.addPackageFilesToCache",
-                packageContents.ToDictionary(x => x.Key, x => Convert.ToBase64String(x.Value)));
+            foreach (var (fileName, fileBytes) in packageContents)
+            {
+                this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, byte[], object>(
+                    "App.NugetPackageInstallerPopup.addPackageFilesToCache",
+                    fileName,
+                    fileBytes);
+            }
             Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
             this.PageNotificationsComponent.AddNotification(

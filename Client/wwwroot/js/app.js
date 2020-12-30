@@ -384,20 +384,29 @@ window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup ||
             _sessionId = new Date().getTime();
             return _sessionId.toString();
         },
-        addPackageFilesToCache: function (packageFiles) {
-            caches.open(`nuget-content-${_sessionId}/`).then(function (cache) {
-                if (!cache) {
-                    // TODO: do we need that?
-                    return;
-                }
+        addPackageFilesToCache: async function (rawFileName, rawFileBytes) {
+            if (!rawFileName || !rawFileBytes) {
+                return;
+            }
 
-                Object.getOwnPropertyNames(packageFiles).forEach(fileName => {
-                    var fileBase64 = packageFiles[fileName];
-                    var arrBuffer = window.App.base64ToArrayBuffer(fileBase64);
-                    const response = new Response(new Blob([arrBuffer]));
-                    cache.put(fileName, response).then(function () { });
+            const nuGetContentCache = await caches.open(`nuget-content-${_sessionId}/`);
+            if (!nuGetContentCache) {
+                return;
+            }
+
+            const fileName = BINDING.conv_string(rawFileName);
+            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
+
+            const cachedResponse = new Response(
+                new Blob([fileBytes]),
+                {
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'Content-Length': fileBytes.length.toString(),
+                    }
                 });
-            });
+
+            await nuGetContentCache.put(fileName, cachedResponse);
         },
         dispose: function () {
             _dotNetInstance = null;
