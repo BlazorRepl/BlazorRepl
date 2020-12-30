@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.IO.Compression;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Json;
@@ -17,7 +16,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class NugetPackageInstallerPopup : IDisposable
+    public partial class NugetPackageInstallerPopup : IAsyncDisposable
     {
         private DotNetObjectReference<NugetPackageInstallerPopup> dotNetInstance;
 
@@ -36,9 +35,6 @@
         [Inject]
         public NuGetPackageManager NuGetPackageManager { get; set; }
 
-        [CascadingParameter]
-        public PageNotifications PageNotificationsComponent { get; set; }
-
         [Parameter]
         public bool Visible { get; set; }
 
@@ -51,29 +47,32 @@
         [Parameter]
         public EventCallback<string> SessionIdChanged { get; set; }
 
-        public string NugetPackageName { get; set; }
+        [CascadingParameter]
+        private PageNotifications PageNotificationsComponent { get; set; }
 
-        public string SelectedNugetPackageName { get; set; }
+        private string NugetPackageName { get; set; }
 
-        public string SelectedNugetPackageVersion { get; set; }
+        private string SelectedNugetPackageName { get; set; }
 
-        public List<string> NugetPackages { get; set; } = new List<string>();
+        private string SelectedNugetPackageVersion { get; set; }
 
-        public List<string> NugetPackageVersions { get; set; } = new List<string>();
+        private List<string> NugetPackages { get; set; } = new List<string>();
 
-        public string VisibleClass => this.Visible ? "show" : string.Empty;
+        private List<string> NugetPackageVersions { get; set; } = new List<string>();
 
-        public string DisplayStyle => this.Visible ? string.Empty : "display: none;";
+        private string VisibleClass => this.Visible ? "show" : string.Empty;
+
+        private string DisplayStyle => this.Visible ? string.Empty : "display: none;";
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            _ = this.JsRuntime.InvokeVoidAsync("App.NugetPackageInstallerPopup.dispose");
+            return this.JsRuntime.InvokeVoidAsync("App.NugetPackageInstallerPopup.dispose");
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -91,6 +90,7 @@
             await base.OnAfterRenderAsync(firstRender);
         }
 
+        // TODO: rename to search and move to the NuGet package manager
         private async Task GetNugetPackages()
         {
             var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
@@ -100,6 +100,7 @@
             this.SelectedNugetPackageName = null;
         }
 
+        // TODO: use method from NuGet package manager
         private async Task SelectNugetPackage(string selectedPackage)
         {
             this.SelectedNugetPackageName = selectedPackage;
@@ -112,11 +113,12 @@
             this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();
         }
 
+        // TODO: think about doing this in the repl component (it is the management component)
         private async Task InstallNugetPackage()
         {
             var sw = Stopwatch.StartNew();
 
-            // extract custom object for the package contents
+            // TODO: extract custom object for the package contents to prevent filtering
             var packageContents = await this.NuGetPackageManager.DownloadPackageContentsAsync(
                 this.SelectedNugetPackageName,
                 this.SelectedNugetPackageVersion);
@@ -127,12 +129,11 @@
             this.CompilationService.AddReferences(dllsBytes);
             Console.WriteLine($"CompilationService.AddReferences - {sw.Elapsed}");
 
-            var packageContentsToAdd = packageContents.ToDictionary(x => x.Key, x => Convert.ToBase64String(x.Value));
-
             sw.Restart();
+            // TODO: Move function to another JS module (+ the function for updating user components DLL) [proposal: ExecutionEngine]
             await this.JsRuntime.InvokeVoidAsync(
                 "App.NugetPackageInstallerPopup.addPackageFilesToCache",
-                packageContentsToAdd);
+                packageContents.ToDictionary(x => x.Key, x => Convert.ToBase64String(x.Value)));
             Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
             this.PageNotificationsComponent.AddNotification(
