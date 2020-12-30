@@ -16,6 +16,7 @@
     public class NuGetPackageManager
     {
         private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
+        private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
 
         private readonly RemoteDependencyWalker remoteDependencyWalker;
         private readonly RemoteDependencyProvider remoteDependencyProvider;
@@ -116,7 +117,9 @@
 
         private static IDictionary<string, byte[]> ExtractStaticContents(IEnumerable<ZipArchiveEntry> entries, string extension)
         {
-            var staticContentEntries = entries.Where(e => Path.GetExtension(e.Name) == extension);
+            var staticContentEntries = entries.Where(e =>
+                Path.GetExtension(e.Name) == extension &&
+                e.FullName.StartsWith(StaticWebAssetsFolderPrefix, StringComparison.OrdinalIgnoreCase));
 
             return GetEntriesContent(staticContentEntries);
         }
@@ -133,6 +136,8 @@
                 var entryBytes = memoryStream.ToArray();
 
                 result.Add(entry.Name, entryBytes);
+
+                Console.WriteLine($"Package entry: {entry.FullName} - {entryBytes.Length / 1024d} KB");
             }
 
             return result;
