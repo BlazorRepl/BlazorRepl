@@ -53,7 +53,15 @@
                 return;
             }
 
-            const result = [];
+            var js_array_to_mono_array = function (js_array) {
+                var mono_array = BINDING.mono_obj_array_new(js_array.length);
+                for (var i = 0; i < js_array.length; ++i) {
+                    BINDING.mono_obj_array_set(mono_array, i, js_array[i]);
+                }
+                return mono_array;
+            };
+
+            const dlls = [];
 
             const files = await nuGetContentCache.keys();
             for (const file of files) {
@@ -81,18 +89,19 @@
                     document.body.appendChild(link);
                 } else {
                     const rawFileBytes = new Uint8Array(await response.arrayBuffer());
-
+                    console.log('JS' + rawFileBytes.join(','));
                     //const fileBytes = BINDING.mono_obj_array_new();
                     //BINDING.mono_obj_array_set(rawFileBytes)
 
                     //console.log(BINDING.js_typed_array_to_array(rawFileBytes));
 
-                    result.push(rawFileBytes);
+                    dlls.push(js_array_to_mono_array(rawFileBytes));
                 }
             }
 
-            console.log(result.map(x => x.length).join());
-            //_nuGetDlls = BINDING.js_typed_array_to_array(result);
+            console.log(dlls.map(x => x.length).join());
+
+            _nuGetDlls = js_array_to_mono_array(dlls);
             return;
 
             console.log(Blazor.platform);

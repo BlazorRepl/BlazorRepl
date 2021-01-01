@@ -1,8 +1,10 @@
 ﻿namespace BlazorRepl.Client.Shared
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Runtime.Loader;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components;
@@ -27,18 +29,31 @@
                 this.JsRuntime.InvokeUnmarshalled<string, object>("App.loadNuGetPackageFiles", sessionId);
                 Console.WriteLine("C#");
 
-                //var sw = new Stopwatch();
+                IEnumerable<byte[]> dlls;
+                var i = 0;
+                while (true)
+                {
+                    dlls = this.JsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.getNuGetDlls");
+                    if (dlls != null)
+                    {
+                        break;
+                    }
 
-                //foreach (var dll in dlls)
-                //{
-                //    sw.Restart();
-                //    var dllBytes = Convert.FromBase64String(dll);
-                //    Console.WriteLine($"string to byte[] DLL - {sw.Elapsed}");
+                    Console.WriteLine($"Iteration: {i++}");
+                    await Task.Delay(20);
+                }
 
-                //    sw.Restart();
-                //    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
-                //    Console.WriteLine($"loading DLL - {sw.Elapsed}");
-                //}
+                Console.WriteLine($"DLLs: {dlls.Count()}");
+                Console.WriteLine("C#" + string.Join(',', dlls.SelectMany(x => x)));
+
+                var sw = new Stopwatch();
+
+                foreach (var dll in dlls)
+                {
+                    sw.Restart();
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll));
+                    Console.WriteLine($"loading DLL - {sw.Elapsed}");
+                }
             }
 
             this.RenderBody = true;
