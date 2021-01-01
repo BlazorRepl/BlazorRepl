@@ -1,4 +1,6 @@
 ﻿window.App = window.App || (function () {
+    let _nuGetDlls = null;
+
     return {
         reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
@@ -43,42 +45,65 @@
 
             return bytes;
         },
-        getAvailableFiles: async function getAvailableFiles(timestamp) {
+        loadNuGetPackageFiles: async function loadNuGetPackageFiles(rawSessionId) {
+            const sessionId = BINDING.conv_string(rawSessionId);
+            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
+            if (!nuGetContentCache) {
+                // TODO: alert user
+                return;
+            }
+
             const result = [];
 
-            await caches.open(`nuget-content-${timestamp}/`).then(async function (cache) {
-                if (!cache) {
-                    // TODO: alert user
-                    return result;
-                }
+            const files = await nuGetContentCache.keys();
+            for (const file of files) {
+                const response = await nuGetContentCache.match(file.url);
 
-                const files = await cache.keys();
-                for await (const file of files) {
-                    const response = await cache.match(file.url);
-
+                if (file.url.endsWith('.css')) {
                     let fileContent = '';
                     (new Uint8Array(await response.arrayBuffer())).forEach(
                         (byte) => { fileContent += String.fromCharCode(byte) });
                     fileContent = btoa(fileContent);
 
-                    if (file.url.endsWith('.css')) {
-                        const link = document.createElement('link');
-                        link.rel = 'stylesheet';
-                        link.type = 'text/css';
-                        link.href = `data:text/css;base64,${fileContent}`;
-                        document.head.appendChild(link);
-                    } else if (file.url.endsWith('.js')) {
-                        const link = document.createElement('script');
-                        link.src = `data:text/javascript;base64,${fileContent}`;
-                        document.body.appendChild(link);
-                    } else {
-                        result.push(fileContent);
-                    }
-                }
-            });
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.type = 'text/css';
+                    link.href = `data:text/css;base64,${fileContent}`;
+                    document.head.appendChild(link);
+                } else if (file.url.endsWith('.js')) {
+                    let fileContent = '';
+                    (new Uint8Array(await response.arrayBuffer())).forEach(
+                        (byte) => { fileContent += String.fromCharCode(byte) });
+                    fileContent = btoa(fileContent);
 
-            return result;
-        }
+                    const link = document.createElement('script');
+                    link.src = `data:text/javascript;base64,${fileContent}`;
+                    document.body.appendChild(link);
+                } else {
+                    const rawFileBytes = new Uint8Array(await response.arrayBuffer());
+
+                    //const fileBytes = BINDING.mono_obj_array_new();
+                    //BINDING.mono_obj_array_set(rawFileBytes)
+
+                    //console.log(BINDING.js_typed_array_to_array(rawFileBytes));
+
+                    result.push(rawFileBytes);
+                }
+            }
+
+            console.log(result.map(x => x.length).join());
+            //_nuGetDlls = BINDING.js_typed_array_to_array(result);
+            return;
+
+            console.log(Blazor.platform);
+            console.log(BINDING);
+
+            debugger;
+
+            // IEnum<byte[]> (.NET) -> Uint8Array[] (JS)
+            _nuGetDlls = result;
+        },
+        getNuGetDlls: () => _nuGetDlls
     };
 }());
 
