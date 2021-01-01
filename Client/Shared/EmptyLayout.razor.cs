@@ -43,15 +43,16 @@
                     await Task.Delay(20);
                 }
 
-                Console.WriteLine($"DLLs: {dlls.Count()}");
-                Console.WriteLine("C#" + string.Join(',', dlls.SelectMany(x => x)));
-
                 var sw = new Stopwatch();
 
                 foreach (var dll in dlls)
                 {
                     sw.Restart();
-                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll));
+                    var dllArr = dll.ToArray();
+                    Console.WriteLine($"prepare DLL bytes - {sw.Elapsed}");
+
+                    sw.Restart();
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllArr));
                     Console.WriteLine($"loading DLL - {sw.Elapsed}");
                 }
             }

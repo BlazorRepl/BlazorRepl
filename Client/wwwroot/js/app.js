@@ -46,6 +46,10 @@
             return bytes;
         },
         loadNuGetPackageFiles: async function loadNuGetPackageFiles(rawSessionId) {
+            if (!rawSessionId) {
+                return;
+            }
+
             const sessionId = BINDING.conv_string(rawSessionId);
             const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
             if (!nuGetContentCache) {
@@ -89,28 +93,12 @@
                     document.body.appendChild(link);
                 } else {
                     const rawFileBytes = new Uint8Array(await response.arrayBuffer());
-                    console.log('JS' + rawFileBytes.join(','));
-                    //const fileBytes = BINDING.mono_obj_array_new();
-                    //BINDING.mono_obj_array_set(rawFileBytes)
-
-                    //console.log(BINDING.js_typed_array_to_array(rawFileBytes));
 
                     dlls.push(js_array_to_mono_array(rawFileBytes));
                 }
             }
 
-            console.log(dlls.map(x => x.length).join());
-
             _nuGetDlls = js_array_to_mono_array(dlls);
-            return;
-
-            console.log(Blazor.platform);
-            console.log(BINDING);
-
-            debugger;
-
-            // IEnum<byte[]> (.NET) -> Uint8Array[] (JS)
-            _nuGetDlls = result;
         },
         getNuGetDlls: () => _nuGetDlls
     };
