@@ -27,7 +27,6 @@
             {
                 // TODO: Extract to a service
                 this.JsRuntime.InvokeUnmarshalled<string, object>("App.loadNuGetPackageFiles", sessionId);
-                Console.WriteLine("C#");
 
                 IEnumerable<byte[]> dlls;
                 var i = 0;
@@ -48,11 +47,7 @@
                 foreach (var dll in dlls)
                 {
                     sw.Restart();
-                    var dllArr = dll.ToArray();
-                    Console.WriteLine($"prepare DLL bytes - {sw.Elapsed}");
-
-                    sw.Restart();
-                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllArr));
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll));
                     Console.WriteLine($"loading DLL - {sw.Elapsed}");
                 }
             }

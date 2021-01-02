@@ -1,6 +1,17 @@
 ﻿window.App = window.App || (function () {
     let _nuGetDlls = null;
 
+    function jsArrayToDotNetArray(jsArray) {
+        jsArray = jsArray || [];
+
+        const dotNetArray = BINDING.mono_obj_array_new(jsArray.length);
+        for (let i = 0; i < jsArray.length; ++i) {
+            BINDING.mono_obj_array_set(dotNetArray, i, jsArray[i]);
+        }
+
+        return dotNetArray;
+    }
+
     return {
         reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
@@ -57,14 +68,6 @@
                 return;
             }
 
-            var js_array_to_mono_array = function (js_array) {
-                var mono_array = BINDING.mono_obj_array_new(js_array.length);
-                for (var i = 0; i < js_array.length; ++i) {
-                    BINDING.mono_obj_array_set(mono_array, i, js_array[i]);
-                }
-                return mono_array;
-            };
-
             const dlls = [];
 
             const files = await nuGetContentCache.keys();
@@ -90,15 +93,15 @@
 
                     const link = document.createElement('script');
                     link.src = `data:text/javascript;base64,${fileContent}`;
+                    // TODO: defer?
                     document.body.appendChild(link);
                 } else {
                     const rawFileBytes = new Uint8Array(await response.arrayBuffer());
-
-                    dlls.push(js_array_to_mono_array(rawFileBytes));
+                    dlls.push(BINDING.js_typed_array_to_array(rawFileBytes));
                 }
             }
 
-            _nuGetDlls = js_array_to_mono_array(dlls);
+            _nuGetDlls = jsArrayToDotNetArray(dlls);
         },
         getNuGetDlls: () => _nuGetDlls
     };
