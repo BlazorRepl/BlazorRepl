@@ -97,6 +97,9 @@
                     document.body.appendChild(link);
                 } else {
                     const rawFileBytes = new Uint8Array(await response.arrayBuffer());
+
+                    // It's really important to use js_typed_array_to_array instead of jsArrayToDotNetArray 
+                    // so we actually have a byte[] instead of object[] in .NET code.
                     dlls.push(BINDING.js_typed_array_to_array(rawFileBytes));
                 }
             }

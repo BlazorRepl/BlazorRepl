@@ -12,7 +12,6 @@ namespace BlazorRepl.Client
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.JSInterop;
-
     using NuGet.Common;
     using NuGet.DependencyResolver;
     using NuGet.Protocol.Core.Types;

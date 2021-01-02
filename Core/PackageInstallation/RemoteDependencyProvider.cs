@@ -26,6 +26,7 @@
 
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ConcurrentDictionary<string, LibraryDependencyInfo> packagesToInstall = new();
+        private readonly ConcurrentDictionary<string, LibraryDependencyInfo> packagesRequiringLicenseAcceptance = new();
 
         public RemoteDependencyProvider(IHttpClientFactory httpClientFactory)
         {
@@ -37,6 +38,8 @@
         public PackageSource Source { get; } = new("https://api.nuget.org/v3/index.json");
 
         internal ICollection<LibraryDependencyInfo> PackagesToInstall => this.packagesToInstall.Values;
+
+        internal ICollection<LibraryDependencyInfo> PackagesRequiringLicenseAcceptance => this.packagesRequiringLicenseAcceptance.Values;
 
         public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
         {
@@ -125,6 +128,11 @@
             LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
 
             this.packagesToInstall.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
+
+            if (nuspecReader.GetRequireLicenseAcceptance())
+            {
+                this.packagesRequiringLicenseAcceptance.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
+            }
 
             return libraryDependencyInfo;
         }

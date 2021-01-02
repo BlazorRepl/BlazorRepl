@@ -33,7 +33,7 @@
             this.httpClient = httpClient;
         }
 
-        public async Task<IDictionary<string, byte[]>> DownloadPackageContentsAsync(string packageName, string packageVersion)
+        public async Task<IEnumerable<string>> GetPackagesToConfirmAsync(string packageName, string packageVersion)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
@@ -50,17 +50,36 @@
                 new VersionRange(new NuGetVersion(packageVersion)),
                 LibraryDependencyTarget.Package);
 
+            var sw = Stopwatch.StartNew();
+            await this.remoteDependencyWalker.WalkAsync(
+                libraryRange,
+                framework: FrameworkConstants.CommonFrameworks.Net50,
+                runtimeIdentifier: null,
+                runtimeGraph: null,
+                recursive: true);
+            Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
+
+            return this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance;
+        }
+
+        public async Task<IDictionary<string, byte[]>> ConfirmedInstallAsync(
+            string packageName,
+            string packageVersion,
+            // TODO: change string with object - license, url, package name + version, author(s) [view Castle.Core package]
+            Func<IEnumerable<string>, Task<bool>> confirmLicenseAcceptanceFunc)
+        {
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageName));
+            }
+
+            if (string.IsNullOrWhiteSpace(packageVersion))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageVersion));
+            }
+            
             try
             {
-                var sw = Stopwatch.StartNew();
-                await this.remoteDependencyWalker.WalkAsync(
-                    libraryRange,
-                    framework: FrameworkConstants.CommonFrameworks.Net50,
-                    runtimeIdentifier: null,
-                    runtimeGraph: null,
-                    recursive: true);
-                Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
-
                 var packageContents = new Dictionary<string, byte[]>();
 
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
@@ -74,6 +93,7 @@
                     using var zippedStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(zippedStream);
 
+                    // TODO: Merge into 1 foreach to prevent 3 times entries traversal
                     sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
                     foreach (var (fileName, fileBytes) in dlls)

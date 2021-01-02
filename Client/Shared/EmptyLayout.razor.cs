@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Runtime.Loader;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components;
@@ -47,7 +46,7 @@
                 foreach (var dll in dlls)
                 {
                     sw.Restart();
-                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll));
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
                     Console.WriteLine($"loading DLL - {sw.Elapsed}");
                 }
             }
