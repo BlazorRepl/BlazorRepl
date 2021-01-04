@@ -10,12 +10,12 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class SaveSnippetPopup : IAsyncDisposable
+    public partial class SaveSnippetPopup : IDisposable
     {
         private DotNetObjectReference<SaveSnippetPopup> dotNetInstance;
 
         [Inject]
-        public IJSRuntime JsRuntime { get; set; }
+        public IJSInProcessRuntime JsRuntime { get; set; }
 
         [Inject]
         public SnippetsService SnippetsService { get; set; }
@@ -36,7 +36,7 @@
         public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
 
         [Parameter]
-        public Func<Task> UpdateActiveCodeFileContentFunc { get; set; }
+        public Action UpdateActiveCodeFileContentAction { get; set; }
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -53,36 +53,36 @@
 
         private string DisplayStyle => this.Visible ? string.Empty : "display: none;";
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            return this.JsRuntime.InvokeVoidAsync("App.SaveSnippetPopup.dispose");
+            this.JsRuntime.InvokeVoid("App.SaveSnippetPopup.dispose");
         }
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
 
-                await this.JsRuntime.InvokeVoidAsync(
+                this.JsRuntime.InvokeVoid(
                     "App.SaveSnippetPopup.init",
                     "save-snippet-popup",
                     this.InvokerId,
                     this.dotNetInstance);
             }
 
-            await base.OnAfterRenderAsync(firstRender);
+            base.OnAfterRender(firstRender);
         }
 
-        private async Task CopyLinkToClipboardAsync()
+        private void CopyLinkToClipboard()
         {
-            await this.JsRuntime.InvokeVoidAsync("App.copyToClipboard", this.SnippetLink);
+            this.JsRuntime.InvokeVoid("App.copyToClipboard", this.SnippetLink);
             this.SnippetLinkCopied = true;
         }
 
@@ -92,7 +92,7 @@
 
             try
             {
-                await (this.UpdateActiveCodeFileContentFunc?.Invoke() ?? Task.CompletedTask);
+                this.UpdateActiveCodeFileContentAction?.Invoke();
 
                 var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles);
 
@@ -100,7 +100,7 @@
                 var url = urlBuilder.Uri.ToString();
                 this.SnippetLink = url;
 
-                await this.JsRuntime.InvokeVoidAsync("App.changeDisplayUrl", url);
+                this.JsRuntime.InvokeVoid("App.changeDisplayUrl", url);
             }
             catch (InvalidOperationException ex)
             {

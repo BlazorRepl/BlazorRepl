@@ -19,7 +19,7 @@
 <SaveSnippetPopup @bind-Visible="@SaveSnippetPopupVisible"
                   InvokerId="save-snippet-btn"
                   CodeFiles="@CodeFiles.Values"
-                  UpdateActiveCodeFileContentFunc="UpdateActiveCodeFileContentAsync"></SaveSnippetPopup>
+                  UpdateActiveCodeFileContentAction="UpdateActiveCodeFileContent"></SaveSnippetPopup>
 
 <div class="row flex" style="margin: 0">
     <ReplLoader Show="@Loading"
@@ -27,9 +27,9 @@
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"
-                    OnTabActivate="@HandleTabActivateAsync"
+                    OnTabActivate="@HandleTabActivate"
                     OnTabClose="@HandleTabClose"
-                    OnTabCreate="@HandleTabCreateAsync"></TabManager>
+                    OnTabCreate="@HandleTabCreate"></TabManager>
 
         <CodeEditor @ref="@CodeEditorComponent"
                     Code="@CodeEditorContent"></CodeEditor>

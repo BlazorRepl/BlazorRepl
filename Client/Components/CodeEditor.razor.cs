@@ -6,14 +6,14 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class CodeEditor : IAsyncDisposable
+    public partial class CodeEditor : IDisposable
     {
         private const string EditorId = "user-code-editor";
 
         private bool hasCodeChanged;
 
         [Inject]
-        public IJSRuntime JsRuntime { get; set; }
+        public IJSInProcessRuntime JsRuntime { get; set; }
 
         [Parameter]
         public string Code { get; set; }
@@ -28,27 +28,27 @@
             return base.SetParametersAsync(parameters);
         }
 
-        public ValueTask DisposeAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.dispose");
+        public void Dispose() => this.JsRuntime.InvokeVoid("App.CodeEditor.dispose");
 
-        internal ValueTask FocusAsync() => this.JsRuntime.InvokeVoidAsync("App.CodeEditor.focus");
+        internal void Focus() => this.JsRuntime.InvokeVoid("App.CodeEditor.focus");
 
-        internal ValueTask<string> GetCodeAsync() => this.JsRuntime.InvokeAsync<string>("App.CodeEditor.getValue");
+        internal string GetCode() => this.JsRuntime.Invoke<string>("App.CodeEditor.getValue");
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
             {
-                await this.JsRuntime.InvokeVoidAsync(
+                this.JsRuntime.InvokeVoid(
                    "App.CodeEditor.init",
                    EditorId,
                    this.Code ?? CoreConstants.MainComponentDefaultFileContent);
             }
             else if (this.hasCodeChanged)
             {
-                await this.JsRuntime.InvokeVoidAsync("App.CodeEditor.setValue", this.Code);
+                this.JsRuntime.InvokeVoid("App.CodeEditor.setValue", this.Code);
             }
 
-            await base.OnAfterRenderAsync(firstRender);
+            base.OnAfterRender(firstRender);
         }
     }
 }

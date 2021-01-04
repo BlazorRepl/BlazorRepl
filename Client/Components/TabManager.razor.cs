@@ -8,7 +8,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class TabManager : IAsyncDisposable
+    public partial class TabManager : IDisposable
     {
         private const int DefaultActiveIndex = 0;
 
@@ -20,7 +20,7 @@
         private DotNetObjectReference<TabManager> dotNetInstance;
 
         [Inject]
-        public IJSRuntime JsRuntime { get; set; }
+        public IJSInProcessRuntime JsRuntime { get; set; }
 
         [Parameter]
         public IList<string> Tabs { get; set; }
@@ -41,12 +41,12 @@
 
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            return this.JsRuntime.InvokeVoidAsync("App.TabManager.dispose");
+            this.JsRuntime.InvokeVoid("App.TabManager.dispose");
         }
 
         [JSInvokable]
@@ -63,7 +63,7 @@
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
 
-                await this.JsRuntime.InvokeVoidAsync("App.TabManager.init", "#new-tab-input", this.dotNetInstance);
+                this.JsRuntime.InvokeVoid("App.TabManager.init", "#new-tab-input", this.dotNetInstance);
             }
 
             if (this.shouldFocusNewTabInput)
