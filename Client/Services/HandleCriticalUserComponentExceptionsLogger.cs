@@ -25,7 +25,7 @@
             Exception exception,
             Func<TState, Exception, string> formatter)
         {
-            if (exception?.ToString().Contains(CompilationService.DefaultRootNamespace) ?? false)
+            if (exception?.ToString()?.Contains(CompilationService.DefaultRootNamespace) ?? false)
             {
                 this.unmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
                     "App.Repl.updateUserAssemblyInCacheStorage",
