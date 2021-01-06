@@ -207,18 +207,6 @@ window.App.Repl = window.App.Repl || (function () {
         }
     }
 
-    function base64ToArrayBuffer(base64) {
-        const binaryString = window.atob(base64);
-        const binaryLen = binaryString.length;
-        const bytes = new Uint8Array(binaryLen);
-        for (let i = 0; i < binaryLen; i++) {
-            const ascii = binaryString.charCodeAt(i);
-            bytes[i] = ascii;
-        }
-
-        return bytes;
-    }
-
     function enableNavigateAwayConfirmation() {
         window.onbeforeunload = () => true;
 
@@ -268,8 +256,9 @@ window.App.Repl = window.App.Repl || (function () {
                 resetEditor();
             }
         },
-        updateUserAssemblyInCacheStorage: function (file) {
-            const response = new Response(new Blob([base64ToArrayBuffer(file)], { type: 'application/octet-stream' }));
+        updateUserAssemblyInCacheStorage: function (rawFileBytes) {
+            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
+            const response = new Response(new Blob([fileBytes], { type: 'application/octet-stream' }));
 
             caches.open('blazor-resources-/').then(function (cache) {
                 if (!cache) {
