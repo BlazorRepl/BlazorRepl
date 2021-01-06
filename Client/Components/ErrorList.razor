@@ -23,7 +23,7 @@
         </button>
     </div>
 
-    @if (Show && Diagnostics.Any())
+    @if (Show && Diagnostics != null && Diagnostics.Any())
     {
         <div class="toast-body">
             <table class="table table-borderless">
