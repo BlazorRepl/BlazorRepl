@@ -33,7 +33,8 @@
             this.httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<string>> GetPackagesToConfirmAsync(string packageName, string packageVersion)
+        // TODO: change string with object - license, url, package name + version, author(s) [view Castle.Core package, for example]
+        public async Task<IEnumerable<string>> PreparePackageForDownloadAsync(string packageName, string packageVersion)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
@@ -59,27 +60,15 @@
                 recursive: true);
             Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
-            return this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance;
+            return null;
+            //return this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance;
         }
 
-        public async Task<IDictionary<string, byte[]>> ConfirmedInstallAsync(
-            string packageName,
-            string packageVersion,
-            // TODO: change string with object - license, url, package name + version, author(s) [view Castle.Core package]
-            Func<IEnumerable<string>, Task<bool>> confirmLicenseAcceptanceFunc)
+        public async Task<IDictionary<string, byte[]>> DownloadPackagesContentsAsync()
         {
-            if (string.IsNullOrWhiteSpace(packageName))
-            {
-                throw new ArgumentOutOfRangeException(nameof(packageName));
-            }
-
-            if (string.IsNullOrWhiteSpace(packageVersion))
-            {
-                throw new ArgumentOutOfRangeException(nameof(packageVersion));
-            }
-            
             try
             {
+                var sw = new Stopwatch();
                 var packageContents = new Dictionary<string, byte[]>();
 
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)

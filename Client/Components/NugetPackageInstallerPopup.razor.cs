@@ -122,9 +122,7 @@
             var sw = Stopwatch.StartNew();
 
             // TODO: extract custom object for the package contents to prevent filtering
-            var packageContents = await this.NuGetPackageManager.DownloadPackageContentsAsync(
-                this.SelectedNugetPackageName,
-                this.SelectedNugetPackageVersion);
+            var packageContents = await this.NuGetPackageManager.DownloadPackagesContentsAsync();
             Console.WriteLine($"NuGetPackageManager.DownloadPackageContentsAsync - {sw.Elapsed}");
 
             sw.Restart();

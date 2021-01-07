@@ -5,8 +5,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
-    using System.Net.Http.Json;
-    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -25,8 +23,6 @@
         private static readonly ConcurrentDictionary<string, LibraryDependencyInfo> LibraryDependencyCache = new();
 
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly ConcurrentDictionary<string, LibraryDependencyInfo> packagesToInstall = new();
-        private readonly ConcurrentDictionary<string, LibraryDependencyInfo> packagesRequiringLicenseAcceptance = new();
 
         public RemoteDependencyProvider(IHttpClientFactory httpClientFactory)
         {
@@ -37,9 +33,9 @@
 
         public PackageSource Source { get; } = new("https://api.nuget.org/v3/index.json");
 
-        internal ICollection<LibraryDependencyInfo> PackagesToInstall => this.packagesToInstall.Values;
+        internal ICollection<LibraryDependencyInfo> PackagesToInstall { get; } = new List<LibraryDependencyInfo>();
 
-        internal ICollection<LibraryDependencyInfo> PackagesRequiringLicenseAcceptance => this.packagesRequiringLicenseAcceptance.Values;
+        internal ICollection<LibraryDependencyInfo> PackagesRequiringLicenseAcceptance { get; } = new List<LibraryDependencyInfo>();
 
         public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
         {
@@ -125,13 +121,14 @@
                 dependencyGroup?.TargetFramework ?? targetFramework,
                 dependencies ?? Array.Empty<LibraryDependency>());
 
-            LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
-
-            this.packagesToInstall.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
-
-            if (nuspecReader.GetRequireLicenseAcceptance())
+            if (LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo))
             {
-                this.packagesRequiringLicenseAcceptance.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
+                this.PackagesToInstall.Add(libraryDependencyInfo);
+
+                if (nuspecReader.GetRequireLicenseAcceptance())
+                {
+                    this.PackagesRequiringLicenseAcceptance.Add(libraryDependencyInfo);
+                }
             }
 
             return libraryDependencyInfo;
@@ -146,26 +143,19 @@
             throw new NotSupportedException();
         }
 
-        public async Task<IEnumerable<NuGetVersion>> GetAllVersionsAsync(
+        public Task<IEnumerable<NuGetVersion>> GetAllVersionsAsync(
             string id,
             SourceCacheContext cacheContext,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            // TODO: Try using strongly-typed object from NuGet.Client lib
-            var httpClient = this.httpClientFactory.CreateClient(nameof(RemoteDependencyProvider));
-            var versionsResult = await httpClient.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api.nuget.org/v3-flatcontainer/{id}/index.json",
-                cancellationToken);
-
-            var versions = JsonSerializer
-                .Deserialize<IEnumerable<string>>(versionsResult["versions"].ToString())
-                .Select(x => new NuGetVersion(x))
-                .ToList();
-
-            return versions;
+            throw new NotSupportedException();
         }
 
-        internal void ClearPackagesToInstall() => this.packagesToInstall.Clear();
+        internal void ClearPackagesToInstall()
+        {
+            this.PackagesToInstall.Clear();
+            this.PackagesRequiringLicenseAcceptance.Clear();
+        }
     }
 }
