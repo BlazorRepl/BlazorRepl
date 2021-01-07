@@ -257,8 +257,19 @@ window.App.Repl = window.App.Repl || (function () {
             }
         },
         updateUserAssemblyInCacheStorage: function (rawFileBytes) {
+            if (!rawFileBytes) {
+                return;
+            }
+
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
-            const response = new Response(new Blob([fileBytes], { type: 'application/octet-stream' }));
+            const response = new Response(
+                new Blob([fileBytes]),
+                {
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'Content-Length': fileBytes.length.toString(),
+                    }
+                });
 
             caches.open('blazor-resources-/').then(function (cache) {
                 if (!cache) {
