@@ -328,8 +328,9 @@ window.App.Repl = window.App.Repl || (function () {
                 resetEditor();
             }
         },
-        updateUserAssemblyInCacheStorage: function (file) {
-            const response = new Response(new Blob([window.App.base64ToArrayBuffer(file)], { type: 'application/octet-stream' }));
+        updateUserAssemblyInCacheStorage: function (rawFileBytes) {
+            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
+            const response = new Response(new Blob([fileBytes], { type: 'application/octet-stream' }));
 
             caches.open('blazor-resources-/').then(function (cache) {
                 if (!cache) {
