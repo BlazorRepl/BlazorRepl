@@ -12,7 +12,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class Repl : IAsyncDisposable
+    public partial class Repl : IDisposable
     {
         private const string MainComponentCodePrefix = "@page \"/__main\"\n";
         private const string MainUserPagePath = "/__main";
@@ -28,7 +28,10 @@
         public CompilationService CompilationService { get; set; }
 
         [Inject]
-        public IJSRuntime JsRuntime { get; set; }
+        public IJSInProcessRuntime JsRuntime { get; set; }
+
+        [Inject]
+        public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
 
         [Parameter]
         public string SnippetId { get; set; }
@@ -40,7 +43,7 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        private IList<string> CodeFileNames { get; set; }
+        private IList<string> CodeFileNames { get; set; } = new List<string>();
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
@@ -68,21 +71,21 @@
             this.StateHasChanged();
         }
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            return this.JsRuntime.InvokeVoidAsync("App.Repl.dispose");
+            this.JsRuntime.InvokeVoid("App.Repl.dispose");
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
 
-                await this.JsRuntime.InvokeVoidAsync(
+                this.JsRuntime.InvokeVoid(
                     "App.Repl.init",
                     "user-code-editor-container",
                     "user-page-window-container",
@@ -97,7 +100,7 @@
                 this.errorMessage = null;
             }
 
-            await base.OnAfterRenderAsync(firstRender);
+            base.OnAfterRender(firstRender);
         }
 
         protected override async Task OnInitializedAsync()
@@ -155,7 +158,7 @@
             string originalMainComponentContent = null;
             try
             {
-                await this.UpdateActiveCodeFileContentAsync();
+                this.UpdateActiveCodeFileContent();
 
                 // Add the necessary main component code prefix and store the original content so we can revert right after compilation.
                 if (this.CodeFiles.TryGetValue(CoreConstants.MainComponentFilePath, out mainComponent))
@@ -188,33 +191,35 @@
 
             if (compilationResult?.AssemblyBytes?.Length > 0)
             {
-                await this.JsRuntime.InvokeVoidAsync("App.Repl.updateUserAssemblyInCacheStorage", compilationResult.AssemblyBytes);
+                this.UnmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
+                    "App.Repl.updateUserAssemblyInCacheStorage",
+                    compilationResult.AssemblyBytes);
 
                 var userPagePath = string.IsNullOrWhiteSpace(this.SessionId)
                     ? MainUserPagePath
                     : $"{MainUserPagePath}#{this.SessionId}";
 
                 // TODO: Add error page in iframe
-                await this.JsRuntime.InvokeVoidAsync("App.reloadIFrame", "user-page-window", userPagePath);
+                this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", MainUserPagePath);
             }
         }
 
         private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
 
-        private async Task HandleTabActivateAsync(string name)
+        private void HandleTabActivate(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 return;
             }
 
-            await this.UpdateActiveCodeFileContentAsync();
+            this.UpdateActiveCodeFileContent();
 
             if (this.CodeFiles.TryGetValue(name, out var codeFile))
             {
                 this.activeCodeFile = codeFile;
 
-                await this.CodeEditorComponent.FocusAsync();
+                this.CodeEditorComponent.Focus();
             }
         }
 
@@ -228,7 +233,7 @@
             this.CodeFiles.Remove(name);
         }
 
-        private async Task HandleTabCreateAsync(string name)
+        private void HandleTabCreate(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -239,10 +244,10 @@
 
             this.CodeFiles.TryAdd(name, new CodeFile { Path = name, Content = $"<h1>{nameWithoutExtension}</h1>" });
 
-            await this.JsRuntime.InvokeVoidAsync("App.Repl.setCodeEditorContainerHeight");
+            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight");
         }
 
-        private async Task UpdateActiveCodeFileContentAsync()
+        private void UpdateActiveCodeFileContent()
         {
             if (this.activeCodeFile == null)
             {
@@ -250,7 +255,7 @@
                 return;
             }
 
-            this.activeCodeFile.Content = await this.CodeEditorComponent.GetCodeAsync();
+            this.activeCodeFile.Content = this.CodeEditorComponent.GetCode();
         }
 
         private Task UpdateLoaderTextAsync(string loaderText)

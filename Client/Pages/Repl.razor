@@ -22,7 +22,7 @@
 <SaveSnippetPopup @bind-Visible="@SaveSnippetPopupVisible"
                   InvokerId="save-snippet-btn"
                   CodeFiles="@CodeFiles.Values"
-                  UpdateActiveCodeFileContentFunc="UpdateActiveCodeFileContentAsync"></SaveSnippetPopup>
+                  UpdateActiveCodeFileContentAction="UpdateActiveCodeFileContent"></SaveSnippetPopup>
 
 <NugetPackageInstallerPopup @bind-Visible="@NugetPackageInstallerPopupVisible"
                             @bind-SessionId="@SessionId"></NugetPackageInstallerPopup>
@@ -33,9 +33,9 @@
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"
-                    OnTabActivate="@HandleTabActivateAsync"
+                    OnTabActivate="@HandleTabActivate"
                     OnTabClose="@HandleTabClose"
-                    OnTabCreate="@HandleTabCreateAsync"></TabManager>
+                    OnTabCreate="@HandleTabCreate"></TabManager>
 
         <CodeEditor @ref="@CodeEditorComponent"
                     Code="@CodeEditorContent"></CodeEditor>

@@ -45,17 +45,6 @@
             document.execCommand('copy');
             document.body.removeChild(input);
         },
-        base64ToArrayBuffer: function base64ToArrayBuffer(base64) {
-            const binaryString = window.atob(base64);
-            const binaryLen = binaryString.length;
-            const bytes = new Uint8Array(binaryLen);
-            for (let i = 0; i < binaryLen; i++) {
-                const ascii = binaryString.charCodeAt(i);
-                bytes[i] = ascii;
-            }
-
-            return bytes;
-        },
         loadNuGetPackageFiles: async function loadNuGetPackageFiles(rawSessionId) {
             if (!rawSessionId) {
                 return;
@@ -331,8 +320,20 @@ window.App.Repl = window.App.Repl || (function () {
                 resetEditor();
             }
         },
-        updateUserAssemblyInCacheStorage: function (file) {
-            const response = new Response(new Blob([window.App.base64ToArrayBuffer(file)], { type: 'application/octet-stream' }));
+        updateUserAssemblyInCacheStorage: function (rawFileBytes) {
+            if (!rawFileBytes) {
+                return;
+            }
+
+            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
+            const response = new Response(
+                new Blob([fileBytes]),
+                {
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'Content-Length': fileBytes.length.toString(),
+                    }
+                });
 
             caches.open('blazor-resources-/').then(function (cache) {
                 if (!cache) {

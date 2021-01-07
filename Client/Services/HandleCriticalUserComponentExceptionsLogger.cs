@@ -11,11 +11,11 @@
     // (Approach: https://github.com/dotnet/aspnetcore/issues/13452#issuecomment-632660280)
     public class HandleCriticalUserComponentExceptionsLogger : ILogger
     {
-        private readonly IJSRuntime jsRuntime;
+        private readonly IJSUnmarshalledRuntime unmarshalledJsRuntime;
 
-        public HandleCriticalUserComponentExceptionsLogger(IJSRuntime jsRuntime)
+        public HandleCriticalUserComponentExceptionsLogger(IJSUnmarshalledRuntime unmarshalledJsRuntime)
         {
-            this.jsRuntime = jsRuntime;
+            this.unmarshalledJsRuntime = unmarshalledJsRuntime;
         }
 
         public void Log<TState>(
@@ -27,7 +27,7 @@
         {
             if (exception?.ToString()?.Contains(CompilationService.DefaultRootNamespace) ?? false)
             {
-                this.jsRuntime.InvokeVoidAsync(
+                this.unmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
                     "App.Repl.updateUserAssemblyInCacheStorage",
                     Convert.FromBase64String(CoreConstants.DefaultUserComponentsAssemblyBytes));
             }
@@ -39,7 +39,7 @@
 
         private class NoOpDisposable : IDisposable
         {
-            public static readonly NoOpDisposable Instance = new NoOpDisposable();
+            public static readonly NoOpDisposable Instance = new();
 
             public void Dispose()
             {
