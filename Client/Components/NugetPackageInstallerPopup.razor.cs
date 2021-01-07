@@ -116,6 +116,27 @@
             this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();
         }
 
+        private async Task PreparePackagesToInstall()
+        {
+            var prepareResult = await this.NuGetPackageManager.PreparePackageForDownloadAsync(
+                this.SelectedNugetPackageName,
+                this.SelectedNugetPackageVersion);
+
+            if (prepareResult.PackagesLicenseInfo?.Any() ?? true)
+            {
+                await this.InstallNugetPackage();
+            }
+            else
+            {
+                // TODO: show license prompt
+            }
+        }
+
+        private void RejectLicenseAcceptance()
+        {
+            this.NuGetPackageManager.CancelPackageInstallation();
+        }
+
         // TODO: think about doing this in the repl component (it is the management component)
         private async Task InstallNugetPackage()
         {
@@ -131,6 +152,7 @@
             Console.WriteLine($"CompilationService.AddReferences - {sw.Elapsed}");
 
             sw.Restart();
+
             // TODO: Move function to another JS module (+ the function for updating user components DLL) [proposal: ExecutionEngine]
             foreach (var (fileName, fileBytes) in packageContents)
             {
@@ -139,6 +161,7 @@
                     fileName,
                     fileBytes);
             }
+
             Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
             this.PageNotificationsComponent.AddNotification(

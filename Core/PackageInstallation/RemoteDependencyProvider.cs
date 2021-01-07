@@ -35,7 +35,7 @@
 
         internal ICollection<LibraryDependencyInfo> PackagesToInstall { get; } = new List<LibraryDependencyInfo>();
 
-        internal ICollection<LibraryDependencyInfo> PackagesRequiringLicenseAcceptance { get; } = new List<LibraryDependencyInfo>();
+        internal ICollection<PackageLicenseInfo> PackagesRequiringLicenseAcceptance { get; } = new List<PackageLicenseInfo>();
 
         public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
         {
@@ -127,7 +127,12 @@
 
                 if (nuspecReader.GetRequireLicenseAcceptance())
                 {
-                    this.PackagesRequiringLicenseAcceptance.Add(libraryDependencyInfo);
+                    var authors = nuspecReader.GetAuthors();
+                    var licenseMetadata = nuspecReader.GetLicenseMetadata();
+
+                    var licenseInfo = new PackageLicenseInfo(libraryIdentity.Name, licenseMetadata.License, authors);
+
+                    this.PackagesRequiringLicenseAcceptance.Add(licenseInfo);
                 }
             }
 
@@ -156,6 +161,15 @@
         {
             this.PackagesToInstall.Clear();
             this.PackagesRequiringLicenseAcceptance.Clear();
+        }
+
+        // call when the user do not accept license prompt
+        internal void RemoveLibraryDependenciesFromCache(IEnumerable<string> libraryDependencies)
+        {
+            foreach (var dependency in libraryDependencies)
+            {
+                LibraryDependencyCache.TryRemove(dependency, out var _);
+            }
         }
     }
 }

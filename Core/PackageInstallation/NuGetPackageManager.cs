@@ -33,8 +33,8 @@
             this.httpClient = httpClient;
         }
 
-        // TODO: change string with object - license, url, package name + version, author(s) [view Castle.Core package, for example]
-        public async Task<IEnumerable<string>> PreparePackageForDownloadAsync(string packageName, string packageVersion)
+        // TODO: change string with object - license + version, url, package name, author(s) [view Castle.Core package, for example]
+        public async Task<PreparePackageInstallationResult> PreparePackageForDownloadAsync(string packageName, string packageVersion)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
@@ -60,8 +60,16 @@
                 recursive: true);
             Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
-            return null;
-            //return this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance;
+            return new PreparePackageInstallationResult
+            {
+                PackagesLicenseInfo = this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance,
+            };
+        }
+
+        public void CancelPackageInstallation()
+        {
+            this.remoteDependencyProvider.RemoveLibraryDependenciesFromCache(
+                this.remoteDependencyProvider.PackagesToInstall.Select(p => p.Library.Name));
         }
 
         public async Task<IDictionary<string, byte[]>> DownloadPackagesContentsAsync()
@@ -89,6 +97,7 @@
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+
                     Console.WriteLine($"ExtractDlls - {sw.Elapsed}");
 
                     sw.Restart();
@@ -97,6 +106,7 @@
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+
                     Console.WriteLine($"ExtractStaticContents JS - {sw.Elapsed}");
 
                     sw.Restart();
@@ -105,6 +115,7 @@
                     {
                         packageContents.Add(fileName, fileBytes);
                     }
+
                     Console.WriteLine($"ExtractStaticContents CSS - {sw.Elapsed}");
                 }
 
