@@ -24,13 +24,12 @@
                   CodeFiles="@CodeFiles.Values"
                   UpdateActiveCodeFileContentAction="UpdateActiveCodeFileContent"></SaveSnippetPopup>
 
-<NugetPackageInstallerPopup @bind-Visible="@NugetPackageInstallerPopupVisible"
-                            @bind-SessionId="@SessionId"></NugetPackageInstallerPopup>
-
 <div class="row flex" style="margin: 0">
     <ReplLoader Show="@Loading"
                 Message="@LoaderText"></ReplLoader>
 
+    <PackageManager></PackageManager>
+    
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"
                     OnTabActivate="@HandleTabActivate"

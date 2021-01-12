@@ -313,7 +313,7 @@ window.App.Repl = window.App.Repl || (function () {
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('keydown', onKeyDown);
 
-            enableNavigateAwayConfirmation();
+            //enableNavigateAwayConfirmation();
         },
         setCodeEditorContainerHeight: function () {
             if (setElementHeight(_editorContainerId, true)) {
