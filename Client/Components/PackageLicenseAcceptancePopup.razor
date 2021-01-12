@@ -1,0 +1,41 @@
+﻿<div id="nuget-package-installer-popup"
+     class="toast nuget-package-installer-popup @VisibleClass"
+     role="alert"
+     aria-live="assertive"
+     aria-atomic="true"
+     style="@DisplayStyle">
+
+    <div class="toast-header" style="margin-bottom: 20px">
+        <h4 class="m-auto">License Acceptance</h4>
+    </div>
+
+    <ul>
+        @foreach (var package in PackagesToAcceptLicense)
+        {
+            var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
+
+            <li>
+                <strong>@package.Package</strong>
+                @if (!string.IsNullOrWhiteSpace(package.Authors))
+                {
+                    @* TODO: CSS *@
+                    @:&nbsp;&nbsp; (Author(s): @package.Authors)
+                }
+
+                <br />
+
+                @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
+                {
+                    @actualLicense
+                }
+                else
+                {
+                    <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
+                }
+            </li>
+        }
+    </ul>
+
+    <button class="btn btn-primary" @onclick="@AcceptAsync">I accept</button>
+    <button class="btn btn-info" @onclick="@RejectAsync">I reject</button>
+</div>

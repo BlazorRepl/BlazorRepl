@@ -3,6 +3,11 @@
         <h4 class="m-auto">Package Manager</h4>
     </div>
 
+    <PackageLicenseAcceptancePopup @bind-Visible="@LicensePopupVisible"
+                                   PackagesToAcceptLicense="@PackagesToAcceptLicense"
+                                   OnAccept="@InstallNugetPackageAsync"
+                                   OnReject="@RejectLicenseAcceptance"></PackageLicenseAcceptancePopup>
+
     <input @bind="@NugetPackageName" class="form-control" style="width: 72%; display: inline-block; margin-bottom: 10px;" />
     <button type="submit" class="btn btn-primary" @onclick="@GetNugetPackages" style="width: 25%">Search</button>
 

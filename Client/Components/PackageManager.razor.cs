@@ -55,6 +55,10 @@
 
         private string NugetPackageName { get; set; }
 
+        private IEnumerable<PackageLicenseInfo> PackagesToAcceptLicense { get; set; } = Enumerable.Empty<PackageLicenseInfo>();
+
+        private bool LicensePopupVisible { get; set; }
+
         private string SelectedNugetPackageName { get; set; }
 
         private string SelectedNugetPackageVersion { get; set; }
@@ -122,13 +126,16 @@
                 this.SelectedNugetPackageName,
                 this.SelectedNugetPackageVersion);
 
-            if (true || (prepareResult.PackagesLicenseInfo?.Any() ?? true))
+            this.PackagesToAcceptLicense = prepareResult.PackagesLicenseInfo ?? Enumerable.Empty<PackageLicenseInfo>();
+
+            if (this.PackagesToAcceptLicense.Any())
             {
-                await this.InstallNugetPackage();
+                this.LicensePopupVisible = true;
+                // TODO: show license prompt
             }
             else
             {
-                // TODO: show license prompt
+                await this.InstallNugetPackageAsync();
             }
         }
 
@@ -138,7 +145,7 @@
         }
 
         // TODO: think about doing this in the repl component (it is the management component)
-        private async Task InstallNugetPackage()
+        private async Task InstallNugetPackageAsync()
         {
             var sw = Stopwatch.StartNew();
 
