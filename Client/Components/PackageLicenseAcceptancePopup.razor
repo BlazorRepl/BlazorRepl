@@ -1,41 +1,45 @@
-﻿<div id="nuget-package-installer-popup"
-     class="toast nuget-package-installer-popup @VisibleClass"
+﻿<div class="toast package-license-popup @VisibleClass"
      role="alert"
      aria-live="assertive"
      aria-atomic="true"
      style="@DisplayStyle">
 
-    <div class="toast-header" style="margin-bottom: 20px">
-        <h4 class="m-auto">License Acceptance</h4>
+    <div class="license-packages-container">
+        <div class="toast-header" style="margin-bottom: 5px">
+            @*TODO: Consider position h4 with absolute*@
+            <h4 class="m-auto">License Acceptance</h4>
+        </div>
+
+        <ul class="list-unstyled">
+            @foreach (var package in PackagesToAcceptLicense)
+            {
+                var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
+
+                <li>
+                    <span class="font-weight-bold">@package.Package</span>
+                    @if (!string.IsNullOrWhiteSpace(package.Authors))
+                    {
+                        @* TODO: CSS *@
+                        @:&nbsp;&nbsp; (Author(s): @package.Authors)
+                    }
+
+                    <br />
+
+                    @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
+                    {
+                        @actualLicense
+                    }
+                    else
+                    {
+                        <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
+                    }
+                </li>
+            }
+        </ul>
     </div>
 
-    <ul>
-        @foreach (var package in PackagesToAcceptLicense)
-        {
-            var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
-
-            <li>
-                <strong>@package.Package</strong>
-                @if (!string.IsNullOrWhiteSpace(package.Authors))
-                {
-                    @* TODO: CSS *@
-                    @:&nbsp;&nbsp; (Author(s): @package.Authors)
-                }
-
-                <br />
-
-                @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
-                {
-                    @actualLicense
-                }
-                else
-                {
-                    <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
-                }
-            </li>
-        }
-    </ul>
-
-    <button class="btn btn-primary" @onclick="@AcceptAsync">I accept</button>
-    <button class="btn btn-info" @onclick="@RejectAsync">I reject</button>
+    <div class="license-action-buttons" style="position: absolute; bottom: 0;">
+        <button class="btn btn-primary" @onclick="@AcceptAsync">I accept</button>
+        <button class="btn btn-info" @onclick="@DeclineAsync">I Decline</button>
+    </div>
 </div>

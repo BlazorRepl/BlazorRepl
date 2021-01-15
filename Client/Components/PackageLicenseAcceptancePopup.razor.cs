@@ -34,8 +34,9 @@
             await this.OnAccept.InvokeAsync();
         }
 
-        private async Task RejectAsync()
+        private async Task DeclineAsync()
         {
+            // TODO: close from outside
             await this.CloseInternalAsync();
             await this.OnReject.InvokeAsync();
         }

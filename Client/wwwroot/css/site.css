@@ -323,17 +323,33 @@ app {
 
 
 /* Nuget Package Installer Popup */
-.nuget-package-installer-popup {
+.package-license-popup {
     position: absolute;
-    top: 45%;
+    top: 25%;
     left: 40%;
-    width: 550px;
-    height: 300px;
+    max-width: 425px;
+    width: 425px;
+    height: 400px;
     z-index: 100;
-    padding: 5px 20px;
-    overflow: visible;
     background-color: #FFF;
 }
+
+    .package-license-popup .license-packages-container {
+        margin-bottom: 31px;
+        overflow: auto;
+        max-height: 350px;
+        padding: 5px 20px;
+        width: 425px;
+        word-break:break-all;
+    }
+
+    .package-license-popup .license-action-buttons {
+        position: absolute;
+        bottom: 0;
+        text-align: center;
+        padding-bottom: 5px;
+        width: 100%;
+    }
 
 /* Save Snippet Popup */
 .save-snippets-popup {
