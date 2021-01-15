@@ -266,8 +266,8 @@ window.App.Repl = window.App.Repl || (function () {
                 new Blob([fileBytes]),
                 {
                     headers: {
-                        'Content-Type': 'application/octet-stream',
-                        'Content-Length': fileBytes.length.toString(),
+                        'content-length': fileBytes.length.toString(),
+                        'content-type': 'application/octet-stream'
                     }
                 });
 
