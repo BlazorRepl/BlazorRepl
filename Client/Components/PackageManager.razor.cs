@@ -139,7 +139,7 @@
             }
         }
 
-        private void RejectLicenseAcceptance()
+        private void DeclineLicense()
         {
             this.NuGetPackageManager.CancelPackageInstallation();
             this.LicensePopupVisible = false;

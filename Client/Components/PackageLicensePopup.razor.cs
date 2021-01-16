@@ -18,7 +18,7 @@
         public EventCallback OnAccept { get; set; }
 
         [Parameter]
-        public EventCallback OnReject { get; set; }
+        public EventCallback OnDecline { get; set; }
 
         private string VisibleClass => this.Visible ? "show" : string.Empty;
 
@@ -26,6 +26,6 @@
 
         private Task AcceptAsync() => this.OnAccept.InvokeAsync();
 
-        private Task DeclineAsync() => this.OnReject.InvokeAsync();
+        private Task DeclineAsync() => this.OnDecline.InvokeAsync();
     }
 }

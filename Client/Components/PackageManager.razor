@@ -6,7 +6,7 @@
     <PackageLicensePopup Visible="@LicensePopupVisible"
                          PackagesToAcceptLicense="@PackagesToAcceptLicense"
                          OnAccept="@InstallNugetPackageAsync"
-                         OnReject="@RejectLicenseAcceptance"></PackageLicensePopup>
+                         OnDecline="@DeclineLicense"></PackageLicensePopup>
 
     <input @bind="@NugetPackageName" class="form-control" style="width: 72%; display: inline-block; margin-bottom: 10px;" />
     <button type="submit" class="btn btn-primary" @onclick="@GetNugetPackages" style="width: 25%">Search</button>
