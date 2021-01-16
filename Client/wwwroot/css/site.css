@@ -326,7 +326,7 @@ app {
 .package-license-popup {
     position: absolute;
     top: 25%;
-    left: 40%;
+    left: calc(50% - 212.5px);
     max-width: 425px;
     width: 425px;
     height: 400px;
