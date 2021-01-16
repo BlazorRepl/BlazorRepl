@@ -1,4 +1,4 @@
-﻿<div class="nuget-sidebar" style="width: 20%">
+﻿<div class="nuget-sidebar" style="width: 20%; padding: 8px;">
     <div class="toast-header" style="margin-bottom: 20px">
         <h4 class="m-auto">Package Manager</h4>
     </div>
@@ -8,32 +8,38 @@
                          OnAccept="@InstallNugetPackageAsync"
                          OnDecline="@DeclineLicense"></PackageLicensePopup>
 
-    <input @bind="@NugetPackageName" class="form-control" style="width: 72%; display: inline-block; margin-bottom: 10px;" />
-    <button type="submit" class="btn btn-primary" @onclick="@GetNugetPackages" style="width: 25%">Search</button>
+    <div class="search-package-wrapper">
+        <input @bind="@NugetPackageName" class="form-control" style="display: inline-block; margin-right: 5px" />
+        <button type="submit" class="btn btn-br-primary" @onclick="@GetNugetPackages">
+            <i class="icon-search2"></i>
+        </button>
+    </div>
 
     @if (string.IsNullOrEmpty(SelectedNugetPackageName))
     {
         @foreach (var nugetPackage in NugetPackages)
         {
             <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
-                <span style="font-weight: bold">@nugetPackage</span>
-                <button class="btn btn-primary" @onclick="@(() => SelectNugetPackage(nugetPackage))">Install</button>
+                <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@nugetPackage">@nugetPackage</span>
+                <button class="btn btn-br-primary" @onclick="@(() => SelectNugetPackage(nugetPackage))">
+                    <i class="icon-download32"></i>
+                </button>
             </div>
         }
     }
     else
     {
         <label for="version-select">Version</label>
-        <div>
-            <select class="form-control" id="version-select" @bind="@SelectedNugetPackageVersion" style="width: 72%; display: inline-block; height: 37px;">
+        <div class="search-package-wrapper">
+            <select class="form-control" id="version-select" @bind="@SelectedNugetPackageVersion" style="display: inline-block; margin-right: 5px;">
                 @foreach (var version in NugetPackageVersions)
                 {
-                    <option value="@version">@version</option>
+                <option value="@version">@version</option>
                 }
             </select>
-            <div style="width: 25%; display: inline-block;">
-                <button class="btn btn-primary" @onclick="@PreparePackageToInstallAsync">Install</button>
-            </div>
+            <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync">
+                <i class="icon-download32"></i>
+            </button>
         </div>
     }
 </div>

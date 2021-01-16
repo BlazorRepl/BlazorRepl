@@ -186,6 +186,22 @@ app {
     z-index: 10;
 }
 
+/* Nuget Sidebar */
+.nuget-sidebar {
+}
+
+    .nuget-sidebar .search-package-wrapper {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 5px;
+    }
+
+.btn-br-primary {
+    background: #4aca85;
+    color: #fff;
+    border: 1px solid #4aca85;
+}
+
 /* App Loader */
 .app-loader {
     position: fixed;
