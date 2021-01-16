@@ -142,6 +142,7 @@
         private void RejectLicenseAcceptance()
         {
             this.NuGetPackageManager.CancelPackageInstallation();
+            this.LicensePopupVisible = false;
         }
 
         // TODO: think about doing this in the repl component (it is the management component)
@@ -171,11 +172,11 @@
 
             Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
-            Console.WriteLine(PageNotificationsComponent != null);
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
                 $"{this.SelectedNugetPackageName} package is successfully installed.");
 
+            this.LicensePopupVisible = false;
             await this.CloseInternalAsync();
         }
 

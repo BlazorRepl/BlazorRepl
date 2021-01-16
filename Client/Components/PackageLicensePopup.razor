@@ -1,12 +1,6 @@
-﻿<div class="package-license-overlay"
-     style="@DisplayStyle">
-    <div class="toast package-license-popup @VisibleClass"
-         role="alert"
-         aria-live="assertive"
-         aria-atomic="true">
-
+﻿<div class="package-license-overlay" style="@DisplayStyle">
+    <div class="toast package-license-popup @VisibleClass" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
-            @*TODO: Consider position h4 with absolute*@
             <h4 class="m-auto">License Acceptance</h4>
         </div>
 
@@ -41,9 +35,9 @@
                 <em>
                     By clicking "I Accept", you agree to the license terms for the package(s)
                     listed above. If you do not agree to the license terms, click "I Decline".
-                </em>                
+                </em>
             </p>
-            <button class="btn btn-primary btn-accept" @onclick="@AcceptAsync">I accept</button>
+            <button class="btn btn-primary btn-accept" @onclick="@AcceptAsync">I Accept</button>
             <button class="btn btn-info btn-decline" @onclick="@DeclineAsync">I Decline</button>
         </div>
     </div>
