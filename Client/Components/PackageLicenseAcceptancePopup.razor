@@ -1,47 +1,50 @@
-﻿<div class="toast package-license-popup @VisibleClass"
-     role="alert"
-     aria-live="assertive"
-     aria-atomic="true"
+﻿<div class="package-license-overlay"
      style="@DisplayStyle">
+    <div class="toast package-license-popup @VisibleClass"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
 
-    <div class="toast-header">
-        @*TODO: Consider position h4 with absolute*@
-        <h4 class="m-auto">License Acceptance</h4>
-    </div>
+        <div class="toast-header">
+            @*TODO: Consider position h4 with absolute*@
+            <h4 class="m-auto">License Acceptance</h4>
+        </div>
 
-    <ul class="list-unstyled license-packages-container">
-        @foreach (var package in PackagesToAcceptLicense)
-        {
-            var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
+        <ul class="list-unstyled license-packages-container">
+            @foreach (var package in PackagesToAcceptLicense)
+            {
+                var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
 
-            <li>
-                <span class="font-weight-bold">@package.Package</span>
-                @if (!string.IsNullOrWhiteSpace(package.Authors))
-                {
-                    @* TODO: CSS *@
-                    @:&nbsp; (Author(s): @package.Authors)
-                }
-
-                <div class="package-license-link-container">
-                    @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
+                <li>
+                    <span class="font-weight-bold">@package.Package</span>
+                    @if (!string.IsNullOrWhiteSpace(package.Authors))
                     {
-                        @actualLicense
+                        @: (Author(s): @package.Authors)
                     }
-                    else
-                    {
-                        <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
-                    }
-                </div>
-            </li>
-        }
-    </ul>
 
-    <div class="license-action-buttons">
-        <p class="license-disclaimer">
-            By clicking "I Accept", you agree to the license terms for the package(s)
-            listed above. If you do not agree to the license terms, click "I Decline".
-        </p>
-        <button class="btn btn-primary" @onclick="@AcceptAsync">I accept</button>
-        <button class="btn btn-info" @onclick="@DeclineAsync">I Decline</button>
+                    <div class="package-license-link-container">
+                        @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
+                        {
+                            @actualLicense
+                        }
+                        else
+                        {
+                            <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+
+        <div class="license-action-buttons">
+            <p class="license-disclaimer">
+                <em>
+                    By clicking "I Accept", you agree to the license terms for the package(s)
+                    listed above. If you do not agree to the license terms, click "I Decline".
+                </em>                
+            </p>
+            <button class="btn btn-primary btn-accept" @onclick="@AcceptAsync">I accept</button>
+            <button class="btn btn-info btn-decline" @onclick="@DeclineAsync">I Decline</button>
+        </div>
     </div>
 </div>

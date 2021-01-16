@@ -323,6 +323,16 @@ app {
 
 
 /* Nuget Package Installer Popup */
+.package-license-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
 .package-license-popup {
     position: absolute;
     top: 25%;
@@ -330,14 +340,25 @@ app {
     max-width: 425px;
     width: 425px;
     height: 400px;
-    z-index: 100;
+    z-index: 110;
     background-color: #FFF;
 }
+
+    .package-license-popup .btn-accept {
+        background-color: #4aca85;
+        border-color: #4aca85;
+    }
+
+    .package-license-popup .btn-decline {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: #f5f5f5;
+    }
 
     .package-license-popup .license-packages-container {
         margin-bottom: 132px;
         overflow: auto;
-        height: 260px;
+        height: 277px;
         padding: 5px 20px;
         width: 425px;
         word-break: break-all;
@@ -363,6 +384,7 @@ app {
     .package-license-popup .license-disclaimer {
         line-height: normal;
         margin-bottom: 5px;
+        font-size: 13px;
     }
 
 /* Save Snippet Popup */
