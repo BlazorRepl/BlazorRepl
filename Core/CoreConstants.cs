@@ -3,7 +3,7 @@
     public static class CoreConstants
     {
         public const string MainComponentFilePath = "__Main.razor";
-        public const string MainComponentDefaultFileContent = @"<h1>Hello World</h1>
+        public const string MainComponentDefaultFileContent = @"<h1>Hello, Blazor REPL!</h1>
 
 @code {
 
