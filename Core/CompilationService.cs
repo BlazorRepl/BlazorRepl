@@ -83,7 +83,13 @@
                 new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
-                    concurrentBuild: false));
+                    concurrentBuild: false,
+                    //// Warnings CS1701 and CS1702 are disabled when compiling in VS too
+                    specificDiagnosticOptions: new[]
+                    {
+                        new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress),
+                        new KeyValuePair<string, ReportDiagnostic>("CS1702", ReportDiagnostic.Suppress),
+                    }));
 
             cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         }
