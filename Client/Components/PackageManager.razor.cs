@@ -132,7 +132,6 @@
             if (this.PackagesToAcceptLicense.Any())
             {
                 this.LicensePopupVisible = true;
-                // TODO: show license prompt
             }
             else
             {

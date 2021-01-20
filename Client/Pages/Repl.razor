@@ -12,9 +12,6 @@
             <button @onclick="@ShowSaveSnippetPopup" class="btn btn-link nav-action" id="save-snippet-btn" title="Save public snippet">
                 <i class="icon-floppy-disk"></i> SAVE
             </button>
-            <button @onclick="@ShowNugetPackageInstaller" class="btn btn-link nav-action" id="nuget-package-install-btn" title="Install Nuget Package">
-                <i class="icon-floppy-disk"></i> Install Nuget Package
-            </button>
         </div>
     </div>
 </nav>
@@ -29,7 +26,7 @@
                 Message="@LoaderText"></ReplLoader>
 
     <PackageManager></PackageManager>
-    
+
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"
                     OnTabActivate="@HandleTabActivate"

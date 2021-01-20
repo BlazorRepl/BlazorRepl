@@ -94,7 +94,8 @@
             {
                 this.UpdateActiveCodeFileContentAction?.Invoke();
 
-                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles);
+                // TODO: Pass the correct packages
+                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, new List<Package>());
 
                 var urlBuilder = new UriBuilder(this.NavigationManager.BaseUri) { Path = $"repl/{snippetId}" };
                 var url = urlBuilder.Uri.ToString();

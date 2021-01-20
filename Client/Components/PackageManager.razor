@@ -34,7 +34,7 @@
             <select class="form-control" id="version-select" @bind="@SelectedNugetPackageVersion" style="display: inline-block; margin-right: 5px;">
                 @foreach (var version in NugetPackageVersions)
                 {
-                <option value="@version">@version</option>
+                    <option value="@version">@version</option>
                 }
             </select>
             <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync">

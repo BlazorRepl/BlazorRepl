@@ -80,7 +80,7 @@
             this.snippetsOptions = snippetsOptions.Value;
         }
 
-        public async Task<string> SaveSnippetAsync(IEnumerable<CodeFile> codeFiles)
+        public async Task<string> SaveSnippetAsync(IEnumerable<CodeFile> codeFiles, IEnumerable<Package> installedPackages)
         {
             if (codeFiles == null)
             {
@@ -93,7 +93,7 @@
                 throw new InvalidOperationException(codeFilesValidationError);
             }
 
-            var requestData = new CreateSnippetRequestModel { Files = codeFiles };
+            var requestData = new CreateSnippetRequestModel { Files = codeFiles, InstalledPackages = installedPackages };
 
             var response = await this.httpClient.PostAsJsonAsync(this.snippetsOptions.CreateUrl, requestData);
             response.EnsureSuccessStatusCode();
