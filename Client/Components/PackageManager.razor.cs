@@ -71,9 +71,6 @@
 
         private string DisplayStyle => this.Visible ? string.Empty : "display: none;";
 
-        [JSInvokable]
-        public Task CloseAsync() => this.CloseInternalAsync();
-
         public ValueTask DisposeAsync()
         {
             this.dotNetInstance?.Dispose();
@@ -81,6 +78,11 @@
 
             return this.JsRuntime.InvokeVoidAsync("App.NugetPackageInstallerPopup.dispose");
         }
+
+        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManager.InstalledPackages;
+
+        [JSInvokable]
+        public Task CloseAsync() => this.CloseInternalAsync();
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -100,9 +102,11 @@
         // TODO: rename to search and move to the NuGet package manager
         private async Task GetNugetPackages()
         {
+            // Add constants
             var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
                 $"https://api-v2v3search-0.nuget.org/autocomplete?q={this.NugetPackageName}");
 
+            // Add strongly typed model
             this.NugetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(10).ToList();
             this.SelectedNugetPackageName = null;
         }
@@ -113,9 +117,13 @@
             this.SelectedNugetPackageName = selectedPackage;
             this.NugetPackageName = selectedPackage;
 
+            this.NugetPackageVersions = new();
+
             // populate versions dropdown
             var versionsResult = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
                 $"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
+
+            // Add strongly typed model
             this.NugetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
             this.NugetPackageVersions.Reverse();
             this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();

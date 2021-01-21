@@ -3,10 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -34,6 +36,9 @@
 
         [Parameter]
         public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
+
+        [Parameter]
+        public IReadOnlyCollection<Package> InstalledPackages { get; set; } = new List<Package>();
 
         [Parameter]
         public Action UpdateActiveCodeFileContentAction { get; set; }
@@ -94,8 +99,7 @@
             {
                 this.UpdateActiveCodeFileContentAction?.Invoke();
 
-                // TODO: Pass the correct packages
-                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, new List<Package>());
+                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, this.InstalledPackages);
 
                 var urlBuilder = new UriBuilder(this.NavigationManager.BaseUri) { Path = $"repl/{snippetId}" };
                 var url = urlBuilder.Uri.ToString();

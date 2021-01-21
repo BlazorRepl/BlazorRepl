@@ -22,6 +22,9 @@
         private readonly RemoteDependencyWalker remoteDependencyWalker;
         private readonly RemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
+        private readonly List<Package> installedPackages = new();
+
+        private Package currentlyInstallingPackage;
 
         public NuGetPackageManager(
             RemoteDependencyWalker remoteDependencyWalker,
@@ -33,7 +36,8 @@
             this.httpClient = httpClient;
         }
 
-        // TODO: change string with object - license + version, url, package name, author(s) [view Castle.Core package, for example]
+        public IReadOnlyCollection<Package> InstalledPackages => this.installedPackages;
+
         public async Task<PreparePackageInstallationResult> PreparePackageForDownloadAsync(string packageName, string packageVersion)
         {
             if (string.IsNullOrWhiteSpace(packageName))
@@ -44,6 +48,11 @@
             if (string.IsNullOrWhiteSpace(packageVersion))
             {
                 throw new ArgumentOutOfRangeException(nameof(packageVersion));
+            }
+
+            if (this.currentlyInstallingPackage != null)
+            {
+                throw new InvalidOperationException("Another package is currently being installed.");
             }
 
             var libraryRange = new LibraryRange(
@@ -60,6 +69,8 @@
                 recursive: true);
             Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
+            this.currentlyInstallingPackage = new Package(packageName, packageVersion);
+
             return new PreparePackageInstallationResult
             {
                 PackagesLicenseInfo = this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance,
@@ -68,12 +79,20 @@
 
         public void CancelPackageInstallation()
         {
+            this.currentlyInstallingPackage = null;
+
+            // TODO: remove parameter and calculate the packages for remove internally in rdp
             this.remoteDependencyProvider.RemoveLibraryDependenciesFromCache(
                 this.remoteDependencyProvider.PackagesToInstall.Select(p => p.Library.Name));
         }
 
         public async Task<IDictionary<string, byte[]>> DownloadPackagesContentsAsync()
         {
+            if (this.currentlyInstallingPackage == null)
+            {
+                throw new InvalidOperationException("No package is currently being installed.");
+            }
+
             try
             {
                 var sw = new Stopwatch();
@@ -119,10 +138,13 @@
                     Console.WriteLine($"ExtractStaticContents CSS - {sw.Elapsed}");
                 }
 
+                this.installedPackages.Add(this.currentlyInstallingPackage);
+
                 return packageContents;
             }
             finally
             {
+                this.currentlyInstallingPackage = null;
                 this.remoteDependencyProvider.ClearPackagesToInstall();
             }
         }

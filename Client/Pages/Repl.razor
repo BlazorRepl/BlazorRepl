@@ -19,13 +19,14 @@
 <SaveSnippetPopup @bind-Visible="@SaveSnippetPopupVisible"
                   InvokerId="save-snippet-btn"
                   CodeFiles="@CodeFiles.Values"
+                  InstalledPackages="@InstalledPackages"
                   UpdateActiveCodeFileContentAction="UpdateActiveCodeFileContent"></SaveSnippetPopup>
 
 <div class="row flex" style="margin: 0">
     <ReplLoader Show="@Loading"
                 Message="@LoaderText"></ReplLoader>
 
-    <PackageManager></PackageManager>
+    <PackageManager @ref="@PackageManager"></PackageManager>
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"

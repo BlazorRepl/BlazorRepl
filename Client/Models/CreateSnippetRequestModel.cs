@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
 
     public class CreateSnippetRequestModel
     {

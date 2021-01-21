@@ -9,6 +9,7 @@
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -46,6 +47,10 @@
         private IList<string> CodeFileNames { get; set; } = new List<string>();
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
+
+        private PackageManager PackageManager { get; set; }
+
+        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManager?.GetInstalledPackages();
 
         private bool SaveSnippetPopupVisible { get; set; }
 

@@ -9,6 +9,7 @@
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.Extensions.Options;
 
     public class SnippetsService
