@@ -8,8 +8,6 @@
                          OnAccept="@InstallNugetPackageAsync"
                          OnDecline="@DeclineLicense"></PackageLicensePopup>
 
-    @*TODO: Show already installed packages*@
-
     @if (PackagePendingRestore?.Any() ?? false)
     {
         @foreach (var package in PackagePendingRestore)
@@ -26,6 +24,19 @@
     }
     else
     {
+        if (this.NuGetPackageManager.InstalledPackages.Any())
+        {
+            <h2>Installed Packages</h2>
+
+            @foreach (var package in this.NuGetPackageManager.InstalledPackages)
+            {
+                <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
+                    <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
+                    <span>@package.Version</span>
+                </div>
+            }
+        }
+
         <div class="search-package-wrapper">
             <input @bind="@NugetPackageName" class="form-control" style="display: inline-block; margin-right: 5px" />
             <button type="submit" class="btn btn-br-primary" @onclick="@GetNugetPackages">
