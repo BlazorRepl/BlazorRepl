@@ -51,7 +51,10 @@
         public EventCallback<string> SessionIdChanged { get; set; }
 
         [Parameter]
-        public IEnumerable<Package> PackagesPendingToInstall { get; set; }
+        public ICollection<Package> PackagePendingRestore { get; set; }
+
+        [Parameter]
+        public EventCallback<ICollection<Package>> PackagePendingRestoreChanged { get; set; }
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -84,15 +87,18 @@
 
         public async Task RestoreSnippetPackages(Func<string, Task> updateStatusFunc)
         {
-            foreach (var package in this.PackagesPendingToInstall)
+            var order = 1;
+            var count = this.PackagePendingRestore.Count;
+            foreach (var package in this.PackagePendingRestore)
             {
-                await updateStatusFunc($"Restore {package.Name} package");
+                await updateStatusFunc($"Restoring {package.Name} {order++}/{count}");
                 await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNugetPackageAsync();
             }
 
-            await updateStatusFunc($"All packages are successfully restored");
+            this.PackagePendingRestore = new List<Package>();
+            await this.PackagePendingRestoreChanged.InvokeAsync(this.PackagePendingRestore);
         }
 
         public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManager.InstalledPackages;
@@ -147,14 +153,15 @@
 
         private async Task RestoreSnippetPackages()
         {
-            foreach (var package in this.PackagesPendingToInstall)
+            foreach (var package in this.PackagePendingRestore)
             {
                 await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNugetPackageAsync();
             }
 
-            this.PackagesPendingToInstall = Enumerable.Empty<Package>();
+            this.PackagePendingRestore = new List<Package>();
+            await this.PackagePendingRestoreChanged.InvokeAsync(this.PackagePendingRestore);
         }
 
         private async Task PreparePackageToInstallAsync()

@@ -27,7 +27,7 @@
                 Message="@LoaderText"></ReplLoader>
 
     <PackageManager @ref="@PackageManager"
-                    PackagesPendingToInstall="PackagesPendingToInstall"></PackageManager>
+                    @bind-PackagePendingRestore="PackagePendingRestore"></PackageManager>
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"

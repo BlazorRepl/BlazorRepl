@@ -52,7 +52,7 @@
 
         private IReadOnlyCollection<Package> InstalledPackages => this.PackageManager?.GetInstalledPackages();
 
-        private IEnumerable<Package> PackagePendingRestore { get; set; } = Enumerable.Empty<Package>();
+        private ICollection<Package> PackagePendingRestore { get; set; } = Array.Empty<Package>();
 
         private bool SaveSnippetPopupVisible { get; set; }
 
@@ -127,7 +127,7 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
-                        this.PackagePendingRestore = snippetResponse.InstalledPackages;
+                        this.PackagePendingRestore = snippetResponse.InstalledPackages.ToList();
                     }
                 }
                 catch (ArgumentException)
@@ -165,7 +165,7 @@
             if (this.PackagePendingRestore.Any())
             {
                 await this.PackageManager.RestoreSnippetPackages(this.UpdateLoaderTextAsync);
-                this.PackagePendingRestore = Enumerable.Empty<Package>();
+                await this.UpdateLoaderTextAsync("Prepare components for compilation");
             }
 
             CompileToAssemblyResult compilationResult = null;
