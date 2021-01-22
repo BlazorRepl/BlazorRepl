@@ -52,6 +52,8 @@
 
         private IReadOnlyCollection<Package> InstalledPackages => this.PackageManager?.GetInstalledPackages();
 
+        private IEnumerable<Package> PackagePendingRestore { get; set; } = Enumerable.Empty<Package>();
+
         private bool SaveSnippetPopupVisible { get; set; }
 
         private string Preset { get; set; } = "basic";
@@ -116,14 +118,16 @@
             {
                 try
                 {
-                    this.CodeFiles = (await this.SnippetsService.GetSnippetContentAsync(this.SnippetId)).ToDictionary(f => f.Path, f => f);
-                    if (!this.CodeFiles.Any())
+                    var snippetResponse = await this.SnippetsService.GetSnippetContentAsync(this.SnippetId);
+                    this.CodeFiles = snippetResponse?.Files?.ToDictionary(f => f.Path, f => f);
+                    if (!(this.CodeFiles?.Any() ?? false))
                     {
                         this.errorMessage = "No files in snippet.";
                     }
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
+                        this.PackagePendingRestore = snippetResponse.InstalledPackages;
                     }
                 }
                 catch (ArgumentException)
@@ -157,6 +161,12 @@
             this.LoaderText = "Processing";
 
             await Task.Delay(10); // Ensure rendering has time to be called
+
+            if (this.PackagePendingRestore.Any())
+            {
+                await this.PackageManager.RestoreSnippetPackages(this.UpdateLoaderTextAsync);
+                this.PackagePendingRestore = Enumerable.Empty<Package>();
+            }
 
             CompileToAssemblyResult compilationResult = null;
             CodeFile mainComponent = null;

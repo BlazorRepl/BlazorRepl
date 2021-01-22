@@ -50,6 +50,9 @@
         [Parameter]
         public EventCallback<string> SessionIdChanged { get; set; }
 
+        [Parameter]
+        public IEnumerable<Package> PackagesPendingToInstall { get; set; }
+
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
@@ -77,6 +80,19 @@
             this.PageNotificationsComponent?.Dispose();
 
             return this.JsRuntime.InvokeVoidAsync("App.NugetPackageInstallerPopup.dispose");
+        }
+
+        public async Task RestoreSnippetPackages(Func<string, Task> updateStatusFunc)
+        {
+            foreach (var package in this.PackagesPendingToInstall)
+            {
+                await updateStatusFunc($"Restore {package.Name} package");
+                await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
+
+                await this.InstallNugetPackageAsync();
+            }
+
+            await updateStatusFunc($"All packages are successfully restored");
         }
 
         public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManager.InstalledPackages;
@@ -127,6 +143,18 @@
             this.NugetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
             this.NugetPackageVersions.Reverse();
             this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();
+        }
+
+        private async Task RestoreSnippetPackages()
+        {
+            foreach (var package in this.PackagesPendingToInstall)
+            {
+                await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
+
+                await this.InstallNugetPackageAsync();
+            }
+
+            this.PackagesPendingToInstall = Enumerable.Empty<Package>();
         }
 
         private async Task PreparePackageToInstallAsync()
@@ -180,6 +208,7 @@
 
             Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
 
+            // consider separate notification from the installation
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
                 $"{this.SelectedNugetPackageName} package is successfully installed.");

@@ -26,7 +26,8 @@
     <ReplLoader Show="@Loading"
                 Message="@LoaderText"></ReplLoader>
 
-    <PackageManager @ref="@PackageManager"></PackageManager>
+    <PackageManager @ref="@PackageManager"
+                    PackagesPendingToInstall="PackagesPendingToInstall"></PackageManager>
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"

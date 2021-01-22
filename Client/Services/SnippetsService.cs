@@ -4,8 +4,10 @@
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Compression;
+    using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Json;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Core;
@@ -103,7 +105,7 @@
             return id;
         }
 
-        public async Task<IEnumerable<CodeFile>> GetSnippetContentAsync(string snippetId)
+        public async Task<SnippetResposeModel> GetSnippetContentAsync(string snippetId)
         {
             if (string.IsNullOrWhiteSpace(snippetId) || snippetId.Length != SnippetIdLength)
             {
@@ -120,7 +122,10 @@
             snippetResponse.EnsureSuccessStatusCode();
 
             var snippetFiles = await ExtractSnippetFilesFromResponseAsync(snippetResponse);
-            return snippetFiles;
+            var installedPackages = ExtractPackagesFromResponseAsync(snippetResponse);
+
+            var responseModel = new SnippetResposeModel { Files = snippetFiles, InstalledPackages = installedPackages };
+            return responseModel;
         }
 
         private static async Task<IEnumerable<CodeFile>> ExtractSnippetFilesFromResponseAsync(HttpResponseMessage snippetResponse)
@@ -146,6 +151,20 @@
             }
 
             return result;
+        }
+
+        private static IEnumerable<Package> ExtractPackagesFromResponseAsync(HttpResponseMessage snippetResponse)
+        {
+            if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var installedPackages))
+            {
+                if (installedPackages.Any())
+                {
+                    var headerDictionary = JsonSerializer.Deserialize<IDictionary<string, string>>(installedPackages.First());
+                    return headerDictionary.Select(x => new Package(x.Key, x.Value));
+                }
+            }
+
+            return Enumerable.Empty<Package>();
         }
 
         private static string DecodeDateIdPart(string encodedPart)
