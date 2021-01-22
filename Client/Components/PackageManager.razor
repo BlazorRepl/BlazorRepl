@@ -10,9 +10,9 @@
 
     @*TODO: Show already installed packages*@
 
-    @if (PackagesPendingToInstall?.Any() ?? false)
+    @if (PackagePendingRestore?.Any() ?? false)
     {
-        @foreach (var package in PackagesPendingToInstall)
+        @foreach (var package in PackagePendingRestore)
         {
             <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
                 <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
