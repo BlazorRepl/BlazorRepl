@@ -6,7 +6,7 @@
     <PackageLicensePopup Visible="@LicensePopupVisible"
                          PackagesToAcceptLicense="@PackagesToAcceptLicense"
                          OnAccept="@ProceedToPackageInstallationAsync"
-                         OnDecline="@DeclineLicense"></PackageLicensePopup>
+                         OnDecline="@DeclinePackageLicense"></PackageLicensePopup>
 
     @if (PackagesToRestore?.Any() ?? false)
     {
@@ -38,19 +38,19 @@
         }
 
         <div class="search-package-wrapper">
-            <input @bind="@NuGetPackageName" class="form-control" style="display: inline-block; margin-right: 5px" />
-            <button type="submit" class="btn btn-br-primary" @onclick="@GetNuGetPackages">
+            <input @bind="@PackageSearchQuery" class="form-control" style="display: inline-block; margin-right: 5px" />
+            <button type="submit" class="btn btn-br-primary" @onclick="@SearchPackagesAsync">
                 <i class="icon-search2"></i>
             </button>
         </div>
 
-        @if (string.IsNullOrEmpty(SelectedNuGetPackageName))
+        @if (string.IsNullOrEmpty(SelectedPackageName))
         {
-            @foreach (var package in NuGetPackages)
+            @foreach (var package in Packages)
             {
                 <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
                     <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package">@package</span>
-                    <button class="btn btn-br-primary" @onclick="@(() => SelectNuGetPackage(package))">
+                    <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))">
                         <i class="icon-download32"></i>
                     </button>
                 </div>
@@ -60,8 +60,8 @@
         {
             <label for="version-select">Version</label>
             <div class="search-package-wrapper">
-                <select class="form-control" id="version-select" @bind="@SelectedNuGetPackageVersion" style="display: inline-block; margin-right: 5px;">
-                    @foreach (var version in NuGetPackageVersions)
+                <select class="form-control" id="version-select" @bind="@SelectedPackageVersion" style="display: inline-block; margin-right: 5px;">
+                    @foreach (var version in PackageVersions)
                     {
                         <option value="@version">@version</option>
                     }

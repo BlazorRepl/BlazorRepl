@@ -5,9 +5,6 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Net.Http;
-    using System.Net.Http.Json;
-    using System.Text.Json;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Core;
@@ -21,9 +18,6 @@
 
         [Inject]
         public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
-
-        [Inject]
-        public HttpClient Http { get; set; }
 
         [Inject]
         public CompilationService CompilationService { get; set; }
@@ -55,31 +49,25 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        private string NuGetPackageName { get; set; }
+        private string PackageSearchQuery { get; set; }
+
+        private string SelectedPackageName { get; set; }
+
+        private string SelectedPackageVersion { get; set; }
+
+        private IEnumerable<string> Packages { get; set; } = Enumerable.Empty<string>();
+
+        private IEnumerable<string> PackageVersions { get; set; } = Enumerable.Empty<string>();
 
         private IEnumerable<PackageLicenseInfo> PackagesToAcceptLicense { get; set; } = Enumerable.Empty<PackageLicenseInfo>();
 
         private bool LicensePopupVisible { get; set; }
 
-        private string SelectedNuGetPackageName { get; set; }
-
-        private string SelectedNuGetPackageVersion { get; set; }
-
-        private IEnumerable<string> NuGetPackages { get; set; } = new List<string>();
-
-        private IEnumerable<string> NuGetPackageVersions { get; set; } = new List<string>();
-
         private string VisibleClass => this.Visible ? "show" : string.Empty;
 
         private string DisplayStyle => this.Visible ? string.Empty : "display: none;";
 
-        public ValueTask DisposeAsync()
-        {
-            this.dotNetInstance?.Dispose();
-            this.PageNotificationsComponent?.Dispose();
-
-            return ValueTask.CompletedTask;
-        }
+        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
 
         public async Task RestorePackagesAsync(bool handleLoading = false)
         {
@@ -100,7 +88,7 @@
 
                 await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
 
-                await this.InstallNuGetPackageAsync();
+                await this.InstallPackageAsync();
             }
 
             this.PackagesToRestore.Clear();
@@ -112,7 +100,13 @@
             }
         }
 
-        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
+        public ValueTask DisposeAsync()
+        {
+            this.dotNetInstance?.Dispose();
+            this.PageNotificationsComponent?.Dispose();
+
+            return ValueTask.CompletedTask;
+        }
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
@@ -127,30 +121,28 @@
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        // TODO: rename to search and move to the NuGet package manager
         // TODO: handle no packages found (ex. "Newtonsoft.Json 12.0.3")
-        private async Task GetNuGetPackages()
+        private async Task SearchPackagesAsync()
         {
-            this.NuGetPackages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.NuGetPackageName);
+            this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
 
-            this.SelectedNuGetPackageName = null;
+            this.SelectedPackageName = null;
         }
 
-        private async Task SelectNuGetPackage(string selectedPackage)
+        private async Task SelectPackageAsync(string selectedPackage)
         {
-            this.SelectedNuGetPackageName = selectedPackage;
-            this.NuGetPackageName = selectedPackage;
+            this.SelectedPackageName = selectedPackage;
 
-            this.NuGetPackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(this.SelectedNuGetPackageName);
+            this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(this.SelectedPackageName);
 
-            this.SelectedNuGetPackageVersion = this.NuGetPackageVersions.FirstOrDefault();
+            this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
         }
 
         private async Task PreparePackageToInstallAsync()
         {
             var prepareResult = await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(
-                this.SelectedNuGetPackageName,
-                this.SelectedNuGetPackageVersion);
+                this.SelectedPackageName,
+                this.SelectedPackageVersion);
 
             this.PackagesToAcceptLicense = prepareResult.PackagesToAcceptLicense ?? Enumerable.Empty<PackageLicenseInfo>();
 
@@ -164,7 +156,7 @@
             }
         }
 
-        private void DeclineLicense()
+        private void DeclinePackageLicense()
         {
             this.NuGetPackageManagementService.CancelPackageInstallation();
 
@@ -173,16 +165,22 @@
 
         private async Task ProceedToPackageInstallationAsync()
         {
-            await this.InstallNuGetPackageAsync();
+            await this.InstallPackageAsync();
 
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
-                $"{this.SelectedNuGetPackageName} package is successfully installed.");
+                $"{this.SelectedPackageName} package is successfully installed.");
 
             this.LicensePopupVisible = false;
+
+            this.PackageSearchQuery = null;
+            this.SelectedPackageName = null;
+            this.SelectedPackageVersion = null;
+            this.Packages = Enumerable.Empty<string>();
+            this.PackageVersions = Enumerable.Empty<string>();
         }
 
-        private async Task InstallNuGetPackageAsync()
+        private async Task InstallPackageAsync()
         {
             var sw = Stopwatch.StartNew();
 
