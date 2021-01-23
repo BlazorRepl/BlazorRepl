@@ -31,9 +31,6 @@
         [Inject]
         public IJSInProcessRuntime JsRuntime { get; set; }
 
-        [Inject]
-        public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
-
         [Parameter]
         public string SnippetId { get; set; }
 
@@ -203,7 +200,8 @@
 
             if (compilationResult?.AssemblyBytes?.Length > 0)
             {
-                this.UnmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
+                // Make sure the DLL is updated before reloading the user page
+                await this.JsRuntime.InvokeVoidAsync(
                     "App.CodeExecution.updateUserComponentsDll",
                     compilationResult.AssemblyBytes);
 

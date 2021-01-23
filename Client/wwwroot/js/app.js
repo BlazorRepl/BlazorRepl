@@ -340,12 +340,25 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
     function convertBytesToBase64String(bytes) {
         let binaryString = '';
         bytes.forEach(byte => binaryString += String.fromCharCode(byte));
+
         return btoa(binaryString);
     }
 
+    function convertBase64StringToBytes(base64String) {
+        const binaryString = window.atob(base64String);
+
+        const bytesCount = binaryString.length;
+        const bytes = new Uint8Array(bytesCount);
+        for (let i = 0; i < bytesCount; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        return bytes;
+    }
+
     return {
-        updateUserComponentsDll: async function (rawFileBytes) {
-            if (!rawFileBytes) {
+        updateUserComponentsDll: async function (fileAsBase64String) {
+            if (!fileAsBase64String) {
                 return;
             }
 
@@ -363,7 +376,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const dllPath = userComponentsDllCacheKey.url.substr(window.location.origin.length);
-            const dllBytes = Blazor.platform.toUint8Array(rawFileBytes);
+            const dllBytes = convertBase64StringToBytes(fileAsBase64String);
             await putInCacheStorage(cache, dllPath, dllBytes);
         },
         storeNuGetPackageFile: async function (rawSessionId, rawFileName, rawFileBytes) {
