@@ -1,17 +1,4 @@
 ﻿window.App = window.App || (function () {
-    let _nuGetDlls = null;
-
-    function jsArrayToDotNetArray(jsArray) {
-        jsArray = jsArray || [];
-
-        const dotNetArray = BINDING.mono_obj_array_new(jsArray.length);
-        for (let i = 0; i < jsArray.length; ++i) {
-            BINDING.mono_obj_array_set(dotNetArray, i, jsArray[i]);
-        }
-
-        return dotNetArray;
-    }
-
     return {
         reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
@@ -44,58 +31,7 @@
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
-        },
-        loadNuGetPackageFiles: async function loadNuGetPackageFiles(rawSessionId) {
-            if (!rawSessionId) {
-                return;
-            }
-
-            const sessionId = BINDING.conv_string(rawSessionId);
-            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
-            if (!nuGetContentCache) {
-                // TODO: alert user
-                return;
-            }
-
-            const dlls = [];
-
-            const files = await nuGetContentCache.keys();
-            for (const file of files) {
-                const response = await nuGetContentCache.match(file.url);
-
-                if (file.url.endsWith('.css')) {
-                    let fileContent = '';
-                    (new Uint8Array(await response.arrayBuffer())).forEach(
-                        (byte) => { fileContent += String.fromCharCode(byte) });
-                    fileContent = btoa(fileContent);
-
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.type = 'text/css';
-                    link.href = `data:text/css;base64,${fileContent}`;
-                    document.head.appendChild(link);
-                } else if (file.url.endsWith('.js')) {
-                    let fileContent = '';
-                    (new Uint8Array(await response.arrayBuffer())).forEach(
-                        (byte) => { fileContent += String.fromCharCode(byte) });
-                    fileContent = btoa(fileContent);
-
-                    const link = document.createElement('script');
-                    link.src = `data:text/javascript;base64,${fileContent}`;
-                    // TODO: defer?
-                    document.body.appendChild(link);
-                } else {
-                    const rawFileBytes = new Uint8Array(await response.arrayBuffer());
-
-                    // It's really important to use js_typed_array_to_array instead of jsArrayToDotNetArray 
-                    // so we actually have a byte[] instead of object[] in .NET code.
-                    dlls.push(BINDING.js_typed_array_to_array(rawFileBytes));
-                }
-            }
-
-            _nuGetDlls = jsArrayToDotNetArray(dlls);
-        },
-        getNuGetDlls: () => _nuGetDlls
+        }
     };
 }());
 
@@ -320,37 +256,6 @@ window.App.Repl = window.App.Repl || (function () {
                 resetEditor();
             }
         },
-        updateUserAssemblyInCacheStorage: function (rawFileBytes) {
-            if (!rawFileBytes) {
-                return;
-            }
-
-            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
-            const response = new Response(
-                new Blob([fileBytes]),
-                {
-                    headers: {
-                        'content-length': fileBytes.length.toString(),
-                        'content-type': 'application/octet-stream'
-                    }
-                });
-
-            caches.open('blazor-resources-/').then(function (cache) {
-                if (!cache) {
-                    // TODO: alert user
-                    return;
-                }
-
-                cache.keys().then(function (keys) {
-                    const keysForDelete = keys.filter(x => x.url.indexOf('UserComponents') > -1);
-
-                    const dll = keysForDelete.find(x => x.url.indexOf('dll') > -1).url.substr(window.location.origin.length);
-                    cache.delete(dll).then(function () {
-                        cache.put(dll, response).then(function () { });
-                    });
-                });
-            });
-        },
         dispose: function () {
             _dotNetInstance = null;
             _editorContainerId = null;
@@ -403,43 +308,119 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
     };
 }());
 
-window.App.NugetPackageInstallerPopup = window.App.NugetPackageInstallerPopup || (function () {
-    let _dotNetInstance;
-    let _sessionId;
+window.App.CodeExecution = window.App.CodeExecution || (function () {
+    const UNEXPECTED_ERROR_MESSAGE = 'An unexpected error has occurred. Please try again later or contact the team.';
+
+    let _loadedNuGetDlls = null;
+
+    function jsArrayToDotNetArray(jsArray) {
+        jsArray = jsArray || [];
+
+        const dotNetArray = BINDING.mono_obj_array_new(jsArray.length);
+        for (let i = 0; i < jsArray.length; ++i) {
+            BINDING.mono_obj_array_set(dotNetArray, i, jsArray[i]);
+        }
+
+        return dotNetArray;
+    }
+
+    async function putInCacheStorage(cache, fileName, fileBytes) {
+        const cachedResponse = new Response(
+            new Blob([fileBytes]),
+            {
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Length': fileBytes.length.toString()
+                }
+            });
+
+        await cache.put(fileName, cachedResponse);
+    }
+
+    function convertBytesToBase64String(bytes) {
+        let binaryString = '';
+        bytes.forEach(byte => binaryString += String.fromCharCode(byte));
+        return btoa(binaryString);
+    }
 
     return {
-        init: function (dotNetInstance) {
-            _dotNetInstance = dotNetInstance;
-            _sessionId = new Date().getTime();
-            return _sessionId.toString();
-        },
-        addPackageFilesToCache: async function (rawFileName, rawFileBytes) {
-            if (!rawFileName || !rawFileBytes) {
+        updateUserComponentsDll: async function (rawFileBytes) {
+            if (!rawFileBytes) {
                 return;
             }
 
-            const nuGetContentCache = await caches.open(`nuget-content-${_sessionId}/`);
+            const cache = await caches.open('blazor-resources-/');
+            if (!cache) {
+                alert(UNEXPECTED_ERROR_MESSAGE);
+                return;
+            }
+
+            const cacheKeys = await cache.keys();
+            const userComponentsDllCacheKey = cacheKeys.find(x => x.url.indexOf('BlazorRepl.UserComponents.dll') > -1);
+            if (!userComponentsDllCacheKey || !userComponentsDllCacheKey.url) {
+                alert(UNEXPECTED_ERROR_MESSAGE);
+                return;
+            }
+
+            const dllPath = userComponentsDllCacheKey.url.substr(window.location.origin.length);
+            const dllBytes = Blazor.platform.toUint8Array(rawFileBytes);
+            await putInCacheStorage(cache, dllPath, dllBytes);
+        },
+        storeNuGetPackageFile: async function (rawSessionId, rawFileName, rawFileBytes) {
+            if (!rawSessionId || !rawFileName || !rawFileBytes) {
+                return;
+            }
+
+            const sessionId = BINDING.conv_string(rawSessionId);
+            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
             if (!nuGetContentCache) {
                 return;
             }
 
             const fileName = BINDING.conv_string(rawFileName);
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
-
-            const cachedResponse = new Response(
-                new Blob([fileBytes]),
-                {
-                    headers: {
-                        'Content-Type': 'application/octet-stream',
-                        'Content-Length': fileBytes.length.toString(),
-                    }
-                });
-
-            await nuGetContentCache.put(fileName, cachedResponse);
+            await putInCacheStorage(nuGetContentCache, fileName, fileBytes);
         },
-        dispose: function () {
-            _dotNetInstance = null;
-            _sessionId = null;
+        loadNuGetPackageFiles: async function (rawSessionId) {
+            if (!rawSessionId) {
+                return;
+            }
+
+            const sessionId = BINDING.conv_string(rawSessionId);
+            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
+            if (!nuGetContentCache) {
+                return;
+            }
+
+            const dlls = [];
+
+            const files = await nuGetContentCache.keys();
+            for (const file of files) {
+                const response = await nuGetContentCache.match(file.url);
+                const bytes = new Uint8Array(await response.arrayBuffer());
+
+                if (file.url.endsWith('.css')) {
+                    const fileContent = convertBytesToBase64String(bytes);
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.type = 'text/css';
+                    link.href = `data:text/css;base64,${fileContent}`;
+                    document.head.appendChild(link);
+                } else if (file.url.endsWith('.js')) {
+                    const fileContent = convertBytesToBase64String(bytes);
+                    const script = document.createElement('script');
+                    script.src = `data:text/javascript;base64,${fileContent}`;
+                    document.body.appendChild(script);
+                } else {
+                    // Use js_typed_array_to_array instead of jsArrayToDotNetArray so we get a byte[] instead of object[] in .NET code.
+                    dlls.push(BINDING.js_typed_array_to_array(bytes));
+                }
+            }
+
+            _loadedNuGetDlls = jsArrayToDotNetArray(dlls);
+        },
+        getLoadedNuGetDlls: function () {
+            return _loadedNuGetDlls;
         }
     };
 }());

@@ -27,7 +27,8 @@
                 Message="@LoaderText"></ReplLoader>
 
     <PackageManager @ref="@PackageManager"
-                    @bind-PackagePendingRestore="PackagePendingRestore"></PackageManager>
+                    @bind-PackagePendingRestore="PackagePendingRestore"
+                    SessionId="@SessionId"></PackageManager>
 
     <div id="user-code-editor-container">
         <TabManager Tabs="@CodeFileNames"

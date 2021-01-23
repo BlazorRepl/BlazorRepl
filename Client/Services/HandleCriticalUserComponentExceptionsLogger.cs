@@ -1,7 +1,9 @@
 ﻿namespace BlazorRepl.Client.Services
 {
     using System;
+
     using BlazorRepl.Core;
+
     using Microsoft.Extensions.Logging;
     using Microsoft.JSInterop;
 
@@ -28,7 +30,7 @@
             if (exception?.ToString()?.Contains(CompilationService.DefaultRootNamespace) ?? false)
             {
                 this.unmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
-                    "App.Repl.updateUserAssemblyInCacheStorage",
+                    "App.CodeExecution.updateUserComponentsDll",
                     Convert.FromBase64String(CoreConstants.DefaultUserComponentsAssemblyBytes));
             }
         }

@@ -6,6 +6,7 @@
     using System.IO;
     using System.Runtime.Loader;
     using System.Threading.Tasks;
+
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -25,13 +26,13 @@
             if (!string.IsNullOrWhiteSpace(sessionId))
             {
                 // TODO: Extract to a service
-                this.JsRuntime.InvokeUnmarshalled<string, object>("App.loadNuGetPackageFiles", sessionId);
+                this.JsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadNuGetPackageFiles", sessionId);
 
                 IEnumerable<byte[]> dlls;
                 var i = 0;
                 while (true)
                 {
-                    dlls = this.JsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.getNuGetDlls");
+                    dlls = this.JsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedNuGetDlls");
                     if (dlls != null)
                     {
                         break;

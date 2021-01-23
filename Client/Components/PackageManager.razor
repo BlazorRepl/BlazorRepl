@@ -24,11 +24,11 @@
     }
     else
     {
-        if (this.NuGetPackageManager.InstalledPackages.Any())
+        if (NuGetPackageManager.InstalledPackages.Any())
         {
             <h2>Installed Packages</h2>
 
-            @foreach (var package in this.NuGetPackageManager.InstalledPackages)
+            @foreach (var package in NuGetPackageManager.InstalledPackages)
             {
                 <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
                     <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>

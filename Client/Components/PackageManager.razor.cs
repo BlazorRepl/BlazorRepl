@@ -9,10 +9,12 @@
     using System.Net.Http.Json;
     using System.Text.Json;
     using System.Threading.Tasks;
+
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
+
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -48,9 +50,6 @@
         public string SessionId { get; set; }
 
         [Parameter]
-        public EventCallback<string> SessionIdChanged { get; set; }
-
-        [Parameter]
         public ICollection<Package> PackagePendingRestore { get; set; }
 
         [Parameter]
@@ -82,7 +81,7 @@
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            return this.JsRuntime.InvokeVoidAsync("App.NugetPackageInstallerPopup.dispose");
+            return ValueTask.CompletedTask;
         }
 
         public async Task RestoreSnippetPackages(Func<string, Task> updateStatusFunc)
@@ -111,17 +110,13 @@
             if (firstRender)
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
-
-                this.SessionId = await this.JsRuntime.InvokeAsync<string>(
-                    "App.NugetPackageInstallerPopup.init",
-                    this.dotNetInstance);
-                await this.SessionIdChanged.InvokeAsync(this.SessionId);
             }
 
             await base.OnAfterRenderAsync(firstRender);
         }
 
         // TODO: rename to search and move to the NuGet package manager
+        // TODO: handle no packages found (ex. "Newtonsoft.Json 12.0.3")
         private async Task GetNuGetPackages()
         {
             // Add constants
@@ -146,8 +141,9 @@
                 $"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
 
             // Add strongly typed model
-            this.NuGetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
-            this.NuGetPackageVersions.Reverse();
+            var versions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
+            versions.Reverse();
+            this.NuGetPackageVersions = versions;
             this.SelectedNuGetPackageVersion = this.NuGetPackageVersions.FirstOrDefault();
         }
 
@@ -207,13 +203,14 @@
             // TODO: Move function to another JS module (+ the function for updating user components DLL) [proposal: ExecutionEngine]
             foreach (var (fileName, fileBytes) in packageContents)
             {
-                this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, byte[], object>(
-                    "App.NugetPackageInstallerPopup.addPackageFilesToCache",
+                this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, string, byte[], object>(
+                    "App.CodeExecution.storeNuGetPackageFile",
+                    this.SessionId,
                     fileName,
                     fileBytes);
             }
 
-            Console.WriteLine($"App.NugetPackageInstallerPopup.addPackageFilesToCache - {sw.Elapsed}");
+            Console.WriteLine($"App.CodeExecution.storeNuGetPackageFile - {sw.Elapsed}");
 
             // consider separate notification from the installation
             this.PageNotificationsComponent.AddNotification(

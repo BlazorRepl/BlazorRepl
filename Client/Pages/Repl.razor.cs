@@ -5,11 +5,13 @@
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+
     using BlazorRepl.Client.Components;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
+
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -37,9 +39,9 @@
         [Parameter]
         public string SnippetId { get; set; }
 
-        public CodeEditor CodeEditorComponent { get; set; }
+        private CodeEditor CodeEditorComponent { get; set; }
 
-        public IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
+        private IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -66,7 +68,7 @@
 
         private bool Loading { get; set; }
 
-        private string SessionId { get; set; }
+        private string SessionId { get; } = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
@@ -205,15 +207,15 @@
             if (compilationResult?.AssemblyBytes?.Length > 0)
             {
                 this.UnmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
-                    "App.Repl.updateUserAssemblyInCacheStorage",
+                    "App.CodeExecution.updateUserComponentsDll",
                     compilationResult.AssemblyBytes);
 
-                var userPagePath = string.IsNullOrWhiteSpace(this.SessionId)
-                    ? MainUserPagePath
-                    : $"{MainUserPagePath}#{this.SessionId}";
+                var userPagePath = this.InstalledPackages?.Any() ?? false
+                    ? $"{MainUserPagePath}#{this.SessionId}"
+                    : MainUserPagePath;
 
                 // TODO: Add error page in iframe
-                this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", MainUserPagePath);
+                this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
 
