@@ -131,31 +131,18 @@
         // TODO: handle no packages found (ex. "Newtonsoft.Json 12.0.3")
         private async Task GetNuGetPackages()
         {
-            // Add constants
-            var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api-v2v3search-0.nuget.org/autocomplete?q={this.NuGetPackageName}");
+            this.NuGetPackages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.NuGetPackageName);
 
-            // Add strongly typed model
-            this.NuGetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(10).ToList();
             this.SelectedNuGetPackageName = null;
         }
 
-        // TODO: use method from NuGet package manager
         private async Task SelectNuGetPackage(string selectedPackage)
         {
             this.SelectedNuGetPackageName = selectedPackage;
             this.NuGetPackageName = selectedPackage;
 
-            this.NuGetPackageVersions = new List<string>();
+            this.NuGetPackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(this.SelectedNuGetPackageName);
 
-            // populate versions dropdown
-            var versionsResult = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
-
-            // Add strongly typed model
-            var versions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
-            versions.Reverse();
-            this.NuGetPackageVersions = versions;
             this.SelectedNuGetPackageVersion = this.NuGetPackageVersions.FirstOrDefault();
         }
 
@@ -188,7 +175,6 @@
         {
             await this.InstallNuGetPackageAsync();
 
-            // consider separate notification from the installation
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
                 $"{this.SelectedNuGetPackageName} package is successfully installed.");

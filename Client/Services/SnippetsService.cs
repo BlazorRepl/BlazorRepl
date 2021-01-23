@@ -97,7 +97,7 @@
                 throw new InvalidOperationException(codeFilesValidationError);
             }
 
-            var requestData = new CreateSnippetRequestModel { Files = codeFiles, InstalledPackages = installedPackages };
+            var requestData = new CreateSnippetRequest { Files = codeFiles, InstalledPackages = installedPackages };
 
             var response = await this.httpClient.PostAsJsonAsync(this.snippetsOptions.CreateUrl, requestData);
             response.EnsureSuccessStatusCode();
@@ -106,7 +106,7 @@
             return id;
         }
 
-        public async Task<SnippetResponseModel> GetSnippetContentAsync(string snippetId)
+        public async Task<SnippetResponse> GetSnippetContentAsync(string snippetId)
         {
             if (string.IsNullOrWhiteSpace(snippetId) || snippetId.Length != SnippetIdLength)
             {
@@ -125,7 +125,7 @@
             var snippetFiles = await ExtractSnippetFilesFromResponseAsync(snippetResponse);
             var installedPackages = ExtractPackagesFromResponse(snippetResponse);
 
-            var responseModel = new SnippetResponseModel { Files = snippetFiles, InstalledPackages = installedPackages };
+            var responseModel = new SnippetResponse { Files = snippetFiles, InstalledPackages = installedPackages };
             return responseModel;
         }
 
@@ -158,8 +158,12 @@
         {
             if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var installedPackages) && installedPackages.Any())
             {
-                var headerDictionary = JsonSerializer.Deserialize<IDictionary<string, string>>(installedPackages.First());
-                return headerDictionary.Select(x => new Package { Name = x.Key, Version = x.Value }).ToList();
+                var packages = JsonSerializer
+                    .Deserialize<IDictionary<string, string>>(installedPackages.First())
+                    .Select(x => new Package { Name = x.Key, Version = x.Value })
+                    .ToList();
+
+                return packages;
             }
 
             return Enumerable.Empty<Package>();

@@ -7,6 +7,8 @@
     using System.IO.Compression;
     using System.Linq;
     using System.Net.Http;
+    using System.Net.Http.Json;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
@@ -144,6 +146,40 @@
                 this.currentlyInstallingPackage = null;
                 this.remoteDependencyProvider.ClearPackagesToInstall();
             }
+        }
+
+        public async Task<IEnumerable<string>> SearchPackagesAsync(string query, int take = 10)
+        {
+            // TODO: Support prerelease packages
+            // TODO: Maybe support other package types
+            const string NuGetEndpointFormat =
+                "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&prerelease=false";
+
+            var result = await this.httpClient.GetFromJsonAsync<NuGetPackagesSearchResponse>(
+                string.Format(NuGetEndpointFormat, query, take));
+
+            return result?.Data ?? Enumerable.Empty<string>();
+        }
+
+        public async Task<IEnumerable<string>> GetPackageVersionsAsync(string packageName)
+        {
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageName));
+            }
+
+            // TODO: Support prerelease packages
+            const string NuGetEndpointFormat = "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&prerelease=false";
+
+            var result = await this.httpClient.GetFromJsonAsync<NuGetPackageVersionsResponse>(
+                string.Format(NuGetEndpointFormat, packageName));
+
+            if (result?.Data == null)
+            {
+                return Enumerable.Empty<string>();
+            }
+
+            return result.Data.Reverse().ToList();
         }
 
         private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)

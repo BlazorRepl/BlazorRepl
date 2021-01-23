@@ -5,7 +5,7 @@
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
 
-    public class CreateSnippetRequestModel
+    public class SnippetResponse
     {
         public IEnumerable<CodeFile> Files { get; set; } = Array.Empty<CodeFile>();
 
