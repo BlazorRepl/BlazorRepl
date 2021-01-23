@@ -36,7 +36,7 @@
         public SnippetsService SnippetsService { get; set; }
 
         [Inject]
-        public NuGetPackageManagementService NuGetPackageManager { get; set; }
+        public NuGetPackageManagementService NuGetPackageManagementService { get; set; }
 
         [Parameter]
         public bool Visible { get; set; }
@@ -89,7 +89,7 @@
             foreach (var package in this.PackagePendingRestore)
             {
                 await updateStatusFunc($"Restoring {package.Name} {order++}/{count}");
-                await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
+                await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNuGetPackageAsync();
             }
@@ -98,7 +98,7 @@
             await this.PackagePendingRestoreChanged.InvokeAsync(this.PackagePendingRestore);
         }
 
-        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManager.InstalledPackages;
+        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
@@ -149,7 +149,7 @@
         {
             foreach (var package in this.PackagePendingRestore)
             {
-                await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
+                await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNuGetPackageAsync();
             }
@@ -160,7 +160,7 @@
 
         private async Task PreparePackageToInstallAsync()
         {
-            var prepareResult = await this.NuGetPackageManager.PreparePackageForDownloadAsync(
+            var prepareResult = await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(
                 this.SelectedNuGetPackageName,
                 this.SelectedNuGetPackageVersion);
 
@@ -178,7 +178,7 @@
 
         private void DeclineLicense()
         {
-            this.NuGetPackageManager.CancelPackageInstallation();
+            this.NuGetPackageManagementService.CancelPackageInstallation();
 
             this.LicensePopupVisible = false;
         }
@@ -189,7 +189,7 @@
             var sw = Stopwatch.StartNew();
 
             // TODO: extract custom object for the package contents to prevent filtering
-            var packageContents = await this.NuGetPackageManager.DownloadPackagesContentsAsync();
+            var packageContents = await this.NuGetPackageManagementService.DownloadPackagesContentsAsync();
             Console.WriteLine($"NuGetPackageManager.DownloadPackageContentsAsync - {sw.Elapsed}");
 
             sw.Restart();
