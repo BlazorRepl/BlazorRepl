@@ -83,6 +83,7 @@
             this.snippetsOptions = snippetsOptions.Value;
         }
 
+        // TODO: Validate packages
         public async Task<string> SaveSnippetAsync(IEnumerable<CodeFile> codeFiles, IEnumerable<Package> installedPackages)
         {
             if (codeFiles == null)
@@ -105,7 +106,7 @@
             return id;
         }
 
-        public async Task<SnippetResposeModel> GetSnippetContentAsync(string snippetId)
+        public async Task<SnippetResponseModel> GetSnippetContentAsync(string snippetId)
         {
             if (string.IsNullOrWhiteSpace(snippetId) || snippetId.Length != SnippetIdLength)
             {
@@ -122,9 +123,9 @@
             snippetResponse.EnsureSuccessStatusCode();
 
             var snippetFiles = await ExtractSnippetFilesFromResponseAsync(snippetResponse);
-            var installedPackages = ExtractPackagesFromResponseAsync(snippetResponse);
+            var installedPackages = ExtractPackagesFromResponse(snippetResponse);
 
-            var responseModel = new SnippetResposeModel { Files = snippetFiles, InstalledPackages = installedPackages };
+            var responseModel = new SnippetResponseModel { Files = snippetFiles, InstalledPackages = installedPackages };
             return responseModel;
         }
 
@@ -153,15 +154,12 @@
             return result;
         }
 
-        private static IEnumerable<Package> ExtractPackagesFromResponseAsync(HttpResponseMessage snippetResponse)
+        private static IEnumerable<Package> ExtractPackagesFromResponse(HttpResponseMessage snippetResponse)
         {
-            if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var installedPackages))
+            if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var installedPackages) && installedPackages.Any())
             {
-                if (installedPackages.Any())
-                {
-                    var headerDictionary = JsonSerializer.Deserialize<IDictionary<string, string>>(installedPackages.First());
-                    return headerDictionary.Select(x => new Package(x.Key, x.Value));
-                }
+                var headerDictionary = JsonSerializer.Deserialize<IDictionary<string, string>>(installedPackages.First());
+                return headerDictionary.Select(x => new Package { Name = x.Key, Version = x.Value }).ToList();
             }
 
             return Enumerable.Empty<Package>();

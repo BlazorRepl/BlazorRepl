@@ -117,8 +117,8 @@
                 try
                 {
                     var snippetResponse = await this.SnippetsService.GetSnippetContentAsync(this.SnippetId);
-                    this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f);
-                    if (!(this.CodeFiles?.Any() ?? false))
+                    this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f) ?? new Dictionary<string, CodeFile>();
+                    if (!this.CodeFiles.Any())
                     {
                         this.errorMessage = "No files in snippet.";
                     }
