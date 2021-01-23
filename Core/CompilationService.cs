@@ -208,6 +208,8 @@
             ICollection<CodeFile> codeFiles,
             Func<string, Task> updateStatusFunc)
         {
+            await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
+
             // The first phase won't include any metadata references for component discovery. This mirrors what the build does.
             var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
@@ -238,8 +240,6 @@
             // Add the 'temp' compilation as a metadata reference
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
-
-            await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
 
             var results = new List<CompileToCSharpResult>(codeFiles.Count);
             foreach (var declaration in declarations)

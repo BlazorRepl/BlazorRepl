@@ -37,20 +37,20 @@
         [Parameter]
         public string SnippetId { get; set; }
 
+        [CascadingParameter]
+        private PageNotifications PageNotificationsComponent { get; set; }
+
         private CodeEditor CodeEditorComponent { get; set; }
 
         private IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
-
-        [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
 
         private IList<string> CodeFileNames { get; set; } = new List<string>();
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
-        private PackageManager PackageManager { get; set; }
+        private PackageManager PackageManagerComponent { get; set; }
 
-        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManager?.GetInstalledPackages();
+        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
 
         private ICollection<Package> PackagePendingRestore { get; set; } = Array.Empty<Package>();
 
@@ -117,7 +117,7 @@
                 try
                 {
                     var snippetResponse = await this.SnippetsService.GetSnippetContentAsync(this.SnippetId);
-                    this.CodeFiles = snippetResponse?.Files?.ToDictionary(f => f.Path, f => f);
+                    this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f);
                     if (!(this.CodeFiles?.Any() ?? false))
                     {
                         this.errorMessage = "No files in snippet.";
@@ -162,8 +162,7 @@
 
             if (this.PackagePendingRestore.Any())
             {
-                await this.PackageManager.RestoreSnippetPackages(this.UpdateLoaderTextAsync);
-                await this.UpdateLoaderTextAsync("Prepare components for compilation");
+                await this.PackageManagerComponent.RestoreSnippetPackages(this.UpdateLoaderTextAsync);
             }
 
             CompileToAssemblyResult compilationResult = null;

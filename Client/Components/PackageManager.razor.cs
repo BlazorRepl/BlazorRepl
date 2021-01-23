@@ -84,11 +84,12 @@
 
         public async Task RestoreSnippetPackages(Func<string, Task> updateStatusFunc)
         {
-            var order = 1;
-            var count = this.PackagePendingRestore.Count;
+            var index = 1;
             foreach (var package in this.PackagePendingRestore)
             {
-                await updateStatusFunc($"Restoring {package.Name} {order++}/{count}");
+                await updateStatusFunc($"[{index}/{this.PackagePendingRestore.Count}] Restoring package: {package.Name}");
+                index++;
+
                 await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNuGetPackageAsync();
