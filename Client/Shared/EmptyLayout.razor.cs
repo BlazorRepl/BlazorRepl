@@ -6,7 +6,6 @@
     using System.IO;
     using System.Runtime.Loader;
     using System.Threading.Tasks;
-
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 

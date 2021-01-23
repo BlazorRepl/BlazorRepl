@@ -1,9 +1,7 @@
 ﻿namespace BlazorRepl.Client.Services
 {
     using System;
-
     using BlazorRepl.Core;
-
     using Microsoft.Extensions.Logging;
     using Microsoft.JSInterop;
 

@@ -9,12 +9,10 @@
     using System.Net.Http.Json;
     using System.Text.Json;
     using System.Threading.Tasks;
-
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
-
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
