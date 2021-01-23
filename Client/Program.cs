@@ -29,7 +29,7 @@ namespace BlazorRepl.Client
             builder.Services.AddScoped<SnippetsService>();
             builder.Services.AddSingleton<CompilationService>();
             builder.Services.AddSingleton<RemoteDependencyProvider>();
-            builder.Services.AddScoped<NuGetPackageManager>();
+            builder.Services.AddScoped<NuGetPackageManagementService>();
             builder.Services.AddHttpClient();
             builder.Services.AddScoped(serviceProvider =>
             {

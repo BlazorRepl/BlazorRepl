@@ -4,6 +4,6 @@
 
     public class PreparePackageInstallationResult
     {
-        public IEnumerable<PackageLicenseInfo> PackagesLicenseInfo { get; set; }
+        public IEnumerable<PackageLicenseInfo> PackagesToAcceptLicense { get; set; }
     }
 }

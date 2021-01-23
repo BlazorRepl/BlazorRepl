@@ -14,7 +14,7 @@
     using NuGet.Packaging;
     using NuGet.Versioning;
 
-    public class NuGetPackageManager
+    public class NuGetPackageManagementService
     {
         private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
         private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
@@ -26,7 +26,7 @@
 
         private Package currentlyInstallingPackage;
 
-        public NuGetPackageManager(
+        public NuGetPackageManagementService(
             RemoteDependencyWalker remoteDependencyWalker,
             RemoteDependencyProvider remoteDependencyProvider,
             HttpClient httpClient)
@@ -73,7 +73,7 @@
 
             return new PreparePackageInstallationResult
             {
-                PackagesLicenseInfo = this.remoteDependencyProvider.PackagesRequiringLicenseAcceptance,
+                PackagesToAcceptLicense = this.remoteDependencyProvider.PackagesToAcceptLicense,
             };
         }
 
@@ -81,9 +81,7 @@
         {
             this.currentlyInstallingPackage = null;
 
-            // TODO: remove parameter and calculate the packages for remove internally in rdp
-            this.remoteDependencyProvider.RemoveLibraryDependenciesFromCache(
-                this.remoteDependencyProvider.PackagesToInstall.Select(p => p.Library.Name));
+            this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
         public async Task<IDictionary<string, byte[]>> DownloadPackagesContentsAsync()
@@ -109,7 +107,6 @@
                     using var zippedStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(zippedStream);
 
-                    // TODO: Merge into 1 foreach to prevent 3 times entries traversal
                     sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
                     foreach (var (fileName, fileBytes) in dlls)

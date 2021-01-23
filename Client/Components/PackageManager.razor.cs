@@ -36,7 +36,7 @@
         public SnippetsService SnippetsService { get; set; }
 
         [Inject]
-        public NuGetPackageManager NuGetPackageManager { get; set; }
+        public NuGetPackageManagementService NuGetPackageManager { get; set; }
 
         [Parameter]
         public bool Visible { get; set; }
@@ -164,7 +164,7 @@
                 this.SelectedNuGetPackageName,
                 this.SelectedNuGetPackageVersion);
 
-            this.PackagesToAcceptLicense = prepareResult.PackagesLicenseInfo ?? Enumerable.Empty<PackageLicenseInfo>();
+            this.PackagesToAcceptLicense = prepareResult.PackagesToAcceptLicense ?? Enumerable.Empty<PackageLicenseInfo>();
 
             if (this.PackagesToAcceptLicense.Any())
             {
@@ -179,6 +179,7 @@
         private void DeclineLicense()
         {
             this.NuGetPackageManager.CancelPackageInstallation();
+
             this.LicensePopupVisible = false;
         }
 
@@ -198,7 +199,6 @@
 
             sw.Restart();
 
-            // TODO: Move function to another JS module (+ the function for updating user components DLL) [proposal: ExecutionEngine]
             foreach (var (fileName, fileBytes) in packageContents)
             {
                 this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, string, byte[], object>(

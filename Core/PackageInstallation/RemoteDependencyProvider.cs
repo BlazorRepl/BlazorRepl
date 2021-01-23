@@ -35,7 +35,7 @@
 
         internal ICollection<LibraryDependencyInfo> PackagesToInstall { get; } = new List<LibraryDependencyInfo>();
 
-        internal ICollection<PackageLicenseInfo> PackagesRequiringLicenseAcceptance { get; } = new List<PackageLicenseInfo>();
+        internal ICollection<PackageLicenseInfo> PackagesToAcceptLicense { get; } = new List<PackageLicenseInfo>();
 
         public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
         {
@@ -80,7 +80,7 @@
         {
             if (LibraryDependencyCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
-                // handle the case when the constraint is not >=
+                // TODO: handle the case when the constraint is not >=
                 if (dependencyInfo.Library.Version >= libraryIdentity.Version)
                 {
                     return dependencyInfo;
@@ -88,6 +88,7 @@
 
                 throw new InvalidOperationException();
 
+                // Some thoughts:
                 // differentiate the deps which comes from the project from those which comes from the current walking
 
                 // we should separate the cache in 3 different collection
@@ -133,7 +134,7 @@
 
                     var licenseInfo = new PackageLicenseInfo(libraryIdentity.Name, licenseMetadata?.License, licenseUrl, authors);
 
-                    this.PackagesRequiringLicenseAcceptance.Add(licenseInfo);
+                    this.PackagesToAcceptLicense.Add(licenseInfo);
                 }
             }
 
@@ -158,19 +159,18 @@
             throw new NotSupportedException();
         }
 
-        internal void ClearPackagesToInstall()
+        internal void ClearPackagesToInstall(bool clearFromCache = false)
         {
-            this.PackagesToInstall.Clear();
-            this.PackagesRequiringLicenseAcceptance.Clear();
-        }
-
-        // call when the user do not accept license prompt
-        internal void RemoveLibraryDependenciesFromCache(IEnumerable<string> libraryDependencies)
-        {
-            foreach (var dependency in libraryDependencies)
+            if (clearFromCache)
             {
-                LibraryDependencyCache.TryRemove(dependency, out var _);
+                foreach (var package in this.PackagesToInstall)
+                {
+                    LibraryDependencyCache.TryRemove(package.Library.Name, out _);
+                }
             }
+
+            this.PackagesToInstall.Clear();
+            this.PackagesToAcceptLicense.Clear();
         }
     }
 }
