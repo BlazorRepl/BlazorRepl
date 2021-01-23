@@ -132,9 +132,13 @@
                     var licenseMetadata = nuspecReader.GetLicenseMetadata();
                     var licenseUrl = nuspecReader.GetLicenseUrl() ?? licenseMetadata?.LicenseUrl?.ToString();
 
-                    var licenseInfo = new PackageLicenseInfo(libraryIdentity.Name, licenseMetadata?.License, licenseUrl, authors);
-
-                    this.PackagesToAcceptLicense.Add(licenseInfo);
+                    this.PackagesToAcceptLicense.Add(new PackageLicenseInfo
+                    {
+                        Package = libraryIdentity.Name,
+                        License = licenseMetadata?.License,
+                        LicenseUrl = licenseUrl,
+                        Authors = authors,
+                    });
                 }
             }
 

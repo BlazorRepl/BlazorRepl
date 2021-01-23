@@ -69,7 +69,7 @@
                 recursive: true);
             Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
-            this.currentlyInstallingPackage = new Package(packageName, packageVersion);
+            this.currentlyInstallingPackage = new Package { Name = packageName, Version = packageVersion };
 
             return new PreparePackageInstallationResult
             {
