@@ -37,7 +37,7 @@
         public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
 
         [Parameter]
-        public IReadOnlyCollection<Package> InstalledPackages { get; set; } = new List<Package>();
+        public IReadOnlyCollection<Package> InstalledPackages { get; set; } = Array.Empty<Package>();
 
         [Parameter]
         public Action UpdateActiveCodeFileContentAction { get; set; }
