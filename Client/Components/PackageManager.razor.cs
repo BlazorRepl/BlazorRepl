@@ -59,19 +59,19 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        private string NugetPackageName { get; set; }
+        private string NuGetPackageName { get; set; }
 
         private IEnumerable<PackageLicenseInfo> PackagesToAcceptLicense { get; set; } = Enumerable.Empty<PackageLicenseInfo>();
 
         private bool LicensePopupVisible { get; set; }
 
-        private string SelectedNugetPackageName { get; set; }
+        private string SelectedNuGetPackageName { get; set; }
 
-        private string SelectedNugetPackageVersion { get; set; }
+        private string SelectedNuGetPackageVersion { get; set; }
 
-        private List<string> NugetPackages { get; set; } = new List<string>();
+        private IEnumerable<string> NuGetPackages { get; set; } = new List<string>();
 
-        private List<string> NugetPackageVersions { get; set; } = new List<string>();
+        private IEnumerable<string> NuGetPackageVersions { get; set; } = new List<string>();
 
         private string VisibleClass => this.Visible ? "show" : string.Empty;
 
@@ -94,7 +94,7 @@
                 await updateStatusFunc($"Restoring {package.Name} {order++}/{count}");
                 await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
 
-                await this.InstallNugetPackageAsync();
+                await this.InstallNuGetPackageAsync();
             }
 
             this.PackagePendingRestore = new List<Package>();
@@ -122,33 +122,33 @@
         }
 
         // TODO: rename to search and move to the NuGet package manager
-        private async Task GetNugetPackages()
+        private async Task GetNuGetPackages()
         {
             // Add constants
             var result = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
-                $"https://api-v2v3search-0.nuget.org/autocomplete?q={this.NugetPackageName}");
+                $"https://api-v2v3search-0.nuget.org/autocomplete?q={this.NuGetPackageName}");
 
             // Add strongly typed model
-            this.NugetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(10).ToList();
-            this.SelectedNugetPackageName = null;
+            this.NuGetPackages = JsonSerializer.Deserialize<List<string>>(result["data"].ToString()).Take(10).ToList();
+            this.SelectedNuGetPackageName = null;
         }
 
         // TODO: use method from NuGet package manager
-        private async Task SelectNugetPackage(string selectedPackage)
+        private async Task SelectNuGetPackage(string selectedPackage)
         {
-            this.SelectedNugetPackageName = selectedPackage;
-            this.NugetPackageName = selectedPackage;
+            this.SelectedNuGetPackageName = selectedPackage;
+            this.NuGetPackageName = selectedPackage;
 
-            this.NugetPackageVersions = new();
+            this.NuGetPackageVersions = new List<string>();
 
             // populate versions dropdown
             var versionsResult = await this.Http.GetFromJsonAsync<IDictionary<string, object>>(
                 $"https://api.nuget.org/v3-flatcontainer/{selectedPackage}/index.json");
 
             // Add strongly typed model
-            this.NugetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
-            this.NugetPackageVersions.Reverse();
-            this.SelectedNugetPackageVersion = this.NugetPackageVersions.FirstOrDefault();
+            this.NuGetPackageVersions = JsonSerializer.Deserialize<List<string>>(versionsResult["versions"].ToString());
+            this.NuGetPackageVersions.Reverse();
+            this.SelectedNuGetPackageVersion = this.NuGetPackageVersions.FirstOrDefault();
         }
 
         private async Task RestoreSnippetPackages()
@@ -157,7 +157,7 @@
             {
                 await this.NuGetPackageManager.PreparePackageForDownloadAsync(package.Name, package.Version);
 
-                await this.InstallNugetPackageAsync();
+                await this.InstallNuGetPackageAsync();
             }
 
             this.PackagePendingRestore = new List<Package>();
@@ -167,8 +167,8 @@
         private async Task PreparePackageToInstallAsync()
         {
             var prepareResult = await this.NuGetPackageManager.PreparePackageForDownloadAsync(
-                this.SelectedNugetPackageName,
-                this.SelectedNugetPackageVersion);
+                this.SelectedNuGetPackageName,
+                this.SelectedNuGetPackageVersion);
 
             this.PackagesToAcceptLicense = prepareResult.PackagesLicenseInfo ?? Enumerable.Empty<PackageLicenseInfo>();
 
@@ -178,7 +178,7 @@
             }
             else
             {
-                await this.InstallNugetPackageAsync();
+                await this.InstallNuGetPackageAsync();
             }
         }
 
@@ -189,7 +189,7 @@
         }
 
         // TODO: think about doing this in the repl component (it is the management component)
-        private async Task InstallNugetPackageAsync()
+        private async Task InstallNuGetPackageAsync()
         {
             var sw = Stopwatch.StartNew();
 
@@ -218,7 +218,7 @@
             // consider separate notification from the installation
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
-                $"{this.SelectedNugetPackageName} package is successfully installed.");
+                $"{this.SelectedNuGetPackageName} package is successfully installed.");
 
             this.LicensePopupVisible = false;
             await this.CloseInternalAsync();

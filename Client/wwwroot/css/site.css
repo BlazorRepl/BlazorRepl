@@ -186,15 +186,12 @@ app {
     z-index: 10;
 }
 
-/* Nuget Sidebar */
-.nuget-sidebar {
+/* NuGet Sidebar */
+.nuget-sidebar .search-package-wrapper {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5px;
 }
-
-    .nuget-sidebar .search-package-wrapper {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 5px;
-    }
 
 .btn-br-primary {
     background: #4aca85;
@@ -338,7 +335,7 @@ app {
 }
 
 
-/* Nuget Package Installer Popup */
+/* Nuget Package License Popup */
 .package-license-overlay {
     width: 100%;
     height: 100%;

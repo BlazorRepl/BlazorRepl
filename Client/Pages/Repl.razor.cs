@@ -66,8 +66,6 @@
 
         private bool Loading { get; set; }
 
-        private bool NugetPackageInstallerPopupVisible { get; set; }
-
         private string SessionId { get; set; }
 
         [JSInvokable]
@@ -281,7 +279,5 @@
 
             return Task.Delay(10); // Ensure rendering has time to be called
         }
-
-        private void ShowNugetPackageInstaller() => this.NugetPackageInstallerPopupVisible = true;
     }
 }
