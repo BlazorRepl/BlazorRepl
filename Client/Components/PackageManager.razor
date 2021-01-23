@@ -5,12 +5,12 @@
 
     <PackageLicensePopup Visible="@LicensePopupVisible"
                          PackagesToAcceptLicense="@PackagesToAcceptLicense"
-                         OnAccept="@InstallNuGetPackageAsync"
+                         OnAccept="@ProceedToPackageInstallationAsync"
                          OnDecline="@DeclineLicense"></PackageLicensePopup>
 
-    @if (PackagePendingRestore?.Any() ?? false)
+    @if (PackagesToRestore?.Any() ?? false)
     {
-        @foreach (var package in PackagePendingRestore)
+        @foreach (var package in PackagesToRestore)
         {
             <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
                 <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
@@ -18,8 +18,8 @@
             </div>
         }
 
-        <button class="btn btn-br-primary" @onclick="@RestoreSnippetPackages">
-            <i class="icon-cloud-download"></i> Restore Snippet Packages
+        <button class="btn btn-br-primary" @onclick="(() => RestorePackagesAsync(true))">
+            <i class="icon-cloud-download"></i> Restore Packages
         </button>
     }
     else

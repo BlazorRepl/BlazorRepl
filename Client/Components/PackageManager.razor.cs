@@ -10,7 +10,6 @@
     using System.Text.Json;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
-    using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
@@ -24,16 +23,10 @@
         public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
 
         [Inject]
-        public IJSRuntime JsRuntime { get; set; }
-
-        [Inject]
         public HttpClient Http { get; set; }
 
         [Inject]
         public CompilationService CompilationService { get; set; }
-
-        [Inject]
-        public SnippetsService SnippetsService { get; set; }
 
         [Inject]
         public NuGetPackageManagementService NuGetPackageManagementService { get; set; }
@@ -48,10 +41,16 @@
         public string SessionId { get; set; }
 
         [Parameter]
-        public ICollection<Package> PackagePendingRestore { get; set; }
+        public ICollection<Package> PackagesToRestore { get; set; }
 
         [Parameter]
-        public EventCallback<ICollection<Package>> PackagePendingRestoreChanged { get; set; }
+        public bool Loading { get; set; }
+
+        [Parameter]
+        public EventCallback<bool> LoadingChanged { get; set; }
+
+        [Parameter]
+        public Func<string, Task> UpdateLoaderTextFunc { get; set; }
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -82,21 +81,35 @@
             return ValueTask.CompletedTask;
         }
 
-        public async Task RestoreSnippetPackages(Func<string, Task> updateStatusFunc)
+        public async Task RestorePackagesAsync(bool handleLoading = false)
         {
-            var index = 1;
-            foreach (var package in this.PackagePendingRestore)
+            if (handleLoading)
             {
-                await updateStatusFunc($"[{index}/{this.PackagePendingRestore.Count}] Restoring package: {package.Name}");
-                index++;
+                this.Loading = true;
+                await this.LoadingChanged.InvokeAsync(this.Loading);
+            }
+
+            var index = 1;
+            foreach (var package in this.PackagesToRestore)
+            {
+                if (this.UpdateLoaderTextFunc != null)
+                {
+                    await this.UpdateLoaderTextFunc($"[{index}/{this.PackagesToRestore.Count}] Restoring package: {package.Name}");
+                    index++;
+                }
 
                 await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
 
                 await this.InstallNuGetPackageAsync();
             }
 
-            this.PackagePendingRestore = new List<Package>();
-            await this.PackagePendingRestoreChanged.InvokeAsync(this.PackagePendingRestore);
+            this.PackagesToRestore.Clear();
+
+            if (handleLoading)
+            {
+                this.Loading = false;
+                await this.LoadingChanged.InvokeAsync(this.Loading);
+            }
         }
 
         public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
@@ -146,19 +159,6 @@
             this.SelectedNuGetPackageVersion = this.NuGetPackageVersions.FirstOrDefault();
         }
 
-        private async Task RestoreSnippetPackages()
-        {
-            foreach (var package in this.PackagePendingRestore)
-            {
-                await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
-
-                await this.InstallNuGetPackageAsync();
-            }
-
-            this.PackagePendingRestore = new List<Package>();
-            await this.PackagePendingRestoreChanged.InvokeAsync(this.PackagePendingRestore);
-        }
-
         private async Task PreparePackageToInstallAsync()
         {
             var prepareResult = await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(
@@ -173,7 +173,7 @@
             }
             else
             {
-                await this.InstallNuGetPackageAsync();
+                await this.ProceedToPackageInstallationAsync();
             }
         }
 
@@ -184,7 +184,18 @@
             this.LicensePopupVisible = false;
         }
 
-        // TODO: think about doing this in the repl component (it is the management component)
+        private async Task ProceedToPackageInstallationAsync()
+        {
+            await this.InstallNuGetPackageAsync();
+
+            // consider separate notification from the installation
+            this.PageNotificationsComponent.AddNotification(
+                NotificationType.Info,
+                $"{this.SelectedNuGetPackageName} package is successfully installed.");
+
+            this.LicensePopupVisible = false;
+        }
+
         private async Task InstallNuGetPackageAsync()
         {
             var sw = Stopwatch.StartNew();
@@ -210,14 +221,6 @@
             }
 
             Console.WriteLine($"App.CodeExecution.storeNuGetPackageFile - {sw.Elapsed}");
-
-            // consider separate notification from the installation
-            this.PageNotificationsComponent.AddNotification(
-                NotificationType.Info,
-                $"{this.SelectedNuGetPackageName} package is successfully installed.");
-
-            this.LicensePopupVisible = false;
-            await this.CloseInternalAsync();
         }
 
         private Task CloseInternalAsync()

@@ -27,7 +27,9 @@
                 Message="@LoaderText"></ReplLoader>
 
     <PackageManager @ref="@PackageManagerComponent"
-                    @bind-PackagePendingRestore="PackagePendingRestore"
+                    @bind-Loading="Loading"
+                    UpdateLoaderTextFunc="UpdateLoaderTextAsync"
+                    PackagesToRestore="PackagesToRestore"
                     SessionId="@SessionId"></PackageManager>
 
     <div id="user-code-editor-container">

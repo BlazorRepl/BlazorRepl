@@ -52,7 +52,7 @@
 
         private IReadOnlyCollection<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
 
-        private ICollection<Package> PackagePendingRestore { get; set; } = Array.Empty<Package>();
+        private ICollection<Package> PackagesToRestore { get; set; } = Array.Empty<Package>();
 
         private bool SaveSnippetPopupVisible { get; set; }
 
@@ -125,7 +125,7 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
-                        this.PackagePendingRestore = snippetResponse.InstalledPackages.ToList();
+                        this.PackagesToRestore = snippetResponse.InstalledPackages.ToList();
                     }
                 }
                 catch (ArgumentException)
@@ -160,9 +160,9 @@
 
             await Task.Delay(10); // Ensure rendering has time to be called
 
-            if (this.PackagePendingRestore.Any())
+            if (this.PackagesToRestore.Any())
             {
-                await this.PackageManagerComponent.RestoreSnippetPackages(this.UpdateLoaderTextAsync);
+                await this.PackageManagerComponent.RestorePackagesAsync();
             }
 
             CompileToAssemblyResult compilationResult = null;
@@ -206,6 +206,9 @@
                 this.UnmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
                     "App.CodeExecution.updateUserComponentsDll",
                     compilationResult.AssemblyBytes);
+
+                // TODO: replace with awaiting the above
+                await Task.Delay(500);
 
                 var userPagePath = this.InstalledPackages?.Any() ?? false
                     ? $"{MainUserPagePath}#{this.SessionId}"
