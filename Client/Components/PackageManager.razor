@@ -58,6 +58,11 @@
                 </button>
             </div>
         }
+
+        if (PackageSearchResultsFetched && !Packages.Any())
+        {
+            <div>No packages found.</div>
+        }
     }
     else
     {

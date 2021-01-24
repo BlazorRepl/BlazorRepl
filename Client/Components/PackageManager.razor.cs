@@ -50,6 +50,8 @@
 
         private string PackageSearchQuery { get; set; }
 
+        private bool PackageSearchResultsFetched { get; set; }
+
         private string SelectedPackageName { get; set; }
 
         private string SelectedPackageVersion { get; set; }
@@ -108,14 +110,14 @@
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
                 this.dotNetInstance = DotNetObjectReference.Create(this);
             }
 
-            await base.OnAfterRenderAsync(firstRender);
+            return base.OnAfterRenderAsync(firstRender);
         }
 
         // TODO: handle no packages found (ex. "Newtonsoft.Json 12.0.3")
@@ -124,6 +126,7 @@
             this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
 
             this.SelectedPackageName = null;
+            this.PackageSearchResultsFetched = true;
         }
 
         private async Task SelectPackageAsync(string selectedPackage)
@@ -184,6 +187,7 @@
             this.SelectedPackageVersion = null;
             this.Packages = Enumerable.Empty<string>();
             this.PackageVersions = Enumerable.Empty<string>();
+            this.PackageSearchResultsFetched = false;
         }
 
         private async Task InstallPackageAsync()
