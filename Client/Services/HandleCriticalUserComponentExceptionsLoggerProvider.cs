@@ -5,9 +5,9 @@
 
     public class HandleCriticalUserComponentExceptionsLoggerProvider : ILoggerProvider
     {
-        private readonly IJSRuntime jsRuntime;
+        private readonly IJSInProcessRuntime jsRuntime;
 
-        public HandleCriticalUserComponentExceptionsLoggerProvider(IJSRuntime jsRuntime)
+        public HandleCriticalUserComponentExceptionsLoggerProvider(IJSInProcessRuntime jsRuntime)
         {
             this.jsRuntime = jsRuntime;
         }

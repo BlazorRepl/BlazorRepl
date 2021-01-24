@@ -11,9 +11,9 @@
     // (Approach: https://github.com/dotnet/aspnetcore/issues/13452#issuecomment-632660280)
     public class HandleCriticalUserComponentExceptionsLogger : ILogger
     {
-        private readonly IJSRuntime jsRuntime;
+        private readonly IJSInProcessRuntime jsRuntime;
 
-        public HandleCriticalUserComponentExceptionsLogger(IJSRuntime jsRuntime)
+        public HandleCriticalUserComponentExceptionsLogger(IJSInProcessRuntime jsRuntime)
         {
             this.jsRuntime = jsRuntime;
         }
@@ -27,7 +27,7 @@
         {
             if (exception?.ToString()?.Contains(CompilationService.DefaultRootNamespace) ?? false)
             {
-                _ = this.jsRuntime.InvokeVoidAsync(
+                this.jsRuntime.InvokeVoid(
                     "App.CodeExecution.updateUserComponentsDll",
                     CoreConstants.DefaultUserComponentsAssemblyBytes);
             }
