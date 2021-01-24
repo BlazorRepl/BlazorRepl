@@ -121,7 +121,6 @@
 
             var cSharpResults = await this.CompileToCSharpAsync(codeFiles, updateStatusFunc);
 
-            await (updateStatusFunc?.Invoke("Compiling Assembly") ?? Task.CompletedTask);
             var result = CompileToAssembly(cSharpResults);
 
             return result;
@@ -235,6 +234,8 @@
             {
                 return new[] { new CompileToCSharpResult { Diagnostics = tempAssembly.Diagnostics } };
             }
+
+            await (updateStatusFunc?.Invoke("Compiling Assembly") ?? Task.CompletedTask);
 
             // Add the 'temp' compilation as a metadata reference
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
