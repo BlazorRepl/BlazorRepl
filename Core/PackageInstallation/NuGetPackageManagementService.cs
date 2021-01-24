@@ -149,7 +149,7 @@
             }
         }
 
-        public async Task<IEnumerable<string>> SearchPackagesAsync(string query, int take = 10)
+        public async Task<IEnumerable<string>> SearchPackagesAsync(string query, int take = 7)
         {
             // TODO: Support prerelease packages
             // TODO: Maybe support other package types
