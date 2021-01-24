@@ -1,5 +1,5 @@
 ﻿<div class="package-manager" style="width: 20%; padding: 8px;">
-    <div class="toast-header" style="margin-bottom: 20px">
+    <div class="toast-header" style="margin-bottom: 20px; background-color: #F5F5F5">
         <h4 class="m-auto">Package Manager</h4>
     </div>
 
@@ -8,68 +8,70 @@
                          OnAccept="@ProceedToPackageInstallationAsync"
                          OnDecline="@DeclinePackageLicense"></PackageLicensePopup>
 
+    @foreach (var package in NuGetPackageManagementService.InstalledPackages)
+    {
+        <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
+            <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
+            <span>
+                <span title="Installed"><i class="icon-checkmark2"></i></span>
+                @package.Version
+            </span>
+        </div>
+    }
+
     @if (PackagesToRestore?.Any() ?? false)
     {
         @foreach (var package in PackagesToRestore)
         {
             <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
                 <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
-                <span>@package.Version</span>
+                <span>
+                    <span title="Pending restore"><i class="icon-spinner6"></i></span>
+                    @package.Version
+                </span>
             </div>
         }
 
-        <button class="btn btn-br-primary" @onclick="(() => RestorePackagesAsync(true))">
-            <i class="icon-cloud-download"></i> Restore Packages
-        </button>
-    }
-    else
-    {
-        if (NuGetPackageManagementService.InstalledPackages.Any())
-        {
-            <h2>Installed Packages</h2>
-
-            @foreach (var package in NuGetPackageManagementService.InstalledPackages)
-            {
-                <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
-                    <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package.Name">@package.Name</span>
-                    <span>@package.Version</span>
-                </div>
-            }
-        }
-
-        <div class="search-package-wrapper">
-            <input @bind="@PackageSearchQuery" class="form-control" style="display: inline-block; margin-right: 5px" />
-            <button type="submit" class="btn btn-br-primary" @onclick="@SearchPackagesAsync">
-                <i class="icon-search2"></i>
+        <div class="text-right">
+            <button class="btn btn-sm btn-br-primary" @onclick="(() => RestorePackagesAsync(true))">
+                <i class="icon-cloud-download"></i> Restore Packages
             </button>
         </div>
+    }
 
-        @if (string.IsNullOrEmpty(SelectedPackageName))
+    <h5 class="text-center mt-3">Browse</h5>
+    <div class="search-package-wrapper mt-1">
+        <input @bind="@PackageSearchQuery" class="form-control" style="display: inline-block; margin-right: 5px" />
+        <button type="submit" class="btn btn-br-primary" @onclick="@SearchPackagesAsync">
+            <i class="icon-search2"></i>
+        </button>
+    </div>
+
+    @if (string.IsNullOrEmpty(SelectedPackageName))
+    {
+        @foreach (var package in Packages)
         {
-            @foreach (var package in Packages)
-            {
-                <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
-                    <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package">@package</span>
-                    <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))">
-                        <i class="icon-download32"></i>
-                    </button>
-                </div>
-            }
-        }
-        else
-        {
-            <label for="version-select">Version</label>
-            <div class="search-package-wrapper">
-                <select class="form-control" id="version-select" @bind="@SelectedPackageVersion" style="display: inline-block; margin-right: 5px;">
-                    @foreach (var version in PackageVersions)
-                    {
-                        <option value="@version">@version</option>
-                    }
-                </select>
-                <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync">
+            <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 2px;">
+                <span class="font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 250px" title="@package">@package</span>
+                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))">
                     <i class="icon-download32"></i>
                 </button>
             </div>
         }
+    }
+    else
+    {
+        <label for="version-select">Version</label>
+        <div class="search-package-wrapper">
+            <select class="form-control" id="version-select" @bind="@SelectedPackageVersion" style="display: inline-block; margin-right: 5px;">
+                @foreach (var version in PackageVersions)
+                {
+                    <option value="@version">@version</option>
+                }
+            </select>
+            <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync">
+                <i class="icon-download32"></i>
+            </button>
+        </div>
     }
 </div>
