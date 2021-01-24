@@ -80,21 +80,32 @@
                 await this.ToggleLoadingAsync(true);
             }
 
-            var index = 1;
-            foreach (var package in this.PackagesToRestore)
+            try
             {
-                if (this.UpdateLoaderTextFunc != null)
+                var index = 1;
+                foreach (var package in this.PackagesToRestore)
                 {
-                    await this.UpdateLoaderTextFunc($"[{index}/{this.PackagesToRestore.Count}] Restoring package: {package.Name}");
-                    index++;
+                    if (this.UpdateLoaderTextFunc != null)
+                    {
+                        await this.UpdateLoaderTextFunc($"[{index}/{this.PackagesToRestore.Count}] Restoring package: {package.Name}");
+                        index++;
+                    }
+
+                    await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
+
+                    await this.InstallPackageAsync();
                 }
 
-                await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(package.Name, package.Version);
-
-                await this.InstallPackageAsync();
+                this.PackagesToRestore.Clear();
             }
+            catch (Exception)
+            {
+                this.NuGetPackageManagementService.CancelPackageInstallation();
 
-            this.PackagesToRestore.Clear();
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while restoring packages. Please try again later.");
+            }
 
             if (handleLoading)
             {
@@ -112,16 +123,18 @@
             try
             {
                 this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
-
-                this.SelectedPackageName = null;
-                this.PackageSearchResultsFetched = true;
             }
             catch (Exception)
             {
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while searching packages. Please try again later.");
+
+                return;
             }
+
+            this.SelectedPackageName = null;
+            this.PackageSearchResultsFetched = true;
         }
 
         private async Task SelectPackageAsync(string selectedPackage)
@@ -129,25 +142,39 @@
             try
             {
                 this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
-
-                this.SelectedPackageName = selectedPackage;
-                this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
             }
             catch (Exception)
             {
-                this.SelectedPackageName = null;
-
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while getting package versions. Please try again later.");
+
+                return;
             }
+
+            this.SelectedPackageName = selectedPackage;
+            this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
         }
 
         private async Task PreparePackageToInstallAsync()
         {
-            var prepareResult = await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(
-                this.SelectedPackageName,
-                this.SelectedPackageVersion);
+            PreparePackageInstallationResult prepareResult;
+            try
+            {
+                prepareResult = await this.NuGetPackageManagementService.PreparePackageForDownloadAsync(
+                   this.SelectedPackageName,
+                   this.SelectedPackageVersion);
+            }
+            catch (Exception)
+            {
+                this.NuGetPackageManagementService.CancelPackageInstallation();
+
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while installing package. Please try again later.");
+
+                return;
+            }
 
             this.PackagesToAcceptLicense = prepareResult.PackagesToAcceptLicense ?? Enumerable.Empty<PackageLicenseInfo>();
 
@@ -174,18 +201,30 @@
 
             await this.ToggleLoadingAsync(true);
 
-            if (this.UpdateLoaderTextFunc != null)
+            await (this.UpdateLoaderTextFunc?.Invoke($"Installing package: {this.SelectedPackageName}") ?? Task.CompletedTask);
+
+            try
             {
-                await this.UpdateLoaderTextFunc($"Installing package: {this.SelectedPackageName}");
+                await this.InstallPackageAsync();
+
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Info,
+                    $"{this.SelectedPackageName} package is successfully installed.");
             }
+            catch (Exception)
+            {
+                this.NuGetPackageManagementService.CancelPackageInstallation();
 
-            await this.InstallPackageAsync();
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while installing package. Please try again later.");
 
-            this.PageNotificationsComponent.AddNotification(
-                NotificationType.Info,
-                $"{this.SelectedPackageName} package is successfully installed.");
-
-            await this.ToggleLoadingAsync(false);
+                return;
+            }
+            finally
+            {
+                await this.ToggleLoadingAsync(false);
+            }
 
             this.PackageSearchQuery = null;
             this.SelectedPackageName = null;
