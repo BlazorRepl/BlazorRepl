@@ -11,10 +11,8 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class PackageManager : IAsyncDisposable
+    public partial class PackageManager : IDisposable
     {
-        private DotNetObjectReference<PackageManager> dotNetInstance;
-
         [Inject]
         public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
 
@@ -72,6 +70,11 @@
 
         public async Task RestorePackagesAsync(bool handleLoading = false)
         {
+            if (this.PackagesToRestore == null || !this.PackagesToRestore.Any())
+            {
+                return;
+            }
+
             if (handleLoading)
             {
                 await this.ToggleLoadingAsync(true);
@@ -99,43 +102,45 @@
             }
         }
 
-        public ValueTask DisposeAsync()
-        {
-            this.dotNetInstance?.Dispose();
-            this.PageNotificationsComponent?.Dispose();
-
-            return ValueTask.CompletedTask;
-        }
+        public void Dispose() => this.PageNotificationsComponent?.Dispose();
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        protected override Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                this.dotNetInstance = DotNetObjectReference.Create(this);
-            }
-
-            return base.OnAfterRenderAsync(firstRender);
-        }
-
-        // TODO: handle no packages found (ex. "Newtonsoft.Json 12.0.3")
         private async Task SearchPackagesAsync()
         {
-            this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
+            try
+            {
+                this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
 
-            this.SelectedPackageName = null;
-            this.PackageSearchResultsFetched = true;
+                this.SelectedPackageName = null;
+                this.PackageSearchResultsFetched = true;
+            }
+            catch (Exception)
+            {
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while searching packages. Please try again later.");
+            }
         }
 
         private async Task SelectPackageAsync(string selectedPackage)
         {
-            this.SelectedPackageName = selectedPackage;
+            try
+            {
+                this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
 
-            this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(this.SelectedPackageName);
+                this.SelectedPackageName = selectedPackage;
+                this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
+            }
+            catch (Exception)
+            {
+                this.SelectedPackageName = null;
 
-            this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    content: "Error while getting package versions. Please try again later.");
+            }
         }
 
         private async Task PreparePackageToInstallAsync()
