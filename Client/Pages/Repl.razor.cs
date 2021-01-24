@@ -47,9 +47,9 @@
 
         private PackageManager PackageManagerComponent { get; set; }
 
-        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
+        private IEnumerable<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
 
-        private ICollection<Package> PackagesToRestore { get; set; } = Array.Empty<Package>();
+        private ICollection<Package> PackagesToRestore { get; set; }
 
         private bool SaveSnippetPopupVisible { get; set; }
 
