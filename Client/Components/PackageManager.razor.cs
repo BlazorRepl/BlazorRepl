@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
@@ -184,18 +183,17 @@
         {
             var sw = Stopwatch.StartNew();
 
-            // TODO: extract custom object for the package contents to prevent filtering
-            var packageContents = await this.NuGetPackageManagementService.DownloadPackagesContentsAsync();
+            var packagesContents = await this.NuGetPackageManagementService.DownloadPackagesContentsAsync();
             Console.WriteLine($"NuGetPackageManager.DownloadPackageContentsAsync - {sw.Elapsed}");
 
             sw.Restart();
-            var dllsBytes = packageContents.Where(x => Path.GetExtension(x.Key) == ".dll").Select(x => x.Value);
-            this.CompilationService.AddReferences(dllsBytes);
+            this.CompilationService.AddAssemblyReferences(packagesContents.DllFiles.Values);
             Console.WriteLine($"CompilationService.AddReferences - {sw.Elapsed}");
 
             sw.Restart();
 
-            foreach (var (fileName, fileBytes) in packageContents)
+            var allPackageFiles = packagesContents.DllFiles.Concat(packagesContents.JavaScriptFiles).Concat(packagesContents.CssFiles);
+            foreach (var (fileName, fileBytes) in allPackageFiles)
             {
                 this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, string, byte[], object>(
                     "App.CodeExecution.storePackageFile",

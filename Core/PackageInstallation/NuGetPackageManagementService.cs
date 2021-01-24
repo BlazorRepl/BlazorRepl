@@ -85,7 +85,7 @@
             this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
-        public async Task<IDictionary<string, byte[]>> DownloadPackagesContentsAsync()
+        public async Task<PackagesContentsResult> DownloadPackagesContentsAsync()
         {
             if (this.currentlyInstallingPackage == null)
             {
@@ -95,14 +95,16 @@
             try
             {
                 var sw = new Stopwatch();
-                var packageContents = new Dictionary<string, byte[]>();
+                var result = new PackagesContentsResult();
+
+                const string NuGetPackageDownloadEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.{1}.nupkg";
 
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
-                    var lib = package.Library;
                     sw.Restart();
                     var packageBytes = await this.httpClient.GetByteArrayAsync(
-                        $"https://api.nuget.org/v3-flatcontainer/{lib.Name}/{lib.Version}/{lib.Name}.{lib.Version}.nupkg");
+                        string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
+
                     Console.WriteLine($"nupkg download - {sw.Elapsed}");
 
                     using var zippedStream = new MemoryStream(packageBytes);
@@ -110,27 +112,27 @@
 
                     sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
-                    foreach (var (fileName, fileBytes) in dlls)
+                    foreach (var file in dlls)
                     {
-                        packageContents.Add(fileName, fileBytes);
+                        result.DllFiles.Add(file);
                     }
 
                     Console.WriteLine($"ExtractDlls - {sw.Elapsed}");
 
                     sw.Restart();
                     var scripts = ExtractStaticContents(archive.Entries, ".js");
-                    foreach (var (fileName, fileBytes) in scripts)
+                    foreach (var file in scripts)
                     {
-                        packageContents.Add(fileName, fileBytes);
+                        result.JavaScriptFiles.Add(file);
                     }
 
                     Console.WriteLine($"ExtractStaticContents JS - {sw.Elapsed}");
 
                     sw.Restart();
                     var styles = ExtractStaticContents(archive.Entries, ".css");
-                    foreach (var (fileName, fileBytes) in styles)
+                    foreach (var file in styles)
                     {
-                        packageContents.Add(fileName, fileBytes);
+                        result.CssFiles.Add(file);
                     }
 
                     Console.WriteLine($"ExtractStaticContents CSS - {sw.Elapsed}");
@@ -138,7 +140,7 @@
 
                 this.installedPackages.Add(this.currentlyInstallingPackage);
 
-                return packageContents;
+                return result;
             }
             finally
             {
@@ -151,11 +153,11 @@
         {
             // TODO: Support prerelease packages
             // TODO: Maybe support other package types
-            const string NuGetEndpointFormat =
+            const string NuGetSearchPackagesEndpointFormat =
                 "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&prerelease=false";
 
             var result = await this.httpClient.GetFromJsonAsync<NuGetPackagesSearchResponse>(
-                string.Format(NuGetEndpointFormat, query, take));
+                string.Format(NuGetSearchPackagesEndpointFormat, query, take));
 
             return result?.Data ?? Enumerable.Empty<string>();
         }
@@ -168,10 +170,10 @@
             }
 
             // TODO: Support prerelease packages
-            const string NuGetEndpointFormat = "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&prerelease=false";
+            const string NuGetPackageVersionsEndpointFormat = "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&prerelease=false";
 
             var result = await this.httpClient.GetFromJsonAsync<NuGetPackageVersionsResponse>(
-                string.Format(NuGetEndpointFormat, packageName));
+                string.Format(NuGetPackageVersionsEndpointFormat, packageName));
 
             if (result?.Data == null)
             {
