@@ -122,7 +122,7 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
-                        this.PackagesToRestore = snippetResponse.InstalledPackages.ToList();
+                        this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList();
                     }
                 }
                 catch (ArgumentException)
@@ -157,7 +157,7 @@
 
             await Task.Delay(10); // Ensure rendering has time to be called
 
-            if (this.PackagesToRestore.Any())
+            if (this.PackagesToRestore?.Any() ?? false)
             {
                 await this.PackageManagerComponent.RestorePackagesAsync();
             }

@@ -83,7 +83,6 @@
             this.snippetsOptions = snippetsOptions.Value;
         }
 
-        // TODO: Validate packages
         public async Task<string> SaveSnippetAsync(IEnumerable<CodeFile> codeFiles, IEnumerable<Package> installedPackages)
         {
             if (codeFiles == null)
@@ -95,6 +94,12 @@
             if (!string.IsNullOrWhiteSpace(codeFilesValidationError))
             {
                 throw new InvalidOperationException(codeFilesValidationError);
+            }
+
+            var packagesValidationError = PackagesHelper.ValidatePackagesForSnippetCreation(installedPackages);
+            if (!string.IsNullOrWhiteSpace(packagesValidationError))
+            {
+                throw new InvalidOperationException(packagesValidationError);
             }
 
             var requestData = new CreateSnippetRequest { Files = codeFiles, InstalledPackages = installedPackages };
