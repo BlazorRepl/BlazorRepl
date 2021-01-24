@@ -72,8 +72,7 @@
         {
             if (handleLoading)
             {
-                this.Loading = true;
-                await this.LoadingChanged.InvokeAsync(this.Loading);
+                await this.ToggleLoadingAsync(true);
             }
 
             var index = 1;
@@ -94,8 +93,7 @@
 
             if (handleLoading)
             {
-                this.Loading = false;
-                await this.LoadingChanged.InvokeAsync(this.Loading);
+                await this.ToggleLoadingAsync(false);
             }
         }
 
@@ -151,7 +149,7 @@
             }
             else
             {
-                await this.ProceedToPackageInstallationAsync();
+                await this.AcceptPackageLicenseAsync();
             }
         }
 
@@ -162,15 +160,24 @@
             this.LicensePopupVisible = false;
         }
 
-        private async Task ProceedToPackageInstallationAsync()
+        private async Task AcceptPackageLicenseAsync()
         {
+            this.LicensePopupVisible = false;
+
+            await this.ToggleLoadingAsync(true);
+
+            if (this.UpdateLoaderTextFunc != null)
+            {
+                await this.UpdateLoaderTextFunc($"Installing package: {this.SelectedPackageName}");
+            }
+
             await this.InstallPackageAsync();
 
             this.PageNotificationsComponent.AddNotification(
                 NotificationType.Info,
                 $"{this.SelectedPackageName} package is successfully installed.");
 
-            this.LicensePopupVisible = false;
+            await this.ToggleLoadingAsync(false);
 
             this.PackageSearchQuery = null;
             this.SelectedPackageName = null;
@@ -209,6 +216,12 @@
         {
             this.Visible = false;
             return this.VisibleChanged.InvokeAsync(this.Visible);
+        }
+
+        private Task ToggleLoadingAsync(bool value)
+        {
+            this.Loading = value;
+            return this.LoadingChanged.InvokeAsync(this.Loading);
         }
     }
 }

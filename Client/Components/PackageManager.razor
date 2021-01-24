@@ -5,7 +5,7 @@
 
     <PackageLicensePopup Visible="@LicensePopupVisible"
                          PackagesToAcceptLicense="@PackagesToAcceptLicense"
-                         OnAccept="@ProceedToPackageInstallationAsync"
+                         OnAccept="@AcceptPackageLicenseAsync"
                          OnDecline="@DeclinePackageLicense"></PackageLicensePopup>
 
     @foreach (var package in NuGetPackageManagementService.InstalledPackages)
