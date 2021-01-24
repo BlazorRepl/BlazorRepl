@@ -186,8 +186,8 @@ app {
     z-index: 10;
 }
 
-/* NuGet Sidebar */
-.nuget-sidebar .search-package-wrapper {
+/* Package Manager */
+.package-manager .search-package-wrapper {
     display: flex;
     justify-content: space-around;
     margin-bottom: 5px;
@@ -335,7 +335,7 @@ app {
 }
 
 
-/* Nuget Package License Popup */
+/* Package License Popup */
 .package-license-overlay {
     width: 100%;
     height: 100%;

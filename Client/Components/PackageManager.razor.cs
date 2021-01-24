@@ -198,13 +198,13 @@
             foreach (var (fileName, fileBytes) in packageContents)
             {
                 this.UnmarshalledJsRuntime.InvokeUnmarshalled<string, string, byte[], object>(
-                    "App.CodeExecution.storeNuGetPackageFile",
+                    "App.CodeExecution.storePackageFile",
                     this.SessionId,
                     fileName,
                     fileBytes);
             }
 
-            Console.WriteLine($"App.CodeExecution.storeNuGetPackageFile - {sw.Elapsed}");
+            Console.WriteLine($"App.CodeExecution.storePackageFile - {sw.Elapsed}");
         }
 
         private Task CloseInternalAsync()

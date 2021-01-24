@@ -28,14 +28,14 @@ namespace BlazorRepl.Client
             builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<SnippetsService>();
             builder.Services.AddSingleton<CompilationService>();
-            builder.Services.AddSingleton<RemoteDependencyProvider>();
+            builder.Services.AddSingleton<NuGetRemoteDependencyProvider>();
             builder.Services.AddScoped<NuGetPackageManagementService>();
             builder.Services.AddHttpClient();
             builder.Services.AddScoped(serviceProvider =>
             {
                 var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
 
-                var remoteDependencyProvider = serviceProvider.GetRequiredService<RemoteDependencyProvider>();
+                var remoteDependencyProvider = serviceProvider.GetRequiredService<NuGetRemoteDependencyProvider>();
                 remoteWalkContext.RemoteLibraryProviders.Add(remoteDependencyProvider);
 
                 return new RemoteDependencyWalker(remoteWalkContext);

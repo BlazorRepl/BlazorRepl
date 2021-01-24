@@ -311,7 +311,7 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
 window.App.CodeExecution = window.App.CodeExecution || (function () {
     const UNEXPECTED_ERROR_MESSAGE = 'An unexpected error has occurred. Please try again later or contact the team.';
 
-    let _loadedNuGetDlls = null;
+    let _loadedPackageDlls = null;
 
     function jsArrayToDotNetArray(jsArray) {
         jsArray = jsArray || [];
@@ -379,37 +379,37 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const dllBytes = convertBase64StringToBytes(fileAsBase64String);
             await putInCacheStorage(cache, dllPath, dllBytes);
         },
-        storeNuGetPackageFile: async function (rawSessionId, rawFileName, rawFileBytes) {
+        storePackageFile: async function (rawSessionId, rawFileName, rawFileBytes) {
             if (!rawSessionId || !rawFileName || !rawFileBytes) {
                 return;
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
-            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
-            if (!nuGetContentCache) {
+            const packagesCache = await caches.open(`packages-${sessionId}/`);
+            if (!packagesCache) {
                 return;
             }
 
             const fileName = BINDING.conv_string(rawFileName);
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
-            await putInCacheStorage(nuGetContentCache, fileName, fileBytes);
+            await putInCacheStorage(packagesCache, fileName, fileBytes);
         },
-        loadNuGetPackageFiles: async function (rawSessionId) {
+        loadPackageFiles: async function (rawSessionId) {
             if (!rawSessionId) {
                 return;
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
-            const nuGetContentCache = await caches.open(`nuget-content-${sessionId}/`);
-            if (!nuGetContentCache) {
+            const packagesCache = await caches.open(`packages-${sessionId}/`);
+            if (!packagesCache) {
                 return;
             }
 
             const dlls = [];
 
-            const files = await nuGetContentCache.keys();
+            const files = await packagesCache.keys();
             for (const file of files) {
-                const response = await nuGetContentCache.match(file.url);
+                const response = await packagesCache.match(file.url);
                 const bytes = new Uint8Array(await response.arrayBuffer());
 
                 if (file.url.endsWith('.css')) {
@@ -430,10 +430,10 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
                 }
             }
 
-            _loadedNuGetDlls = jsArrayToDotNetArray(dlls);
+            _loadedPackageDlls = jsArrayToDotNetArray(dlls);
         },
-        getLoadedNuGetDlls: function () {
-            return _loadedNuGetDlls;
+        getLoadedPackageDlls: function () {
+            return _loadedPackageDlls;
         }
     };
 }());

@@ -18,13 +18,13 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
-    public class RemoteDependencyProvider : IRemoteDependencyProvider
+    public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
         private static readonly ConcurrentDictionary<string, LibraryDependencyInfo> LibraryDependencyCache = new();
 
         private readonly IHttpClientFactory httpClientFactory;
 
-        public RemoteDependencyProvider(IHttpClientFactory httpClientFactory)
+        public NuGetRemoteDependencyProvider(IHttpClientFactory httpClientFactory)
         {
             this.httpClientFactory = httpClientFactory;
         }
@@ -102,9 +102,11 @@
                 //    if not -> throw
             }
 
-            var httpClient = this.httpClientFactory.CreateClient(nameof(RemoteDependencyProvider));
+            const string NuGetNuspecEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.nuspec";
+
+            var httpClient = this.httpClientFactory.CreateClient(nameof(NuGetRemoteDependencyProvider));
             var nuspecStream = await httpClient.GetStreamAsync(
-                $"https://api.nuget.org/v3-flatcontainer/{libraryIdentity.Name}/{libraryIdentity.Version}/{libraryIdentity.Name}.nuspec",
+                string.Format(NuGetNuspecEndpointFormat, libraryIdentity.Name, libraryIdentity.Version),
                 cancellationToken);
 
             var nuspecReader = new NuspecReader(nuspecStream);

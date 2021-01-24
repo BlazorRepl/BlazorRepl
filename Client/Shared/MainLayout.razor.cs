@@ -22,7 +22,7 @@
             // Order of init and add to cache is really important
             await CompilationService.InitAsync(this.HttpClient);
 
-            RemoteDependencyProvider.AddAssemblyDependenciesToCache(CompilationService.BaseAssemblyNames);
+            NuGetRemoteDependencyProvider.AddAssemblyDependenciesToCache(CompilationService.BaseAssemblyNames);
 
             await base.OnInitializedAsync();
         }

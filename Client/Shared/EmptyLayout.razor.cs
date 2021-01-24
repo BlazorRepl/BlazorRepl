@@ -25,13 +25,13 @@
             if (!string.IsNullOrWhiteSpace(sessionId))
             {
                 // TODO: Extract to a service
-                this.JsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadNuGetPackageFiles", sessionId);
+                this.JsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
 
                 IEnumerable<byte[]> dlls;
                 var i = 0;
                 while (true)
                 {
-                    dlls = this.JsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedNuGetDlls");
+                    dlls = this.JsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedPackageDlls");
                     if (dlls != null)
                     {
                         break;

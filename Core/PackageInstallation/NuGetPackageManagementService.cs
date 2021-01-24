@@ -21,7 +21,7 @@
         private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
 
         private readonly RemoteDependencyWalker remoteDependencyWalker;
-        private readonly RemoteDependencyProvider remoteDependencyProvider;
+        private readonly NuGetRemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
         private readonly List<Package> installedPackages = new();
 
@@ -29,7 +29,7 @@
 
         public NuGetPackageManagementService(
             RemoteDependencyWalker remoteDependencyWalker,
-            RemoteDependencyProvider remoteDependencyProvider,
+            NuGetRemoteDependencyProvider remoteDependencyProvider,
             HttpClient httpClient)
         {
             this.remoteDependencyWalker = remoteDependencyWalker;
