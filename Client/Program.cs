@@ -45,7 +45,7 @@ namespace BlazorRepl.Client
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));
 
-            // TODO: builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+            builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
             await builder.Build().RunAsync();

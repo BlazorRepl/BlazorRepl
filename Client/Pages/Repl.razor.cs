@@ -205,9 +205,6 @@
                     "App.CodeExecution.updateUserComponentsDll",
                     compilationResult.AssemblyBytes);
 
-                // TODO: replace with awaiting the above
-                await Task.Delay(500);
-
                 var userPagePath = this.InstalledPackages?.Any() ?? false
                     ? $"{MainUserPagePath}#{this.SessionId}"
                     : MainUserPagePath;

@@ -97,8 +97,7 @@
         }
 
         // TODO: think about removal of packages
-        // TODO: use ImmutableArray<byte> to prevent copying the bytes
-        public void AddReferences(IEnumerable<byte[]> dllsBytes)
+        public void AddAssemblyReferences(IEnumerable<byte[]> dllsBytes)
         {
             if (dllsBytes == null)
             {
