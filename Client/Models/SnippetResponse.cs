@@ -1,14 +1,14 @@
 ﻿namespace BlazorRepl.Client.Models
 {
-    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
 
     public class SnippetResponse
     {
-        public IEnumerable<CodeFile> Files { get; set; } = Array.Empty<CodeFile>();
+        public IEnumerable<CodeFile> Files { get; set; } = Enumerable.Empty<CodeFile>();
 
-        public IEnumerable<Package> InstalledPackages { get; set; } = Array.Empty<Package>();
+        public IEnumerable<Package> InstalledPackages { get; set; } = Enumerable.Empty<Package>();
     }
 }
