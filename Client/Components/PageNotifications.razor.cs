@@ -68,9 +68,9 @@
                 Interval = AutoCloseNotificationTimeoutMs,
             };
 
-            autoCloseNotificationTimer.Elapsed += (sender, args) =>
+            autoCloseNotificationTimer.Elapsed += (sender, _) =>
             {
-                if (!(sender is Timer timer))
+                if (sender is not Timer timer)
                 {
                     return;
                 }
