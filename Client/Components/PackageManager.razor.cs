@@ -98,8 +98,9 @@
 
                 this.PackagesToRestore.Clear();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 this.PageNotificationsComponent.AddNotification(
@@ -124,8 +125,9 @@
             {
                 this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while searching packages. Please try again later.");
@@ -143,8 +145,9 @@
             {
                 this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while getting package versions. Please try again later.");
@@ -165,8 +168,9 @@
                    this.SelectedPackageName,
                    this.SelectedPackageVersion);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 this.PageNotificationsComponent.AddNotification(
@@ -211,8 +215,9 @@
                     NotificationType.Info,
                     $"{this.SelectedPackageName} package is successfully installed.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 this.PageNotificationsComponent.AddNotification(
