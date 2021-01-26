@@ -6,7 +6,6 @@
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using Microsoft.AspNetCore.Components;
-    using Microsoft.JSInterop;
 
     public partial class TabManager : IDisposable
     {
@@ -17,10 +16,6 @@
         private string newTab;
         private ElementReference newTabInput;
         private string previousInvalidTab;
-        private DotNetObjectReference<TabManager> dotNetInstance;
-
-        [Inject]
-        public IJSInProcessRuntime JsRuntime { get; set; }
 
         [Parameter]
         public IList<string> Tabs { get; set; }
@@ -41,31 +36,10 @@
 
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
 
-        public void Dispose()
-        {
-            this.dotNetInstance?.Dispose();
-            this.PageNotificationsComponent?.Dispose();
-
-            this.JsRuntime.InvokeVoid("App.TabManager.dispose");
-        }
-
-        [JSInvokable]
-        public async Task CreateTabAsync()
-        {
-            await this.CreateTabAsyncInternal();
-
-            this.StateHasChanged();
-        }
+        public void Dispose() => this.PageNotificationsComponent?.Dispose();
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)
-            {
-                this.dotNetInstance = DotNetObjectReference.Create(this);
-
-                this.JsRuntime.InvokeVoid("App.TabManager.init", "#new-tab-input", this.dotNetInstance);
-            }
-
             if (this.shouldFocusNewTabInput)
             {
                 this.shouldFocusNewTabInput = false;
@@ -123,7 +97,7 @@
             this.newTab = null;
         }
 
-        private async Task CreateTabAsyncInternal()
+        private async Task CreateTabAsync()
         {
             if (string.IsNullOrWhiteSpace(this.newTab))
             {
