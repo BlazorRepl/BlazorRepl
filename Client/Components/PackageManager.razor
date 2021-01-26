@@ -40,12 +40,12 @@
     }
 
     <h5 class="text-center mt-3">Browse</h5>
-    <div class="search-package-wrapper mt-1">
+    <form class="search-package-wrapper mt-1" @onsubmit="@SearchPackagesAsync">
         <input @bind="@PackageSearchQuery" class="form-control" style="display: inline-block; margin-right: 5px" />
-        <button type="submit" class="btn btn-br-primary" @onclick="@SearchPackagesAsync">
+        <button type="submit" class="btn btn-br-primary">
             <i class="icon-search2"></i>
         </button>
-    </div>
+    </form>
 
     @if (string.IsNullOrEmpty(SelectedPackageName))
     {
