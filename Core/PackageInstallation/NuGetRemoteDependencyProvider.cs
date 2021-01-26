@@ -86,7 +86,8 @@
                     return dependencyInfo;
                 }
 
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(
+                    $"Cannot install {dependencyInfo.Library.Name} v{libraryIdentity.Version} because v{dependencyInfo.Library.Version} is installed.");
 
                 // Some thoughts:
                 // differentiate the deps which comes from the project from those which comes from the current walking
