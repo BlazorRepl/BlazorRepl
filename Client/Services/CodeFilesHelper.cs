@@ -9,8 +9,9 @@
     public static class CodeFilesHelper
     {
         private const int MainComponentFileContentMinLength = 10;
+        private const string RazorFileExtension = ".razor";
 
-        private static readonly HashSet<string> ValidCodeFileExtensions = new(StringComparer.OrdinalIgnoreCase) { ".razor", ".cs" };
+        private static readonly HashSet<string> ValidCodeFileExtensions = new(StringComparer.Ordinal) { RazorFileExtension, ".cs" };
 
         public static string NormalizeCodeFilePath(string path, out string error)
         {
@@ -22,28 +23,34 @@
 
             var trimmedPath = path.Trim();
 
-            var extension = Path.GetExtension(trimmedPath);
-            if (!string.IsNullOrEmpty(extension) && !ValidCodeFileExtensions.Contains(extension))
+            var extension = Path.GetExtension(trimmedPath).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension))
+            {
+                // Razor files are the default
+                extension = RazorFileExtension;
+            }
+
+            if (!ValidCodeFileExtensions.Contains(extension))
             {
                 error = $"Extension cannot be '{extension}'. Valid extensions: {string.Join("; ", ValidCodeFileExtensions)}";
                 return null;
             }
 
-            var fileName = trimmedPath.Substring(0, trimmedPath.Length - extension.Length);
+            var fileName = Path.GetFileNameWithoutExtension(trimmedPath);
             if (!SyntaxFacts.IsValidIdentifier(fileName))
             {
                 error = $"'{fileName}' is not a valid file name. It must be a valid C# identifier.";
                 return null;
             }
 
-            if (char.IsLower(fileName[0]))
+            if (extension == RazorFileExtension && char.IsLower(fileName[0]))
             {
-                error = $"'{fileName}' starts with a lowercase character. File names must start with an uppercase character or _.";
+                error = $"'{fileName}' starts with a lowercase character. Razor file names must start with an uppercase character or _.";
                 return null;
             }
 
             error = null;
-            return fileName + extension.ToLowerInvariant();
+            return fileName + extension;
         }
 
         public static string ValidateCodeFilesForSnippetCreation(IEnumerable<CodeFile> codeFiles)
@@ -54,7 +61,7 @@
             }
 
             var containsMainComponent = false;
-            var filePaths = new HashSet<string>();
+            var processedFilePaths = new HashSet<string>();
             var index = 0;
             foreach (var codeFile in codeFiles)
             {
@@ -68,27 +75,26 @@
                     return $"File #{index} - no file path.";
                 }
 
-                if (filePaths.Contains(codeFile.Path))
+                if (processedFilePaths.Contains(codeFile.Path))
                 {
                     return $"File '{codeFile.Path}' is duplicated.";
                 }
 
-                // TODO: Test with .RaZoR file
                 var extension = Path.GetExtension(codeFile.Path);
                 if (!ValidCodeFileExtensions.Contains(extension))
                 {
                     return $"File '{codeFile.Path}' has invalid extension: {extension}. Valid extensions: {string.Join("; ", ValidCodeFileExtensions)}";
                 }
 
-                var fileName = codeFile.Path.Substring(0, codeFile.Path.Length - extension.Length);
+                var fileName = Path.GetFileNameWithoutExtension(codeFile.Path);
                 if (!SyntaxFacts.IsValidIdentifier(fileName))
                 {
                     return $"'{fileName}' is not a valid file name. It must be a valid C# identifier.";
                 }
 
-                if (char.IsLower(fileName[0]))
+                if (extension == RazorFileExtension && char.IsLower(fileName[0]))
                 {
-                    return $"'{fileName}' starts with a lowercase character. File names must start with an uppercase character or _.";
+                    return $"'{fileName}' starts with a lowercase character. Razor file names must start with an uppercase character or _.";
                 }
 
                 if (codeFile.Path == CoreConstants.MainComponentFilePath)
@@ -101,7 +107,7 @@
                     containsMainComponent = true;
                 }
 
-                filePaths.Add(codeFile.Path);
+                processedFilePaths.Add(codeFile.Path);
                 index++;
             }
 
