@@ -8,8 +8,9 @@
 
     public static class CodeFilesHelper
     {
-        private const string ValidCodeFileExtension = ".razor";
         private const int MainComponentFileContentMinLength = 10;
+
+        private static readonly HashSet<string> ValidCodeFileExtensions = new(StringComparer.OrdinalIgnoreCase) { ".razor", ".cs" };
 
         public static string NormalizeCodeFilePath(string path, out string error)
         {
@@ -22,10 +23,9 @@
             var trimmedPath = path.Trim();
 
             var extension = Path.GetExtension(trimmedPath);
-            if (!string.IsNullOrEmpty(extension) &&
-                !ValidCodeFileExtension.Equals(extension, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(extension) && !ValidCodeFileExtensions.Contains(extension))
             {
-                error = $"Extension cannot be '{extension}'. Valid extensions: {ValidCodeFileExtension}";
+                error = $"Extension cannot be '{extension}'. Valid extensions: {string.Join("; ", ValidCodeFileExtensions)}";
                 return null;
             }
 
@@ -43,7 +43,7 @@
             }
 
             error = null;
-            return fileName + ValidCodeFileExtension;
+            return fileName + extension.ToLowerInvariant();
         }
 
         public static string ValidateCodeFilesForSnippetCreation(IEnumerable<CodeFile> codeFiles)
@@ -73,10 +73,11 @@
                     return $"File '{codeFile.Path}' is duplicated.";
                 }
 
+                // TODO: Test with .RaZoR file
                 var extension = Path.GetExtension(codeFile.Path);
-                if (!ValidCodeFileExtension.Equals(extension, StringComparison.Ordinal))
+                if (!ValidCodeFileExtensions.Contains(extension))
                 {
-                    return $"File '{codeFile.Path}' has invalid extension: {extension}. Valid extensions: {ValidCodeFileExtension}";
+                    return $"File '{codeFile.Path}' has invalid extension: {extension}. Valid extensions: {string.Join("; ", ValidCodeFileExtensions)}";
                 }
 
                 var fileName = codeFile.Path.Substring(0, codeFile.Path.Length - extension.Length);

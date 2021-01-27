@@ -10,6 +10,7 @@
     using System.Net.Http.Json;
     using System.Runtime;
     using System.Text;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Razor.Language;
@@ -129,7 +130,7 @@
             return streams;
         }
 
-        private static CompileToAssemblyResult CompileToAssembly(ICollection<CompileToCSharpResult> cSharpResults)
+        private static CompileToAssemblyResult CompileToAssembly(IReadOnlyCollection<CompileToCSharpResult> cSharpResults)
         {
             if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
             {
@@ -188,7 +189,7 @@
                 Encoding.UTF8.GetBytes(fileContent.TrimStart()));
         }
 
-        private async Task<ICollection<CompileToCSharpResult>> CompileToCSharpAsync(
+        private async Task<IReadOnlyCollection<CompileToCSharpResult>> CompileToCSharpAsync(
             ICollection<CodeFile> codeFiles,
             Func<string, Task> updateStatusFunc)
         {
@@ -196,20 +197,36 @@
             var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
             // Result of generating declarations
-            var declarations = new List<CompileToCSharpResult>(codeFiles.Count);
+            var declarations = new CompileToCSharpResult[codeFiles.Count];
+            var index = 0;
             foreach (var codeFile in codeFiles)
             {
-                var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
-
-                var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
-                var cSharpDocument = codeDocument.GetCSharpDocument();
-
-                declarations.Add(new CompileToCSharpResult
+                // TODO: abstract
+                if (Path.GetExtension(codeFile.Path) == ".razor")
                 {
-                    ProjectItem = projectItem,
-                    Code = cSharpDocument.GeneratedCode,
-                    Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                });
+                    var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
+
+                    var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
+                    var cSharpDocument = codeDocument.GetCSharpDocument();
+
+                    Console.WriteLine(JsonSerializer.Serialize(cSharpDocument.GeneratedCode));
+                    declarations[index] = new CompileToCSharpResult
+                    {
+                        ProjectItem = projectItem,
+                        Code = cSharpDocument.GeneratedCode,
+                        Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
+                    };
+                }
+                else
+                {
+                    declarations[index] = new CompileToCSharpResult
+                    {
+                        Code = codeFile.Content,
+                        Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will be actually evaluated later
+                    };
+                }
+
+                index++;
             }
 
             // Result of doing 'temp' compilation
@@ -225,18 +242,30 @@
 
             await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
 
-            var results = new List<CompileToCSharpResult>(codeFiles.Count);
+            var results = new CompileToCSharpResult[declarations.Length];
+            index = 0;
             foreach (var declaration in declarations)
             {
-                var codeDocument = projectEngine.Process(declaration.ProjectItem);
-                var cSharpDocument = codeDocument.GetCSharpDocument();
-
-                results.Add(new CompileToCSharpResult
+                // Only Razor file declarations have project item
+                if (declaration.ProjectItem != null)
                 {
-                    ProjectItem = declaration.ProjectItem,
-                    Code = cSharpDocument.GeneratedCode,
-                    Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                });
+                    var codeDocument = projectEngine.Process(declaration.ProjectItem);
+                    var cSharpDocument = codeDocument.GetCSharpDocument();
+
+                    Console.WriteLine(JsonSerializer.Serialize(cSharpDocument.GeneratedCode));
+                    results[index] = new CompileToCSharpResult
+                    {
+                        ProjectItem = declaration.ProjectItem,
+                        Code = cSharpDocument.GeneratedCode,
+                        Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
+                    };
+                }
+                else
+                {
+                    results[index] = declaration;
+                }
+
+                index++;
             }
 
             return results;
