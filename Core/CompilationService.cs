@@ -85,7 +85,20 @@
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
                     concurrentBuild: false,
-                    //// Warnings CS1701 and CS1702 are disabled when compiling in VS too
+                    usings: new[]
+                    {
+                        "System",
+                        "System.Collections.Generic",
+                        "System.ComponentModel.DataAnnotations",
+                        "System.Linq",
+                        "System.Net.Http",
+                        "System.Net.Http.Json",
+                        "System.Threading.Tasks",
+                        "Microsoft.AspNetCore.Components.Forms",
+                        "Microsoft.AspNetCore.Components.Routing",
+                        "Microsoft.AspNetCore.Components.Web",
+                    },
+                    //// Microsoft.JSInterop";Warnings CS1701 and CS1702 are disabled when compiling in VS too
                     specificDiagnosticOptions: new[]
                     {
                         new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress),
