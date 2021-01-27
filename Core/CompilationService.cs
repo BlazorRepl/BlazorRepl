@@ -10,7 +10,6 @@
     using System.Net.Http.Json;
     using System.Runtime;
     using System.Text;
-    using System.Text.Json;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Razor.Language;
@@ -85,20 +84,7 @@
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
                     concurrentBuild: false,
-                    usings: new[]
-                    {
-                        "System",
-                        "System.Collections.Generic",
-                        "System.ComponentModel.DataAnnotations",
-                        "System.Linq",
-                        "System.Net.Http",
-                        "System.Net.Http.Json",
-                        "System.Threading.Tasks",
-                        "Microsoft.AspNetCore.Components.Forms",
-                        "Microsoft.AspNetCore.Components.Routing",
-                        "Microsoft.AspNetCore.Components.Web",
-                    },
-                    //// Microsoft.JSInterop";Warnings CS1701 and CS1702 are disabled when compiling in VS too
+                    //// Warnings CS1701 and CS1702 are disabled when compiling in VS too
                     specificDiagnosticOptions: new[]
                     {
                         new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress),
@@ -143,17 +129,17 @@
             return streams;
         }
 
-        private static CompileToAssemblyResult CompileToAssembly(IReadOnlyCollection<CompileToCSharpResult> cSharpResults)
+        private static CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
         {
             if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
             {
                 return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
             }
 
-            var syntaxTrees = new List<SyntaxTree>(cSharpResults.Count);
-            foreach (var cSharpResult in cSharpResults)
+            var syntaxTrees = new SyntaxTree[cSharpResults.Count];
+            for (var i = 0; i < cSharpResults.Count; i++)
             {
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(cSharpResult.Code, cSharpParseOptions));
+                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResults[i].Code, cSharpParseOptions);
             }
 
             var finalCompilation = baseCompilation.AddSyntaxTrees(syntaxTrees);
@@ -202,7 +188,7 @@
                 Encoding.UTF8.GetBytes(fileContent.TrimStart()));
         }
 
-        private async Task<IReadOnlyCollection<CompileToCSharpResult>> CompileToCSharpAsync(
+        private async Task<IReadOnlyList<CompileToCSharpResult>> CompileToCSharpAsync(
             ICollection<CodeFile> codeFiles,
             Func<string, Task> updateStatusFunc)
         {
@@ -214,15 +200,13 @@
             var index = 0;
             foreach (var codeFile in codeFiles)
             {
-                // TODO: abstract
-                if (Path.GetExtension(codeFile.Path) == ".razor")
+                if (FileKinds.GetFileKindFromFilePath(codeFile.Path) == FileKinds.Component)
                 {
                     var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
 
                     var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    Console.WriteLine(JsonSerializer.Serialize(cSharpDocument.GeneratedCode));
                     declarations[index] = new CompileToCSharpResult
                     {
                         ProjectItem = projectItem,
@@ -235,7 +219,7 @@
                     declarations[index] = new CompileToCSharpResult
                     {
                         Code = codeFile.Content,
-                        Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will be actually evaluated later
+                        Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
                     };
                 }
 
@@ -256,16 +240,16 @@
             await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
 
             var results = new CompileToCSharpResult[declarations.Length];
-            index = 0;
-            foreach (var declaration in declarations)
+            for (index = 0; index < declarations.Length; index++)
             {
+                var declaration = declarations[index];
+
                 // Only Razor file declarations have project item
                 if (declaration.ProjectItem != null)
                 {
                     var codeDocument = projectEngine.Process(declaration.ProjectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    Console.WriteLine(JsonSerializer.Serialize(cSharpDocument.GeneratedCode));
                     results[index] = new CompileToCSharpResult
                     {
                         ProjectItem = declaration.ProjectItem,
