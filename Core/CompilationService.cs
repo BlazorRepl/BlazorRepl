@@ -131,6 +131,10 @@
 
         private static CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
         {
+            Console.WriteLine(cSharpResults.ToList().FindIndex(x => x == null));
+            Console.WriteLine(cSharpResults.Any(x => x.Diagnostics == null));
+            Console.WriteLine(cSharpResults.Any(x => x.Diagnostics.Any(y => y == null)));
+
             if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
             {
                 return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
@@ -226,6 +230,10 @@
                 index++;
             }
 
+            Console.WriteLine("before");
+            index = 0;
+            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
+
             // Result of doing 'temp' compilation
             var tempAssembly = CompileToAssembly(declarations);
             if (tempAssembly.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
@@ -233,6 +241,11 @@
                 return new[] { new CompileToCSharpResult { Diagnostics = tempAssembly.Diagnostics } };
             }
 
+            Console.WriteLine("after");
+            index = 0;
+            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
+
+            Console.WriteLine("Phase 2");
             // Add the 'temp' compilation as a metadata reference
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
@@ -264,6 +277,9 @@
 
                 index++;
             }
+
+            index = 0;
+            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
 
             return results;
         }
