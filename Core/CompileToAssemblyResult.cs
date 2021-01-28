@@ -6,14 +6,9 @@
 
     public class CompileToAssemblyResult
     {
-        public CompileToAssemblyResult()
-        {
-            this.Diagnostics = Enumerable.Empty<CompilationDiagnostic>();
-        }
-
         public Compilation Compilation { get; set; }
 
-        public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; }
+        public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; } = Enumerable.Empty<CompilationDiagnostic>();
 
         public byte[] AssemblyBytes { get; set; }
     }
