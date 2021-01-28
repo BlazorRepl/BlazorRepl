@@ -24,7 +24,7 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    class {{0}}
+    public class {{0}}
     {{{{
     }}}}
 }}}}
