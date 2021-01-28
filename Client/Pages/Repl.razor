@@ -32,7 +32,8 @@
                     OnTabCreate="@HandleTabCreate"></TabManager>
 
         <CodeEditor @ref="@CodeEditorComponent"
-                    Code="@CodeEditorContent"></CodeEditor>
+                    Code="@CodeEditorContent"
+                    Language="@CodeEditorLanguage"></CodeEditor>
     </div>
     <div id="user-page-window-container">
         <iframe id="user-page-window" src="/user-page"></iframe>

@@ -47,6 +47,8 @@
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
+        private string CodeEditorLanguage => (this.activeCodeFile?.IsRazorFile ?? true) ? "razor" : "csharp";
+
         private bool SaveSnippetPopupVisible { get; set; }
 
         private string Preset { get; set; } = "basic";
@@ -171,8 +173,9 @@
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
                 this.AreDiagnosticsShown = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
             }
             finally
@@ -234,9 +237,14 @@
 
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(name);
 
-            this.CodeFiles.TryAdd(name, new CodeFile { Path = name, Content = $"<h1>{nameWithoutExtension}</h1>" });
+            var newCodeFile = new CodeFile { Path = name };
+            newCodeFile.Content = newCodeFile.IsRazorFile
+                ? $"<h1>{nameWithoutExtension}</h1>"
+                : $"public class {nameWithoutExtension}\n{{\n}}";
 
-            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight");
+            this.CodeFiles.TryAdd(name, newCodeFile);
+
+            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", newCodeFile.IsRazorFile ? "razor" : "csharp");
         }
 
         private void UpdateActiveCodeFileContent()

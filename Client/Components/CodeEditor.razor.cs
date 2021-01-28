@@ -18,6 +18,9 @@
         [Parameter]
         public string Code { get; set; }
 
+        [Parameter]
+        public string Language { get; set; }
+
         public override Task SetParametersAsync(ParameterView parameters)
         {
             if (parameters.TryGetValue<string>(nameof(this.Code), out var parameterValue))
@@ -45,7 +48,7 @@
             }
             else if (this.hasCodeChanged)
             {
-                this.JsRuntime.InvokeVoid("App.CodeEditor.setValue", this.Code);
+                this.JsRuntime.InvokeVoid("App.CodeEditor.setValue", this.Code, this.Language);
             }
 
             base.OnAfterRender(firstRender);
