@@ -112,7 +112,9 @@
             return result;
         }
 
-        private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(HttpClient httpClient, IEnumerable<string> assemblyNames)
+        private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(
+            HttpClient httpClient,
+            IEnumerable<string> assemblyNames)
         {
             var streams = new ConcurrentDictionary<string, Stream>();
 
@@ -131,10 +133,6 @@
 
         private static CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
         {
-            Console.WriteLine(cSharpResults.ToList().FindIndex(x => x == null));
-            Console.WriteLine(cSharpResults.Any(x => x.Diagnostics == null));
-            Console.WriteLine(cSharpResults.Any(x => x.Diagnostics.Any(y => y == null)));
-
             if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
             {
                 return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
@@ -204,7 +202,7 @@
             var index = 0;
             foreach (var codeFile in codeFiles)
             {
-                if (FileKinds.GetFileKindFromFilePath(codeFile.Path) == FileKinds.Component)
+                if (codeFile.Type == CodeFileType.Razor)
                 {
                     var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
 
@@ -230,10 +228,6 @@
                 index++;
             }
 
-            Console.WriteLine("before");
-            index = 0;
-            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
-
             // Result of doing 'temp' compilation
             var tempAssembly = CompileToAssembly(declarations);
             if (tempAssembly.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
@@ -241,11 +235,6 @@
                 return new[] { new CompileToCSharpResult { Diagnostics = tempAssembly.Diagnostics } };
             }
 
-            Console.WriteLine("after");
-            index = 0;
-            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
-
-            Console.WriteLine("Phase 2");
             // Add the 'temp' compilation as a metadata reference
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
@@ -256,9 +245,9 @@
             for (index = 0; index < declarations.Length; index++)
             {
                 var declaration = declarations[index];
+                var isRazorDeclaration = declaration.ProjectItem != null;
 
-                // Only Razor file declarations have project item
-                if (declaration.ProjectItem != null)
+                if (isRazorDeclaration)
                 {
                     var codeDocument = projectEngine.Process(declaration.ProjectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
@@ -274,12 +263,7 @@
                 {
                     results[index] = declaration;
                 }
-
-                index++;
             }
-
-            index = 0;
-            declarations.ToList().ForEach(x => Console.WriteLine(index++ + ": " + (x.Diagnostics == null)));
 
             return results;
         }
