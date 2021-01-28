@@ -71,9 +71,7 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
             }
         } else {
             _overrideValue = value;
-            if (language) {
-                _currentLanguage = language;
-            }
+            _currentLanguage = language || _currentLanguage;
         }
     }
 
