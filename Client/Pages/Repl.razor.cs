@@ -173,9 +173,8 @@
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
                 this.AreDiagnosticsShown = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
             }
             finally
@@ -238,9 +237,10 @@
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(name);
 
             var newCodeFile = new CodeFile { Path = name };
-            newCodeFile.Content = newCodeFile.Type == CodeFileType.Razor
-                ? $"<h1>{nameWithoutExtension}</h1>"
-                : $"public class {nameWithoutExtension}\n{{\n}}";
+
+            newCodeFile.Content = newCodeFile.Type == CodeFileType.CSharp
+                ? string.Format(CoreConstants.DefaultCSharpFileContentFormat, nameWithoutExtension)
+                : string.Format(CoreConstants.DefaultRazorFileContentFormat, nameWithoutExtension);
 
             this.CodeFiles.TryAdd(name, newCodeFile);
 
