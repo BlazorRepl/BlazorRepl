@@ -244,6 +244,7 @@
 
             this.CodeFiles.TryAdd(name, newCodeFile);
 
+            // TODO: update method name when refactoring the coded editor JS module
             this.JsRuntime.InvokeVoid(
                 "App.Repl.setCodeEditorContainerHeight",
                 newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");

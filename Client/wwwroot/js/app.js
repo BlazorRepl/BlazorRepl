@@ -65,8 +65,9 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
     function setValue(value, language) {
         if (_editor) {
             _editor.setValue(value || '');
-            if (language) {
+            if (language && language !== _currentLanguage) {
                 monaco.editor.setModelLanguage(_editor.getModel(), language);
+                _currentLanguage = language;
             }
         } else {
             _overrideValue = value;
