@@ -47,7 +47,7 @@
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
-        private string CodeEditorLanguage => (this.activeCodeFile?.IsRazorFile ?? true) ? "razor" : "csharp";
+        private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
 
         private bool SaveSnippetPopupVisible { get; set; }
 
@@ -238,13 +238,15 @@
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(name);
 
             var newCodeFile = new CodeFile { Path = name };
-            newCodeFile.Content = newCodeFile.IsRazorFile
+            newCodeFile.Content = newCodeFile.Type == CodeFileType.Razor
                 ? $"<h1>{nameWithoutExtension}</h1>"
                 : $"public class {nameWithoutExtension}\n{{\n}}";
 
             this.CodeFiles.TryAdd(name, newCodeFile);
 
-            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", newCodeFile.IsRazorFile ? "razor" : "csharp");
+            this.JsRuntime.InvokeVoid(
+                "App.Repl.setCodeEditorContainerHeight",
+                newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");
         }
 
         private void UpdateActiveCodeFileContent()

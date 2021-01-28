@@ -19,7 +19,7 @@
         public string Code { get; set; }
 
         [Parameter]
-        public string Language { get; set; }
+        public CodeFileType CodeFileType { get; set; }
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
@@ -48,7 +48,8 @@
             }
             else if (this.hasCodeChanged)
             {
-                this.JsRuntime.InvokeVoid("App.CodeEditor.setValue", this.Code, this.Language);
+                var language = this.CodeFileType == CodeFileType.CSharp ? "csharp" : "razor";
+                this.JsRuntime.InvokeVoid("App.CodeEditor.setValue", this.Code, language);
             }
 
             base.OnAfterRender(firstRender);

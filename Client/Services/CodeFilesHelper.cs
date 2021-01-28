@@ -9,9 +9,12 @@
     public static class CodeFilesHelper
     {
         private const int MainComponentFileContentMinLength = 10;
-        private const string RazorFileExtension = ".razor";
 
-        private static readonly HashSet<string> ValidCodeFileExtensions = new(StringComparer.Ordinal) { RazorFileExtension, ".cs" };
+        private static readonly HashSet<string> ValidCodeFileExtensions = new(StringComparer.Ordinal)
+        {
+            CodeFile.RazorFileExtension,
+            CodeFile.CsharpFileExtension,
+        };
 
         public static string NormalizeCodeFilePath(string path, out string error)
         {
@@ -27,7 +30,7 @@
             if (string.IsNullOrEmpty(extension))
             {
                 // Razor files are the default
-                extension = RazorFileExtension;
+                extension = CodeFile.RazorFileExtension;
             }
 
             if (!ValidCodeFileExtensions.Contains(extension))
@@ -43,7 +46,7 @@
                 return null;
             }
 
-            if (extension == RazorFileExtension && char.IsLower(fileName[0]))
+            if (extension == CodeFile.RazorFileExtension && char.IsLower(fileName[0]))
             {
                 error = $"'{fileName}' starts with a lowercase character. Razor file names must start with an uppercase character or _.";
                 return null;
@@ -92,7 +95,7 @@
                     return $"'{fileName}' is not a valid file name. It must be a valid C# identifier.";
                 }
 
-                if (extension == RazorFileExtension && char.IsLower(fileName[0]))
+                if (extension == CodeFile.RazorFileExtension && char.IsLower(fileName[0]))
                 {
                     return $"'{fileName}' starts with a lowercase character. Razor file names must start with an uppercase character or _.";
                 }
