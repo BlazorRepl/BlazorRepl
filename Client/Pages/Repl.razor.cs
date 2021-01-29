@@ -78,7 +78,7 @@
             this.dotNetInstance?.Dispose();
             this.PageNotificationsComponent?.Dispose();
 
-            this.JsRuntime.InvokeVoid("App.Repl.dispose");
+            this.JsRuntime.InvokeVoid("App.Repl.dispose", this.SessionId);
         }
 
         protected override void OnAfterRender(bool firstRender)

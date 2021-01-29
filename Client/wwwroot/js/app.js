@@ -222,7 +222,7 @@ window.App.Repl = window.App.Repl || (function () {
                 resetEditor();
             }
         },
-        dispose: function () {
+        dispose: async function (sessionId) {
             _dotNetInstance = null;
             _editorContainerId = null;
             _resultContainerId = null;
@@ -232,6 +232,8 @@ window.App.Repl = window.App.Repl || (function () {
             window.removeEventListener('keydown', onKeyDown);
 
             disableNavigateAwayConfirmation();
+
+            await window.App.CodeExecution.clearPackages(sessionId);
         }
     };
 }());
@@ -400,6 +402,13 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         },
         getLoadedPackageDlls: function () {
             return _loadedPackageDlls;
+        },
+        clearPackages: async function (sessionId) {
+            if (!sessionId) {
+                return;
+            }
+
+            await caches.delete(`packages-${sessionId}/`);
         }
     };
 }());
