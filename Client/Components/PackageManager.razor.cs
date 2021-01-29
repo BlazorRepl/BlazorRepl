@@ -155,6 +155,7 @@
                 return;
             }
 
+            this.PackageSearchQuery = selectedPackage;
             this.SelectedPackageName = selectedPackage;
             this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
         }
