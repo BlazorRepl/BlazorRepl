@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.2" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.321">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

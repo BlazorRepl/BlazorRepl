@@ -22,11 +22,11 @@
     {
         private static readonly ConcurrentDictionary<string, LibraryDependencyInfo> LibraryDependencyCache = new();
 
-        private readonly IHttpClientFactory httpClientFactory;
+        private readonly HttpClient httpClient;
 
-        public NuGetRemoteDependencyProvider(IHttpClientFactory httpClientFactory)
+        public NuGetRemoteDependencyProvider(HttpClient httpClient)
         {
-            this.httpClientFactory = httpClientFactory;
+            this.httpClient = httpClient;
         }
 
         public bool IsHttp { get; } = true;
@@ -105,8 +105,7 @@
 
             const string NuGetNuspecEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.nuspec";
 
-            var httpClient = this.httpClientFactory.CreateClient(nameof(NuGetRemoteDependencyProvider));
-            var nuspecStream = await httpClient.GetStreamAsync(
+            var nuspecStream = await this.httpClient.GetStreamAsync(
                 string.Format(NuGetNuspecEndpointFormat, libraryIdentity.Name, libraryIdentity.Version),
                 cancellationToken);
 

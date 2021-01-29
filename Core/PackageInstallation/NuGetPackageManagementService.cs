@@ -15,7 +15,7 @@
     using NuGet.Packaging;
     using NuGet.Versioning;
 
-    public class NuGetPackageManagementService
+    public class NuGetPackageManagementService : IDisposable
     {
         private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
         private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
@@ -181,6 +181,13 @@
             }
 
             return result.Data.Reverse().ToList();
+        }
+
+        public void Dispose()
+        {
+            this.currentlyInstallingPackage = null;
+            this.installedPackages.Clear();
+            this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
         private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)

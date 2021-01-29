@@ -25,13 +25,12 @@ namespace BlazorRepl.Client
 
             builder.Services.AddSingleton(serviceProvider => (IJSInProcessRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
             builder.Services.AddSingleton(serviceProvider => (IJSUnmarshalledRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
-            builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-            builder.Services.AddScoped<SnippetsService>();
+            builder.Services.AddSingleton(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddSingleton<SnippetsService>();
             builder.Services.AddSingleton<CompilationService>();
             builder.Services.AddSingleton<NuGetRemoteDependencyProvider>();
-            builder.Services.AddScoped<NuGetPackageManagementService>();
-            builder.Services.AddHttpClient();
-            builder.Services.AddScoped(serviceProvider =>
+            builder.Services.AddTransient<NuGetPackageManagementService>();
+            builder.Services.AddSingleton(serviceProvider =>
             {
                 var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
 
@@ -45,7 +44,6 @@ namespace BlazorRepl.Client
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));
 
-            builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
             await builder.Build().RunAsync();

@@ -114,7 +114,7 @@
             }
         }
 
-        public void Dispose() => this.PageNotificationsComponent?.Dispose();
+        public void Dispose() => this.NuGetPackageManagementService?.Dispose();
 
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();

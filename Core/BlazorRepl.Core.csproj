@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="5.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="NuGet.DependencyResolver.Core" Version="5.8.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
