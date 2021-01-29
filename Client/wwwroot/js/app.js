@@ -38,8 +38,9 @@
 window.App.CodeEditor = window.App.CodeEditor || (function () {
     let _editor;
     let _overrideValue;
+    let _currentLanguage;
 
-    function initEditor(editorId, value) {
+    function initEditor(editorId, value, language) {
         if (!editorId) {
             return;
         }
@@ -49,10 +50,11 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
             _editor = monaco.editor.create(document.getElementById(editorId), {
                 fontSize: '16px',
                 value: _overrideValue || value || '',
-                language: 'razor'
+                language: language || _currentLanguage || 'razor'
             });
 
             _overrideValue = null;
+            _currentLanguage = language || _currentLanguage;
         });
     }
 
@@ -60,11 +62,16 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
         return _editor && _editor.getValue();
     }
 
-    function setValue(value) {
+    function setValue(value, language) {
         if (_editor) {
             _editor.setValue(value || '');
+            if (language && language !== _currentLanguage) {
+                monaco.editor.setModelLanguage(_editor.getModel(), language);
+                _currentLanguage = language;
+            }
         } else {
             _overrideValue = value;
+            _currentLanguage = language || _currentLanguage;
         }
     }
 
@@ -138,14 +145,14 @@ window.App.Repl = window.App.Repl || (function () {
         }
     }
 
-    function resetEditor() {
+    function resetEditor(newLanguage) {
         const value = window.App.CodeEditor.getValue();
         const oldEditorElement = document.getElementById(_editorId);
         if (oldEditorElement && oldEditorElement.childNodes) {
             oldEditorElement.childNodes.forEach(c => oldEditorElement.removeChild(c));
         }
 
-        window.App.CodeEditor.initEditor(_editorId, value);
+        window.App.CodeEditor.initEditor(_editorId, value, newLanguage);
     }
 
     function onWindowResize() {
@@ -217,10 +224,9 @@ window.App.Repl = window.App.Repl || (function () {
 
             enableNavigateAwayConfirmation();
         },
-        setCodeEditorContainerHeight: function () {
-            if (setElementHeight(_editorContainerId, true)) {
-                resetEditor();
-            }
+        setCodeEditorContainerHeight: function (newLanguage) {
+            setElementHeight(_editorContainerId, true);
+            resetEditor(newLanguage);
         },
         updateUserAssemblyInCacheStorage: function (rawFileBytes) {
             if (!rawFileBytes) {

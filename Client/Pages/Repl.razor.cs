@@ -47,6 +47,8 @@
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
+        private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
+
         private bool SaveSnippetPopupVisible { get; set; }
 
         private string Preset { get; set; } = "basic";
@@ -234,9 +236,18 @@
 
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(name);
 
-            this.CodeFiles.TryAdd(name, new CodeFile { Path = name, Content = $"<h1>{nameWithoutExtension}</h1>" });
+            var newCodeFile = new CodeFile { Path = name };
 
-            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight");
+            newCodeFile.Content = newCodeFile.Type == CodeFileType.CSharp
+                ? string.Format(CoreConstants.DefaultCSharpFileContentFormat, nameWithoutExtension)
+                : string.Format(CoreConstants.DefaultRazorFileContentFormat, nameWithoutExtension);
+
+            this.CodeFiles.TryAdd(name, newCodeFile);
+
+            // TODO: update method name when refactoring the coded editor JS module
+            this.JsRuntime.InvokeVoid(
+                "App.Repl.setCodeEditorContainerHeight",
+                newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");
         }
 
         private void UpdateActiveCodeFileContent()
