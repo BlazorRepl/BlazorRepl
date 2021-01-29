@@ -7,7 +7,7 @@
     using BlazorRepl.Client.Services;
     using Microsoft.AspNetCore.Components;
 
-    public partial class TabManager : IDisposable
+    public partial class TabManager
     {
         private const int DefaultActiveIndex = 0;
 
@@ -35,8 +35,6 @@
         private int ActiveIndex { get; set; } = DefaultActiveIndex;
 
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
-
-        public void Dispose() => this.PageNotificationsComponent?.Dispose();
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

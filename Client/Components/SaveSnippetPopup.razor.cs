@@ -60,7 +60,6 @@
         public void Dispose()
         {
             this.dotNetInstance?.Dispose();
-            this.PageNotificationsComponent?.Dispose();
 
             this.JsRuntime.InvokeVoid("App.SaveSnippetPopup.dispose");
         }
