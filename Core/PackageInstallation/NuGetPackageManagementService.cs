@@ -154,7 +154,7 @@
             // TODO: Support prerelease packages
             // TODO: Maybe support other package types
             const string NuGetSearchPackagesEndpointFormat =
-                "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&prerelease=false";
+                "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&semVerLevel=2.0.0&prerelease=false";
 
             var result = await this.httpClient.GetFromJsonAsync<NuGetPackagesSearchResponse>(
                 string.Format(NuGetSearchPackagesEndpointFormat, query, take));
