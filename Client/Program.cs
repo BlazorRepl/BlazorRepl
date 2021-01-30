@@ -1,7 +1,11 @@
 namespace BlazorRepl.Client
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
     using System.Net.Http;
+    using System.Runtime.Loader;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
@@ -47,9 +51,46 @@ namespace BlazorRepl.Client
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
+            await LoadPackageDllsAsync();
+
             Startup.Configure(builder);
 
             await builder.Build().RunAsync();
+        }
+
+        private static async Task LoadPackageDllsAsync()
+        {
+            var jsRuntime = ReplWebAssemblyJsRuntime.Instance;
+
+            var sessionId = jsRuntime.Invoke<string>("App.getUrlFragment");
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                // TODO: Extract to a service
+                jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
+
+                IEnumerable<byte[]> dlls;
+                var i = 0;
+                while (true)
+                {
+                    dlls = jsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedPackageDlls");
+                    if (dlls != null)
+                    {
+                        break;
+                    }
+
+                    Console.WriteLine($"Iteration: {i++}");
+                    await Task.Delay(20);
+                }
+
+                var sw = new Stopwatch();
+
+                foreach (var dll in dlls)
+                {
+                    sw.Restart();
+                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
+                    Console.WriteLine($"loading DLL - {sw.Elapsed}");
+                }
+            }
         }
     }
 }

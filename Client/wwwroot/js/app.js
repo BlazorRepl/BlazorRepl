@@ -31,6 +31,9 @@
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
+        },
+        getUrlFragment: function () {
+            return window.location.hash && window.location.hash.substr(1);
         }
     };
 }());
