@@ -98,6 +98,12 @@
 
                 this.PackagesToRestore.Clear();
             }
+            catch (NotSupportedException ex)
+            {
+                this.NuGetPackageManagementService.CancelPackageInstallation();
+
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, $"Error while restoring packages: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -215,6 +221,12 @@
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Info,
                     $"{this.SelectedPackageName} package is successfully installed.");
+            }
+            catch (NotSupportedException ex)
+            {
+                this.NuGetPackageManagementService.CancelPackageInstallation();
+
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, $"Error while installing package: {ex.Message}");
             }
             catch (Exception ex)
             {

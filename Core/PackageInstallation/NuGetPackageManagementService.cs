@@ -111,7 +111,7 @@
                     using var archive = new ZipArchive(zippedStream);
 
                     sw.Restart();
-                    var dlls = ExtractDlls(archive.Entries, package.Framework);
+                    var dlls = ExtractDlls(archive.Entries, package.Framework, package.Library.Name);
                     foreach (var file in dlls)
                     {
                         result.DllFiles.Add(file);
@@ -190,20 +190,47 @@
             this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
-        private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)
+        // TODO: Abstract .NET 5.0 hard-coded stuff
+        private static IDictionary<string, byte[]> ExtractDlls(
+            IEnumerable<ZipArchiveEntry> entries,
+            NuGetFramework framework,
+            string packageName)
         {
-            var dllEntries = entries.Where(e =>
+            var allDllEntries = entries.Where(e =>
+                Path.GetExtension(e.FullName) == ".dll" &&
+                e.FullName.StartsWith(LibFolderPrefix, StringComparison.OrdinalIgnoreCase));
+
+            var wantedFramework = framework;
+            if (framework == NuGetFramework.AnyFramework)
             {
-                if (Path.GetExtension(e.FullName) != ".dll" ||
-                    !e.FullName.StartsWith(LibFolderPrefix, StringComparison.OrdinalIgnoreCase))
+                var frameworkCandidates = new HashSet<NuGetFramework>();
+                foreach (var dllEntry in allDllEntries)
                 {
-                    return false;
+                    var path = dllEntry.FullName[LibFolderPrefix.Length..];
+                    var candidateFramework = FrameworkNameUtility.ParseNuGetFrameworkFolderName(path, strictParsing: true, out _);
+
+                    frameworkCandidates.Add(candidateFramework);
                 }
 
+                var nearestCompatibleFramework = NuGetFrameworkUtility.GetNearest(
+                    frameworkCandidates,
+                    FrameworkConstants.CommonFrameworks.Net50,
+                    f => f);
+
+                if (nearestCompatibleFramework == null)
+                {
+                    throw new NotSupportedException($"Package '{packageName}' is not compatible with .NET 5");
+                }
+
+                wantedFramework = nearestCompatibleFramework;
+            }
+
+            var dllEntries = allDllEntries.Where(e =>
+            {
                 var path = e.FullName[LibFolderPrefix.Length..];
                 var parsedFramework = FrameworkNameUtility.ParseNuGetFrameworkFolderName(path, strictParsing: true, out _);
 
-                return parsedFramework == framework;
+                return parsedFramework == wantedFramework;
             });
 
             return GetEntriesContent(dllEntries);

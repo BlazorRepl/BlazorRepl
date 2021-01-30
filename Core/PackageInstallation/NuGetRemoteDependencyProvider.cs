@@ -63,8 +63,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            // we are validating the version, name and target framework upon getting them in the ui
-            // so we don't need second validation here
+            // We are validating the name, version and target framework upon getting them on UI so we skip second validation here
             return Task.FromResult(new LibraryIdentity(
                 libraryRange.Name,
                 libraryRange.VersionRange.MinVersion,
@@ -112,17 +111,17 @@
             var nuspecReader = new NuspecReader(nuspecStream);
 
             var dependencyGroup = NuGetFrameworkUtility.GetNearest(
-                nuspecReader.GetDependencyGroups(false),
+                nuspecReader.GetDependencyGroups(useStrictVersionCheck: false),
                 targetFramework,
                 item => item.TargetFramework);
 
-            var dependencies = dependencyGroup?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToArray();
+            var dependencies = dependencyGroup?.Packages?.Select(PackagingUtility.GetLibraryDependencyFromNuspec).ToList();
 
             var libraryDependencyInfo = new LibraryDependencyInfo(
                 libraryIdentity,
                 resolved: true,
-                dependencyGroup?.TargetFramework ?? targetFramework,
-                dependencies ?? Array.Empty<LibraryDependency>());
+                dependencyGroup?.TargetFramework ?? NuGetFramework.AnyFramework,
+                dependencies ?? Enumerable.Empty<LibraryDependency>());
 
             if (LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo))
             {
