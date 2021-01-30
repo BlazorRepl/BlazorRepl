@@ -126,7 +126,9 @@
             return result;
         }
 
-        private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(HttpClient httpClient, IEnumerable<string> assemblyNames)
+        private static async Task<IDictionary<string, Stream>> GetStreamFromHttpAsync(
+            HttpClient httpClient,
+            IEnumerable<string> assemblyNames)
         {
             var streams = new ConcurrentDictionary<string, Stream>();
 
@@ -143,17 +145,17 @@
             return streams;
         }
 
-        private static CompileToAssemblyResult CompileToAssembly(ICollection<CompileToCSharpResult> cSharpResults)
+        private static CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
         {
             if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
             {
                 return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
             }
 
-            var syntaxTrees = new List<SyntaxTree>(cSharpResults.Count);
-            foreach (var cSharpResult in cSharpResults)
+            var syntaxTrees = new SyntaxTree[cSharpResults.Count];
+            for (var i = 0; i < cSharpResults.Count; i++)
             {
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(cSharpResult.Code, cSharpParseOptions));
+                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResults[i].Code, cSharpParseOptions);
             }
 
             var finalCompilation = baseCompilation.AddSyntaxTrees(syntaxTrees);
@@ -202,7 +204,7 @@
                 Encoding.UTF8.GetBytes(fileContent.TrimStart()));
         }
 
-        private async Task<ICollection<CompileToCSharpResult>> CompileToCSharpAsync(
+        private async Task<IReadOnlyList<CompileToCSharpResult>> CompileToCSharpAsync(
             ICollection<CodeFile> codeFiles,
             Func<string, Task> updateStatusFunc)
         {
@@ -212,20 +214,34 @@
             var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
             // Result of generating declarations
-            var declarations = new List<CompileToCSharpResult>(codeFiles.Count);
+            var declarations = new CompileToCSharpResult[codeFiles.Count];
+            var index = 0;
             foreach (var codeFile in codeFiles)
             {
-                var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
-
-                var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
-                var cSharpDocument = codeDocument.GetCSharpDocument();
-
-                declarations.Add(new CompileToCSharpResult
+                if (codeFile.Type == CodeFileType.Razor)
                 {
-                    ProjectItem = projectItem,
-                    Code = cSharpDocument.GeneratedCode,
-                    Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                });
+                    var projectItem = CreateRazorProjectItem(codeFile.Path, codeFile.Content);
+
+                    var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
+                    var cSharpDocument = codeDocument.GetCSharpDocument();
+
+                    declarations[index] = new CompileToCSharpResult
+                    {
+                        ProjectItem = projectItem,
+                        Code = cSharpDocument.GeneratedCode,
+                        Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
+                    };
+                }
+                else
+                {
+                    declarations[index] = new CompileToCSharpResult
+                    {
+                        Code = codeFile.Content,
+                        Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
+                    };
+                }
+
+                index++;
             }
 
             // Result of doing 'temp' compilation
@@ -241,18 +257,28 @@
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
 
-            var results = new List<CompileToCSharpResult>(codeFiles.Count);
-            foreach (var declaration in declarations)
+            var results = new CompileToCSharpResult[declarations.Length];
+            for (index = 0; index < declarations.Length; index++)
             {
-                var codeDocument = projectEngine.Process(declaration.ProjectItem);
-                var cSharpDocument = codeDocument.GetCSharpDocument();
+                var declaration = declarations[index];
+                var isRazorDeclaration = declaration.ProjectItem != null;
 
-                results.Add(new CompileToCSharpResult
+                if (isRazorDeclaration)
                 {
-                    ProjectItem = declaration.ProjectItem,
-                    Code = cSharpDocument.GeneratedCode,
-                    Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                });
+                    var codeDocument = projectEngine.Process(declaration.ProjectItem);
+                    var cSharpDocument = codeDocument.GetCSharpDocument();
+
+                    results[index] = new CompileToCSharpResult
+                    {
+                        ProjectItem = declaration.ProjectItem,
+                        Code = cSharpDocument.GeneratedCode,
+                        Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
+                    };
+                }
+                else
+                {
+                    results[index] = declaration;
+                }
             }
 
             return results;

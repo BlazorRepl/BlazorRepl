@@ -6,15 +6,10 @@
 
     internal class CompileToCSharpResult
     {
-        public CompileToCSharpResult()
-        {
-            this.Diagnostics = Enumerable.Empty<CompilationDiagnostic>();
-        }
-
         public RazorProjectItem ProjectItem { get; set; }
 
         public string Code { get; set; }
 
-        public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; }
+        public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; } = Enumerable.Empty<CompilationDiagnostic>();
     }
 }
