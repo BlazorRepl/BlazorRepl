@@ -4,7 +4,9 @@ namespace BlazorRepl.Client
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Net.Http;
+    using System.Reflection;
     using System.Runtime.Loader;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
@@ -51,46 +53,96 @@ namespace BlazorRepl.Client
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
-            await LoadPackageDllsAsync();
+            if (await LoadPackageDllsAsync())
+            {
+                // TODO: Ignore startup class casing
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            Startup.Configure(builder);
+                Console.WriteLine("assemblies " + string.Join(" | ", assemblies.Select(x => x.GetName())));
+
+                var assembly = assemblies.FirstOrDefault(x => x.FullName == "BlazorRepl.UserComponents");
+                if (assembly != null)
+                {
+                    Console.WriteLine("assembly found");
+                    var startupType = assembly.GetExportedTypes().SingleOrDefault(t => t.Name == "Startup");
+                    if (startupType != null)
+                    {
+                        Console.WriteLine("startup class exists");
+                        var method = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
+                        if (method != null)
+                        {
+                            Console.WriteLine("configure method exists");
+                            var parameters = method.GetParameters();
+                            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(WebAssemblyHostBuilder))
+                            {
+                                Console.WriteLine("configure method params are OK");
+                                method.Invoke(obj: null, new object[] { builder });
+                            }
+                            else
+                            {
+                                Console.WriteLine("no correct params");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("no method");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("no class");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("no assembly");
+                }
+            }
 
             await builder.Build().RunAsync();
         }
 
-        private static async Task LoadPackageDllsAsync()
+        private static async Task<bool> LoadPackageDllsAsync()
         {
             var jsRuntime = ReplWebAssemblyJsRuntime.Instance;
 
             var sessionId = jsRuntime.Invoke<string>("App.getUrlFragment");
-            if (!string.IsNullOrWhiteSpace(sessionId))
+
+            // Validate that the sessionId is not altered
+            // TODO: Validate it's a valid timestamp!!!
+            if (string.IsNullOrWhiteSpace(sessionId) || !ulong.TryParse(sessionId, out _))
             {
-                // TODO: Extract to a service
-                jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
-
-                IEnumerable<byte[]> dlls;
-                var i = 0;
-                while (true)
-                {
-                    dlls = jsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedPackageDlls");
-                    if (dlls != null)
-                    {
-                        break;
-                    }
-
-                    Console.WriteLine($"Iteration: {i++}");
-                    await Task.Delay(20);
-                }
-
-                var sw = new Stopwatch();
-
-                foreach (var dll in dlls)
-                {
-                    sw.Restart();
-                    AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
-                    Console.WriteLine($"loading DLL - {sw.Elapsed}");
-                }
+                Console.WriteLine("ALL BAD");
+                return false;
             }
+
+            // TODO: Extract to a service
+            jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
+
+            IEnumerable<byte[]> dlls;
+            var i = 0;
+            while (true)
+            {
+                dlls = jsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedPackageDlls");
+                if (dlls != null)
+                {
+                    break;
+                }
+
+                Console.WriteLine($"Iteration: {i++}");
+                await Task.Delay(20);
+            }
+
+            var sw = new Stopwatch();
+
+            foreach (var dll in dlls)
+            {
+                sw.Restart();
+                AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
+                Console.WriteLine($"loading DLL - {sw.Elapsed}");
+            }
+
+            return true;
         }
     }
 }

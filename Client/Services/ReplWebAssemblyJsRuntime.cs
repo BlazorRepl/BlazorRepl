@@ -8,12 +8,12 @@
     {
         internal static readonly ReplWebAssemblyJsRuntime Instance = new ReplWebAssemblyJsRuntime();
 
-        public ElementReferenceContext ElementReferenceContext { get; }
+        //public ElementReferenceContext ElementReferenceContext { get; }
 
         private ReplWebAssemblyJsRuntime()
         {
-            ElementReferenceContext = new WebElementReferenceContext(this);
-            JsonSerializerOptions.Converters.Add(new ReplElementReferenceJsonConverter(ElementReferenceContext));
+            //ElementReferenceContext = new WebElementReferenceContext(this);
+            //JsonSerializerOptions.Converters.Add(new ReplElementReferenceJsonConverter(ElementReferenceContext));
         }
 
 #pragma warning disable IDE0051 // Remove unused private members. Invoked via Mono's JS interop mechanism (invoke_method)
