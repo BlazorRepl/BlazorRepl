@@ -170,7 +170,8 @@
             }
 
             // TODO: Support prerelease packages
-            const string NuGetPackageVersionsEndpointFormat = "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&prerelease=false";
+            const string NuGetPackageVersionsEndpointFormat =
+                "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&semVerLevel=2.0.0&prerelease=false";
 
             var result = await this.httpClient.GetFromJsonAsync<NuGetPackageVersionsResponse>(
                 string.Format(NuGetPackageVersionsEndpointFormat, packageName));
