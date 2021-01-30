@@ -209,7 +209,10 @@
                     var path = dllEntry.FullName[LibFolderPrefix.Length..];
                     var candidateFramework = FrameworkNameUtility.ParseNuGetFrameworkFolderName(path, strictParsing: true, out _);
 
-                    frameworkCandidates.Add(candidateFramework);
+                    if (candidateFramework != null)
+                    {
+                        frameworkCandidates.Add(candidateFramework);
+                    }
                 }
 
                 var nearestCompatibleFramework = NuGetFrameworkUtility.GetNearest(
