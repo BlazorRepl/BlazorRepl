@@ -187,8 +187,10 @@
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
                 this.AreDiagnosticsShown = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
+
                 this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
             }
             finally

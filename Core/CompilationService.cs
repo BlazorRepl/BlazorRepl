@@ -12,6 +12,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
+    using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
     using Microsoft.AspNetCore.Razor.Language;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -58,6 +59,7 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 
             var assemblyNames = basicReferenceAssemblyRoots
@@ -214,8 +216,8 @@
             var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
             // Result of generating declarations
-            var declarations = new CompileToCSharpResult[codeFiles.Count];
-            var index = 0;
+            var declarations = new List<CompileToCSharpResult>(codeFiles.Count);
+            var containsStartupClass = false;
             foreach (var codeFile in codeFiles)
             {
                 if (codeFile.Type == CodeFileType.Razor)
@@ -225,23 +227,36 @@
                     var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    declarations[index] = new CompileToCSharpResult
+                    declarations.Add(new CompileToCSharpResult
                     {
                         ProjectItem = projectItem,
                         Code = cSharpDocument.GeneratedCode,
                         Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                    };
+                    });
                 }
                 else
                 {
-                    declarations[index] = new CompileToCSharpResult
+                    // TODO: Do we need these declaration during 1st phase at all? What about the 2nd?
+                    declarations.Add(new CompileToCSharpResult
                     {
                         Code = codeFile.Content,
                         Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
-                    };
-                }
+                    });
 
-                index++;
+                    if (string.Equals(codeFile.Path, CoreConstants.StartupClassFilePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        containsStartupClass = true;
+                    }
+                }
+            }
+
+            if (!containsStartupClass)
+            {
+                declarations.Add(new CompileToCSharpResult
+                {
+                    Code = CoreConstants.StartupClassDefaultContent,
+                    Diagnostics = Enumerable.Empty<CompilationDiagnostic>(),
+                });
             }
 
             // Result of doing 'temp' compilation
@@ -257,10 +272,10 @@
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
 
-            var results = new CompileToCSharpResult[declarations.Length];
-            for (index = 0; index < declarations.Length; index++)
+            var results = new CompileToCSharpResult[declarations.Count];
+            for (var i = 0; i < declarations.Count; i++)
             {
-                var declaration = declarations[index];
+                var declaration = declarations[i];
                 var isRazorDeclaration = declaration.ProjectItem != null;
 
                 if (isRazorDeclaration)
@@ -268,7 +283,7 @@
                     var codeDocument = projectEngine.Process(declaration.ProjectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    results[index] = new CompileToCSharpResult
+                    results[i] = new CompileToCSharpResult
                     {
                         ProjectItem = declaration.ProjectItem,
                         Code = cSharpDocument.GeneratedCode,
@@ -277,7 +292,7 @@
                 }
                 else
                 {
-                    results[index] = declaration;
+                    results[i] = declaration;
                 }
             }
 
