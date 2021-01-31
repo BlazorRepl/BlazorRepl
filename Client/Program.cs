@@ -5,6 +5,7 @@ namespace BlazorRepl.Client
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.Loader;
@@ -55,47 +56,29 @@ namespace BlazorRepl.Client
 
             if (await LoadPackageDllsAsync())
             {
-                // TODO: Ignore startup class casing
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
+                var userComponentsAssembly = typeof(__Main).Assembly;
+                Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
+                var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
+                    ?? userComponentsAssembly.GetType("BlazorRepl.UserComponents.Startup", throwOnError: false, ignoreCase: true);
 
-                Console.WriteLine("assemblies " + string.Join(" | ", assemblies.Select(x => x.GetName())));
-
-                var assembly = assemblies.FirstOrDefault(x => x.FullName == "BlazorRepl.UserComponents");
-                if (assembly != null)
+                if (startupType != null)
                 {
-                    Console.WriteLine("assembly found");
-                    var startupType = assembly.GetExportedTypes().SingleOrDefault(t => t.Name == "Startup");
-                    if (startupType != null)
+                    var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
+                    if (configureMethod != null)
                     {
-                        Console.WriteLine("startup class exists");
-                        var method = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
-                        if (method != null)
+                        var configureMethodParams = configureMethod.GetParameters();
+                        if (configureMethodParams.Length == 1 && configureMethodParams[0].ParameterType == typeof(WebAssemblyHostBuilder))
                         {
-                            Console.WriteLine("configure method exists");
-                            var parameters = method.GetParameters();
-                            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(WebAssemblyHostBuilder))
-                            {
-                                Console.WriteLine("configure method params are OK");
-                                method.Invoke(obj: null, new object[] { builder });
-                            }
-                            else
-                            {
-                                Console.WriteLine("no correct params");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("no method");
+                            Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
+
+                            Console.WriteLine("configure method params are OK");
+                            _ = Expression.Call(
+                                configureMethod, 
+                                new Expression[] { Expression.Constant(builder, typeof(WebAssemblyHostBuilder)) });
+                            //configureMethod.Invoke(obj: null, new object[] { builder });
                         }
                     }
-                    else
-                    {
-                        Console.WriteLine("no class");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("no assembly");
                 }
             }
 
@@ -112,7 +95,6 @@ namespace BlazorRepl.Client
             // TODO: Validate it's a valid timestamp!!!
             if (string.IsNullOrWhiteSpace(sessionId) || !ulong.TryParse(sessionId, out _))
             {
-                Console.WriteLine("ALL BAD");
                 return false;
             }
 
