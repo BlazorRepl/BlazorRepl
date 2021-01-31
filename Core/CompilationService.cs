@@ -235,8 +235,6 @@
                 }
                 else
                 {
-                    // TODO: Do we need these declaration during 1st phase at all? What about the 2nd?
-                    // TODO: Where does it throw when there is an error in a C# file?
                     declarations.Add(new CompileToCSharpResult
                     {
                         Code = codeFile.Content,

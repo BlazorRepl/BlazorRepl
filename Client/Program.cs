@@ -4,8 +4,6 @@ namespace BlazorRepl.Client
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Linq.Expressions;
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.Loader;
@@ -54,9 +52,16 @@ namespace BlazorRepl.Client
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
-            await LoadPackageDllsAsync();
+            try
+            {
+                await LoadPackageDllsAsync();
 
-            ExecuteUserDefinedConfiguration(builder);
+                ExecuteUserDefinedConfiguration(builder);
+            }
+            catch (Exception)
+            {
+                // Ignore all errors to prevent a broken app
+            }
 
             await builder.Build().RunAsync();
         }
