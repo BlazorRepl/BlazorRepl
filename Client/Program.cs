@@ -26,8 +26,6 @@ namespace BlazorRepl.Client
 
     public class Program
     {
-        private const string DefaultJsRuntimeTypeName = "DefaultWebAssemblyJSRuntime";
-
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -56,41 +54,37 @@ namespace BlazorRepl.Client
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
+            var jsRuntime = GetJsRuntime();
+
             try
             {
-                await LoadPackageDllsAsync();
+                await LoadPackageDllsAsync(jsRuntime);
 
-                ExecuteUserDefinedConfiguration(builder);
+                if (TryExecuteUserDefinedConfiguration(builder))
+                {
+                    // If the user defined configuration code has executed, the user components DLL is now
+                    // loaded in the app domain so we reset the DLL in the storage for the next app load
+                    jsRuntime.InvokeUnmarshalled<string, object>(
+                        "App.CodeExecution.updateUserComponentsDll",
+                        CoreConstants.DefaultUserComponentsAssemblyBytes);
+                }
             }
-            catch (Exception ex) when (ex is not MissingMemberException || !ex.Message.Contains(DefaultJsRuntimeTypeName))
+            catch (Exception ex)
             {
-                // Ignore all errors to prevent a broken app
+                // We shouldn't throw during app start so just give the user the info
+                // that an exception has been thrown and continue the app execution
+                var actualException = ex is TargetInvocationException tie ? tie.InnerException : ex;
+                Console.Error.WriteLine($"Error on app startup: {actualException}");
             }
 
             await builder.Build().RunAsync();
         }
 
-        private static async Task LoadPackageDllsAsync()
+        private static async Task LoadPackageDllsAsync(IJSUnmarshalledRuntime jsRuntime)
         {
-            var defaultJsRuntimeType = typeof(LazyAssemblyLoader).Assembly
-                .GetTypes()
-                .SingleOrDefault(t => t.Name == DefaultJsRuntimeTypeName);
-
-            if (defaultJsRuntimeType == null)
-            {
-                throw new MissingMemberException($"Couldn't find type '{DefaultJsRuntimeTypeName}'.");
-            }
-
-            var instanceField = defaultJsRuntimeType.GetField("Instance", BindingFlags.Static | BindingFlags.NonPublic);
-            if (instanceField == null)
-            {
-                throw new MissingMemberException($"Couldn't find property 'Instance' in '{DefaultJsRuntimeTypeName}'.");
-            }
-
-            var jsRuntime = (IJSUnmarshalledRuntime)instanceField.GetValue(obj: null);
+            var sessionId = jsRuntime.InvokeUnmarshalled<string>("App.getUrlFragmentValue");
 
             // We use timestamps for session ID and care only about DLLs in caches that contain timestamps
-            var sessionId = jsRuntime.InvokeUnmarshalled<string>("App.getUrlFragmentValue");
             if (!ulong.TryParse(sessionId, out _))
             {
                 return;
@@ -122,7 +116,7 @@ namespace BlazorRepl.Client
             }
         }
 
-        private static void ExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
+        private static bool TryExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
         {
             var userComponentsAssembly = typeof(__Main).Assembly;
             var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
@@ -130,24 +124,48 @@ namespace BlazorRepl.Client
 
             if (startupType == null)
             {
-                return;
+                return false;
             }
 
             var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
             if (configureMethod == null)
             {
-                return;
+                return false;
             }
 
             var configureMethodParams = configureMethod.GetParameters();
             if (configureMethodParams.Length != 1 || configureMethodParams[0].ParameterType != typeof(WebAssemblyHostBuilder))
             {
-                return;
+                return false;
             }
 
-            Console.WriteLine("configure method params are OK");
             configureMethod.Invoke(obj: null, new object[] { builder });
-            Console.WriteLine("Configure() done!");
+            Console.WriteLine("Startup.Configure() done!");
+
+            return true;
+        }
+
+        private static IJSUnmarshalledRuntime GetJsRuntime()
+        {
+            const string DefaultJsRuntimeTypeName = "DefaultWebAssemblyJSRuntime";
+            const string InstanceFieldName = "Instance";
+
+            var defaultJsRuntimeType = typeof(LazyAssemblyLoader).Assembly
+                .GetTypes()
+                .SingleOrDefault(t => t.Name == DefaultJsRuntimeTypeName);
+
+            if (defaultJsRuntimeType == null)
+            {
+                throw new MissingMemberException($"Couldn't find type '{DefaultJsRuntimeTypeName}'.");
+            }
+
+            var instanceField = defaultJsRuntimeType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.NonPublic);
+            if (instanceField == null)
+            {
+                throw new MissingMemberException($"Couldn't find property '{InstanceFieldName}' in '{DefaultJsRuntimeTypeName}'.");
+            }
+
+            return (IJSUnmarshalledRuntime)instanceField.GetValue(obj: null);
         }
     }
 }

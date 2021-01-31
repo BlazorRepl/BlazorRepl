@@ -340,8 +340,8 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
     }
 
     return {
-        updateUserComponentsDll: async function (fileAsBase64String) {
-            if (!fileAsBase64String) {
+        updateUserComponentsDll: async function (fileContent) {
+            if (!fileContent) {
                 return;
             }
 
@@ -359,7 +359,10 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const dllPath = userComponentsDllCacheKey.url.substr(window.location.origin.length);
+
+            const fileAsBase64String = typeof fileContent === 'string' ? fileContent : BINDING.conv_string(fileContent);
             const dllBytes = convertBase64StringToBytes(fileAsBase64String);
+
             await putInCacheStorage(cache, dllPath, dllBytes);
         },
         storePackageFile: async function (rawSessionId, rawFileName, rawFileBytes) {
