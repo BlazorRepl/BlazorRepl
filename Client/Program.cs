@@ -56,9 +56,7 @@ namespace BlazorRepl.Client
 
             if (await LoadPackageDllsAsync())
             {
-                Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
                 var userComponentsAssembly = typeof(__Main).Assembly;
-                Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
                 var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
                     ?? userComponentsAssembly.GetType("BlazorRepl.UserComponents.Startup", throwOnError: false, ignoreCase: true);
 
@@ -70,13 +68,9 @@ namespace BlazorRepl.Client
                         var configureMethodParams = configureMethod.GetParameters();
                         if (configureMethodParams.Length == 1 && configureMethodParams[0].ParameterType == typeof(WebAssemblyHostBuilder))
                         {
-                            Console.WriteLine(string.Join(" | ", AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetName().Name)));
-
                             Console.WriteLine("configure method params are OK");
-                            _ = Expression.Call(
-                                configureMethod, 
-                                new Expression[] { Expression.Constant(builder, typeof(WebAssemblyHostBuilder)) });
-                            //configureMethod.Invoke(obj: null, new object[] { builder });
+                            configureMethod.Invoke(obj: null, new object[] { builder });
+                            Console.WriteLine("Configure() done!");
                         }
                     }
                 }
@@ -85,17 +79,16 @@ namespace BlazorRepl.Client
             await builder.Build().RunAsync();
         }
 
-        private static async Task<bool> LoadPackageDllsAsync()
+        private static async Task LoadPackageDllsAsync()
         {
             var jsRuntime = ReplWebAssemblyJsRuntime.Instance;
 
             var sessionId = jsRuntime.Invoke<string>("App.getUrlFragment");
 
-            // Validate that the sessionId is not altered
-            // TODO: Validate it's a valid timestamp!!!
-            if (string.IsNullOrWhiteSpace(sessionId) || !ulong.TryParse(sessionId, out _))
+            // We use timestamps for session ID
+            if (!ulong.TryParse(sessionId, out _))
             {
-                return false;
+                return;
             }
 
             // TODO: Extract to a service
@@ -123,8 +116,6 @@ namespace BlazorRepl.Client
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
                 Console.WriteLine($"loading DLL - {sw.Elapsed}");
             }
-
-            return true;
         }
     }
 }
