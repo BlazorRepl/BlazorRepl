@@ -216,7 +216,8 @@
             var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
             // Result of generating declarations
-            var declarations = new List<CompileToCSharpResult>(codeFiles.Count);
+            var declarations = new CompileToCSharpResult[codeFiles.Count];
+            var index = 0;
             foreach (var codeFile in codeFiles)
             {
                 if (codeFile.Type == CodeFileType.Razor)
@@ -226,21 +227,23 @@
                     var codeDocument = projectEngine.ProcessDeclarationOnly(projectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    declarations.Add(new CompileToCSharpResult
+                    declarations[index] = new CompileToCSharpResult
                     {
                         ProjectItem = projectItem,
                         Code = cSharpDocument.GeneratedCode,
                         Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
-                    });
+                    };
                 }
                 else
                 {
-                    declarations.Add(new CompileToCSharpResult
+                    declarations[index] = new CompileToCSharpResult
                     {
                         Code = codeFile.Content,
                         Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
-                    });
+                    };
                 }
+
+                index++;
             }
 
             // Result of doing 'temp' compilation
@@ -256,10 +259,10 @@
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = this.CreateRazorProjectEngine(references);
 
-            var results = new CompileToCSharpResult[declarations.Count];
-            for (var i = 0; i < declarations.Count; i++)
+            var results = new CompileToCSharpResult[declarations.Length];
+            for (index = 0; index < declarations.Length; index++)
             {
-                var declaration = declarations[i];
+                var declaration = declarations[index];
                 var isRazorDeclaration = declaration.ProjectItem != null;
 
                 if (isRazorDeclaration)
@@ -267,7 +270,7 @@
                     var codeDocument = projectEngine.Process(declaration.ProjectItem);
                     var cSharpDocument = codeDocument.GetCSharpDocument();
 
-                    results[i] = new CompileToCSharpResult
+                    results[index] = new CompileToCSharpResult
                     {
                         ProjectItem = declaration.ProjectItem,
                         Code = cSharpDocument.GeneratedCode,
@@ -276,7 +279,7 @@
                 }
                 else
                 {
-                    results[i] = declaration;
+                    results[index] = declaration;
                 }
             }
 
