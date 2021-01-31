@@ -54,27 +54,9 @@ namespace BlazorRepl.Client
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
-            if (await LoadPackageDllsAsync())
-            {
-                var userComponentsAssembly = typeof(__Main).Assembly;
-                var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
-                    ?? userComponentsAssembly.GetType("BlazorRepl.UserComponents.Startup", throwOnError: false, ignoreCase: true);
+            await LoadPackageDllsAsync();
 
-                if (startupType != null)
-                {
-                    var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
-                    if (configureMethod != null)
-                    {
-                        var configureMethodParams = configureMethod.GetParameters();
-                        if (configureMethodParams.Length == 1 && configureMethodParams[0].ParameterType == typeof(WebAssemblyHostBuilder))
-                        {
-                            Console.WriteLine("configure method params are OK");
-                            configureMethod.Invoke(obj: null, new object[] { builder });
-                            Console.WriteLine("Configure() done!");
-                        }
-                    }
-                }
-            }
+            ExecuteUserDefinedConfiguration(builder);
 
             await builder.Build().RunAsync();
         }
@@ -116,6 +98,34 @@ namespace BlazorRepl.Client
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dll, writable: false));
                 Console.WriteLine($"loading DLL - {sw.Elapsed}");
             }
+        }
+
+        private static void ExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
+        {
+            var userComponentsAssembly = typeof(__Main).Assembly;
+            var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
+                ?? userComponentsAssembly.GetType("BlazorRepl.UserComponents.Startup", throwOnError: false, ignoreCase: true);
+
+            if (startupType == null)
+            {
+                return;
+            }
+
+            var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
+            if (configureMethod == null)
+            {
+                return;
+            }
+
+            var configureMethodParams = configureMethod.GetParameters();
+            if (configureMethodParams.Length != 1 || configureMethodParams[0].ParameterType != typeof(WebAssemblyHostBuilder))
+            {
+                return;
+            }
+
+            Console.WriteLine("configure method params are OK");
+            configureMethod.Invoke(obj: null, new object[] { builder });
+            Console.WriteLine("Configure() done!");
         }
     }
 }
