@@ -223,7 +223,7 @@
 
                 if (nearestCompatibleFramework == null)
                 {
-                    throw new NotSupportedException($"Package '{packageName}' is not compatible with .NET 5");
+                    return new Dictionary<string, byte[]>(0);
                 }
 
                 wantedFramework = nearestCompatibleFramework;
