@@ -236,7 +236,6 @@
                 }
                 else
                 {
-                    // TODO: Do we need these declaration during 1st phase at all? What about the 2nd?
                     declarations.Add(new CompileToCSharpResult
                     {
                         Code = codeFile.Content,
