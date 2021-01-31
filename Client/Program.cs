@@ -26,6 +26,8 @@ namespace BlazorRepl.Client
 
     public class Program
     {
+        private const string DefaultJsRuntimeTypeName = "DefaultWebAssemblyJSRuntime";
+
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -58,11 +60,11 @@ namespace BlazorRepl.Client
             {
                 await LoadPackageDllsAsync();
 
-                Startup.Configure(builder);
+                ExecuteUserDefinedConfiguration(builder);
             }
-            catch (Exception ex) when (ex is not MissingMemberException)
+            catch (Exception ex) when (ex is not MissingMemberException || !ex.Message.Contains(DefaultJsRuntimeTypeName))
             {
-                Console.Error.WriteLine($"Error during user startup code execution: {ex}");
+                // Ignore all errors to prevent a broken app
             }
 
             await builder.Build().RunAsync();
@@ -70,8 +72,6 @@ namespace BlazorRepl.Client
 
         private static async Task LoadPackageDllsAsync()
         {
-            const string DefaultJsRuntimeTypeName = "DefaultWebAssemblyJSRuntime";
-
             var defaultJsRuntimeType = typeof(LazyAssemblyLoader).Assembly
                 .GetTypes()
                 .SingleOrDefault(t => t.Name == DefaultJsRuntimeTypeName);
@@ -120,6 +120,34 @@ namespace BlazorRepl.Client
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes, writable: false));
                 Console.WriteLine($"loading DLL - {sw.Elapsed}");
             }
+        }
+
+        private static void ExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
+        {
+            var userComponentsAssembly = typeof(__Main).Assembly;
+            var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
+                ?? userComponentsAssembly.GetType("BlazorRepl.UserComponents.Startup", throwOnError: false, ignoreCase: true);
+
+            if (startupType == null)
+            {
+                return;
+            }
+
+            var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
+            if (configureMethod == null)
+            {
+                return;
+            }
+
+            var configureMethodParams = configureMethod.GetParameters();
+            if (configureMethodParams.Length != 1 || configureMethodParams[0].ParameterType != typeof(WebAssemblyHostBuilder))
+            {
+                return;
+            }
+
+            Console.WriteLine("configure method params are OK");
+            configureMethod.Invoke(obj: null, new object[] { builder });
+            Console.WriteLine("Configure() done!");
         }
     }
 }

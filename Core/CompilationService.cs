@@ -217,7 +217,6 @@
 
             // Result of generating declarations
             var declarations = new List<CompileToCSharpResult>(codeFiles.Count);
-            var containsStartupClass = false;
             foreach (var codeFile in codeFiles)
             {
                 if (codeFile.Type == CodeFileType.Razor)
@@ -241,21 +240,7 @@
                         Code = codeFile.Content,
                         Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
                     });
-
-                    if (string.Equals(codeFile.Path, CoreConstants.StartupClassFilePath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        containsStartupClass = true;
-                    }
                 }
-            }
-
-            if (!containsStartupClass)
-            {
-                declarations.Add(new CompileToCSharpResult
-                {
-                    Code = CoreConstants.StartupClassDefaultContent,
-                    Diagnostics = Enumerable.Empty<CompilationDiagnostic>(),
-                });
             }
 
             // Result of doing 'temp' compilation
