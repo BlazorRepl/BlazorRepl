@@ -65,7 +65,7 @@
 
         private bool Loading { get; set; }
 
-        private string SessionId { get; } = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
+        private string SessionId { get; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
