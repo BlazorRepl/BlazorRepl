@@ -17,6 +17,15 @@
 
             window.history.pushState(null, null, url);
         },
+        getUrlFragmentValue: function () {
+            const hash = window.location.hash;
+            const hashValue = hash && hash.substr(1);
+            if (!hashValue) {
+                return null;
+            }
+
+            return BINDING.js_string_to_mono_string(hashValue);
+        },
         copyToClipboard: function (text) {
             if (!text) {
                 return;
@@ -31,9 +40,6 @@
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
-        },
-        getUrlFragment: function () {
-            return window.location.hash && window.location.hash.substr(1);
         }
     };
 }());
@@ -373,12 +379,16 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         },
         loadPackageFiles: async function (rawSessionId) {
             if (!rawSessionId) {
+                // Prevent endless loop on getting the loaded DLLs
+                _loadedPackageDlls = [];
                 return;
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
             const packagesCache = await caches.open(`packages-${sessionId}/`);
             if (!packagesCache) {
+                // Prevent endless loop on getting the loaded DLLs
+                _loadedPackageDlls = [];
                 return;
             }
 
