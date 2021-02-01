@@ -1,4 +1,7 @@
-﻿<div class="package-manager" style="width: 20%; padding: 8px;">
+﻿
+
+<div class="package-manager" style="@DisplayStyle">
+    <button @onclick="@(() => Visible = !Visible)" class="package-manager-toggle-btn"></button>
     <div class="toast-header" style="margin-bottom: 20px; background-color: #F5F5F5">
         <h4 class="m-auto">Package Manager</h4>
     </div>

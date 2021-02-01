@@ -81,6 +81,12 @@ app {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.btn-br-primary {
+    background: #4aca85;
+    color: #fff;
+    border: 1px solid #4aca85;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
@@ -187,16 +193,33 @@ app {
 }
 
 /* Package Manager */
+.package-manager {
+    padding: 8px;
+    background: white;
+}
+
+.package-manager-toggle-btn {
+    position: relative;
+    left: calc(100% + 8px);
+    z-index: 1000;
+    top: -28px;
+    background-image: url("../img/nuget-logo.png");
+    width: 27px;
+    height: 26px;
+    background-size: contain;
+    border: none;
+}
+
+.package-manager-hide-btn {
+    position: fixed;
+    left: 20%;
+    top: 50px;
+}
+
 .package-manager .search-package-wrapper {
     display: flex;
     justify-content: space-around;
     margin-bottom: 5px;
-}
-
-.btn-br-primary {
-    background: #4aca85;
-    color: #fff;
-    border: 1px solid #4aca85;
 }
 
 /* App Loader */

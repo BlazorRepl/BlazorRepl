@@ -64,7 +64,7 @@
 
         private string VisibleClass => this.Visible ? "show" : string.Empty;
 
-        private string DisplayStyle => this.Visible ? string.Empty : "display: none;";
+        private string DisplayStyle => this.Visible ? "width: 20%; padding: 8px;" : "width: 0; padding: 0;";
 
         public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
 
