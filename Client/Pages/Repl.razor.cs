@@ -49,7 +49,7 @@
 
         private PackageManager PackageManagerComponent { get; set; }
 
-        private IEnumerable<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
+        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
@@ -220,6 +220,8 @@
                 this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
+
+        private void TogglePackageManager() => this.PackageManagerVisible = !this.PackageManagerVisible;
 
         private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
 
