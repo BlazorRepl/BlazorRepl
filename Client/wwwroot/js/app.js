@@ -345,6 +345,8 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
                 return;
             }
 
+            const fileAsBase64String = typeof fileContent === 'string' ? fileContent : BINDING.conv_string(fileContent);
+
             const cache = await caches.open('blazor-resources-/');
             if (!cache) {
                 alert(UNEXPECTED_ERROR_MESSAGE);
@@ -359,8 +361,6 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const dllPath = userComponentsDllCacheKey.url.substr(window.location.origin.length);
-
-            const fileAsBase64String = typeof fileContent === 'string' ? fileContent : BINDING.conv_string(fileContent);
             const dllBytes = convertBase64StringToBytes(fileAsBase64String);
 
             await putInCacheStorage(cache, dllPath, dllBytes);
@@ -371,13 +371,14 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
+            const fileName = BINDING.conv_string(rawFileName);
+            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
+
             const packagesCache = await caches.open(`packages-${sessionId}/`);
             if (!packagesCache) {
                 return;
             }
 
-            const fileName = BINDING.conv_string(rawFileName);
-            const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
             await putInCacheStorage(packagesCache, fileName, fileBytes);
         },
         loadPackageFiles: async function (rawSessionId) {
