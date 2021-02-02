@@ -183,7 +183,6 @@
 
                 compilationResult = await this.CompilationService.CompileToAssemblyAsync(
                     this.CodeFiles.Values,
-                    this.Preset,
                     this.UpdateLoaderTextAsync);
 
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
