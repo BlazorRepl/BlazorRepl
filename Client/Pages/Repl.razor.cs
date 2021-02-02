@@ -53,6 +53,8 @@
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
+        private int PackagesCount => (this.InstalledPackages?.Count ?? 0) + (this.PackagesToRestore?.Count ?? 0);
+
         private bool SaveSnippetPopupVisible { get; set; }
 
         private bool PackageManagerVisible { get; set; }

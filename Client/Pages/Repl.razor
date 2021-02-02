@@ -11,9 +11,9 @@
             </button>
             <button @onclick="@TogglePackageManager" class="btn btn-link nav-action" disabled="@Loading" title="Show Package Manager">
                 <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image" /> PACKAGES
-                @if (InstalledPackages != null && InstalledPackages.Any())
+                @if (PackagesCount > 0)
                 {
-                    @: (@InstalledPackages.Count)
+                    @: (@PackagesCount)
                 }
             </button>
             <button @onclick="@ShowSaveSnippetPopup"
