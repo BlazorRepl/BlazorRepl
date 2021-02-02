@@ -115,10 +115,10 @@ namespace BlazorRepl.Client
             sw.Restart();
             foreach (var dllBytes in dllsBytes)
             {
-                sw.Restart();
-                AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes, writable: false));
-                Console.WriteLine($"loading DLL - {sw.Elapsed}");
+                AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
             }
+
+            Console.WriteLine($"loading DLLs- {sw.Elapsed}");
         }
 
         private static bool TryExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)

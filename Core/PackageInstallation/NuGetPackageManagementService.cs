@@ -102,12 +102,15 @@
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
                     sw.Restart();
-                    var packageStream = await this.httpClient.GetStreamAsync(
+
+                    // Get byte[] instead of Stream because for some reason the stream later (when storing) is not the same
+                    var packageBytes = await this.httpClient.GetByteArrayAsync(
                         string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
 
                     Console.WriteLine($"{package.Library.Name} nupkg download - {sw.Elapsed}");
 
-                    using var archive = new ZipArchive(packageStream);
+                    using var memoryStream = new MemoryStream(packageBytes);
+                    using var archive = new ZipArchive(memoryStream);
 
                     sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework, package.Library.Name);
