@@ -198,11 +198,31 @@ app {
     width: 20%;
 }
 
-    .package-manager .search-package-wrapper {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 5px;
+.package-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+    .package-container .package-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        max-width: 250px;
     }
+
+.search-package-wrapper input,
+.search-package-wrapper select {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.package-manager .search-package-wrapper {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5px;
+}
 
 .package-manager-header {
     padding-right: 0.25em;
@@ -356,7 +376,6 @@ app {
         left: 46%;
     }
 }
-
 
 /* Package License Popup */
 .package-license-overlay {
