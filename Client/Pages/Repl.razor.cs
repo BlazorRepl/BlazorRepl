@@ -55,6 +55,8 @@
 
         private bool SaveSnippetPopupVisible { get; set; }
 
+        private bool PackageManagerVisible { get; set; }
+
         private string Preset { get; set; } = "basic";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();

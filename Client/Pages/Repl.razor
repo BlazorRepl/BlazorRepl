@@ -9,6 +9,9 @@
             <button class="btn btn-link nav-action" @onclick="@CompileAsync" disabled="@Loading" title="Run (Ctrl+S)">
                 <i class="icon-play4"></i> RUN
             </button>
+            <button @onclick="@(() => PackageManagerVisible = !PackageManagerVisible)" class="btn btn-link nav-action" title="Show NuGet Package Manager">
+                <img src="../img/nuget-logo.png"  class="nuget-package-image"/> PACKAGES
+            </button>
             <button @onclick="@ShowSaveSnippetPopup" class="btn btn-link nav-action" id="save-snippet-btn" title="Save public snippet">
                 <i class="icon-floppy-disk"></i> SAVE
             </button>
@@ -27,7 +30,8 @@
                 Message="@LoaderText"></ReplLoader>
 
     <PackageManager @ref="@PackageManagerComponent"
-                    @bind-Loading="Loading"
+                    @bind-Loading="@Loading"
+                    @bind-Visible="@PackageManagerVisible"
                     UpdateLoaderTextFunc="UpdateLoaderTextAsync"
                     PackagesToRestore="PackagesToRestore"
                     SessionId="@SessionId"></PackageManager>

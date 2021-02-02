@@ -1,9 +1,7 @@
-﻿
-
-<div class="package-manager" style="@DisplayStyle">
-    <button @onclick="@(() => Visible = !Visible)" class="package-manager-toggle-btn"></button>
-    <div class="toast-header" style="margin-bottom: 20px; background-color: #F5F5F5">
+﻿<div class="package-manager" style="@DisplayStyle">
+    <div class="toast-header package-manager-header">
         <h4 class="m-auto">Package Manager</h4>
+        <span class="package-manager-close-btn" @onclick="@CloseInternalAsync">&times;</span>
     </div>
 
     <PackageLicensePopup Visible="@LicensePopupVisible"

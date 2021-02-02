@@ -195,31 +195,25 @@ app {
 /* Package Manager */
 .package-manager {
     padding: 8px;
-    background: white;
-}
-
-.package-manager-toggle-btn {
-    position: relative;
-    left: calc(100% + 8px);
-    z-index: 1000;
-    top: -28px;
-    background-image: url("../img/nuget-logo.png");
-    width: 27px;
-    height: 26px;
-    background-size: contain;
-    border: none;
-}
-
-.package-manager-hide-btn {
-    position: fixed;
-    left: 20%;
-    top: 50px;
+    width: 20%;
 }
 
 .package-manager .search-package-wrapper {
     display: flex;
     justify-content: space-around;
     margin-bottom: 5px;
+}
+
+.package-manager-header {
+    padding-right: 0.25em;
+    margin-bottom: 20px;
+    background-color: #F5F5F5
+}
+
+.package-manager-close-btn {
+    cursor: pointer;
+    font-size: 1.3em;
+    font-weight: bold;
 }
 
 /* App Loader */
@@ -266,6 +260,11 @@ app {
 
 .repl-navbar {
     margin-bottom: 0;
+}
+
+.nuget-package-image {
+    width: 25px;
+    padding-bottom: 5px;
 }
 
 /* Splitter */
