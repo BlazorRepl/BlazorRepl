@@ -94,10 +94,11 @@ namespace BlazorRepl.Client
                 return;
             }
 
+            var sw = Stopwatch.StartNew();
+
             jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
 
             IEnumerable<byte[]> dllsBytes;
-            var i = 0;
             while (true)
             {
                 dllsBytes = jsRuntime.InvokeUnmarshalled<IEnumerable<byte[]>>("App.CodeExecution.getLoadedPackageDlls");
@@ -106,12 +107,12 @@ namespace BlazorRepl.Client
                     break;
                 }
 
-                Console.WriteLine($"Iteration: {i++}");
-                await Task.Delay(20);
+                await Task.Delay(50);
             }
 
-            var sw = new Stopwatch();
+            Console.WriteLine($"loadPackageFiles: {sw.Elapsed}");
 
+            sw.Restart();
             foreach (var dllBytes in dllsBytes)
             {
                 sw.Restart();

@@ -243,14 +243,13 @@
             var sw = Stopwatch.StartNew();
 
             var packagesContents = await this.NuGetPackageManagementService.DownloadPackagesContentsAsync();
-            Console.WriteLine($"NuGetPackageManager.DownloadPackageContentsAsync - {sw.Elapsed}");
+            Console.WriteLine($"NuGetPackageManager.DownloadPackagesContentsAsync - {sw.Elapsed}");
 
             sw.Restart();
             this.CompilationService.AddAssemblyReferences(packagesContents.DllFiles.Values);
-            Console.WriteLine($"CompilationService.AddReferences - {sw.Elapsed}");
+            Console.WriteLine($"CompilationService.AddAssemblyReferences - {sw.Elapsed}");
 
             sw.Restart();
-
             var allPackageFiles = packagesContents.DllFiles.Concat(packagesContents.JavaScriptFiles).Concat(packagesContents.CssFiles);
             foreach (var (fileName, fileBytes) in allPackageFiles)
             {
