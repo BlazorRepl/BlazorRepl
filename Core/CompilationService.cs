@@ -96,7 +96,6 @@
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(
             ICollection<CodeFile> codeFiles,
-            string preset,
             Func<string, Task> updateStatusFunc) // TODO: try convert to event
         {
             if (codeFiles == null)

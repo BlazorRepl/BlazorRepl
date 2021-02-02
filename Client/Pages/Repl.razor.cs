@@ -51,8 +51,6 @@
 
         private bool SaveSnippetPopupVisible { get; set; }
 
-        private string Preset { get; set; } = "basic";
-
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
         private bool AreDiagnosticsShown { get; set; }
@@ -167,7 +165,6 @@
 
                 compilationResult = await this.CompilationService.CompileToAssemblyAsync(
                     this.CodeFiles.Values,
-                    this.Preset,
                     this.UpdateLoaderTextAsync);
 
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
