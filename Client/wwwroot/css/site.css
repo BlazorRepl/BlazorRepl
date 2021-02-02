@@ -198,11 +198,11 @@ app {
     width: 20%;
 }
 
-.package-manager .search-package-wrapper {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 5px;
-}
+    .package-manager .search-package-wrapper {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 5px;
+    }
 
 .package-manager-header {
     padding-right: 0.25em;
@@ -260,6 +260,7 @@ app {
 
 .repl-navbar {
     margin-bottom: 0;
+    color: #303133;
 }
 
 .nuget-package-image {
