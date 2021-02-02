@@ -102,13 +102,12 @@
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
                     sw.Restart();
-                    var packageBytes = await this.httpClient.GetByteArrayAsync(
+                    var packageStream = await this.httpClient.GetStreamAsync(
                         string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
 
-                    Console.WriteLine($"nupkg download - {sw.Elapsed}");
+                    Console.WriteLine($"{package.Library.Name} nupkg download - {sw.Elapsed}");
 
-                    using var zippedStream = new MemoryStream(packageBytes);
-                    using var archive = new ZipArchive(zippedStream);
+                    using var archive = new ZipArchive(packageStream);
 
                     sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework, package.Library.Name);
@@ -117,25 +116,19 @@
                         result.DllFiles.Add(file);
                     }
 
-                    Console.WriteLine($"ExtractDlls - {sw.Elapsed}");
-
-                    sw.Restart();
                     var scripts = ExtractStaticContents(archive.Entries, ".js");
                     foreach (var file in scripts)
                     {
                         result.JavaScriptFiles.Add(file);
                     }
 
-                    Console.WriteLine($"ExtractStaticContents JS - {sw.Elapsed}");
-
-                    sw.Restart();
                     var styles = ExtractStaticContents(archive.Entries, ".css");
                     foreach (var file in styles)
                     {
                         result.CssFiles.Add(file);
                     }
 
-                    Console.WriteLine($"ExtractStaticContents CSS - {sw.Elapsed}");
+                    Console.WriteLine($"{package.Library.Name} contents extract - {sw.Elapsed}");
                 }
 
                 this.installedPackages.Add(this.currentlyInstallingPackage);
