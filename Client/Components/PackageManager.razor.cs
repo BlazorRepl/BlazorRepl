@@ -101,9 +101,11 @@
                 Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
-                this.PageNotificationsComponent.AddNotification(
-                    NotificationType.Error,
-                    content: "Error while restoring packages. Please try again later.");
+                var errorMessage = ex is NotSupportedException
+                    ? ex.Message
+                    : "Error while restoring packages. Please try again later.";
+
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage);
             }
 
             if (handleLoading)
@@ -172,9 +174,11 @@
                 Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
-                this.PageNotificationsComponent.AddNotification(
-                    NotificationType.Error,
-                    content: "Error while installing package. Please try again later.");
+                var errorMessage = ex is NotSupportedException
+                    ? ex.Message
+                    : "Error while installing package. Please try again later.";
+
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage);
 
                 return;
             }

@@ -85,8 +85,8 @@
                     return dependencyInfo;
                 }
 
-                throw new InvalidOperationException(
-                    $"Cannot install {dependencyInfo.Library.Name} v{libraryIdentity.Version} because v{dependencyInfo.Library.Version} is installed.");
+                throw new NotSupportedException(
+                    $"Cannot install package '{dependencyInfo.Library.Name}' v{libraryIdentity.Version} because v{dependencyInfo.Library.Version} is already installed.");
 
                 // Some thoughts:
                 // differentiate the deps which comes from the project from those which comes from the current walking
