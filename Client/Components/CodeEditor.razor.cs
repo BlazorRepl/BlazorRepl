@@ -35,6 +35,8 @@
 
         internal void Focus() => this.JsRuntime.InvokeVoid("App.CodeEditor.focus");
 
+        internal void Resize() => this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
+
         internal string GetCode() => this.JsRuntime.Invoke<string>("App.CodeEditor.getValue");
 
         protected override void OnAfterRender(bool firstRender)

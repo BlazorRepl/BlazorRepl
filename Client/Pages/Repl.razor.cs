@@ -234,7 +234,7 @@
             this.StateHasChanged();
             await Task.Delay(1); // Ensure rendering has time to be called
 
-            this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
+            this.CodeEditorComponent.Resize();
         }
 
         private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
@@ -296,7 +296,7 @@
             this.StateHasChanged();
             await Task.Delay(1); // Ensure rendering has time to be called
 
-            this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
+            this.CodeEditorComponent.Resize();
         }
 
         private void UpdateActiveCodeFileContent()

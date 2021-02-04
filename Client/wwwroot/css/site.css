@@ -209,7 +209,7 @@ app {
         overflow: hidden;
         text-overflow: ellipsis;
         display: inline-block;
-        max-width: calc(100% - 50px);
+        max-width: calc(100% - 65px);
     }
 
 .search-package-wrapper input,
