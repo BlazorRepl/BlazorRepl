@@ -9,6 +9,7 @@
     using System.Net.Http;
     using System.Net.Http.Json;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Components.WebAssembly.Http;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
@@ -103,9 +104,14 @@
                 {
                     sw.Restart();
 
+                    var url = string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version);
+                    var response = await this.httpClient.SendAsync(
+                        new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
+
+                    response.EnsureSuccessStatusCode();
+
                     // Get byte[] instead of Stream because for some reason the stream later (when storing) is not the same
-                    var packageBytes = await this.httpClient.GetByteArrayAsync(
-                        string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
+                    var packageBytes = await response.Content.ReadAsByteArrayAsync();
 
                     Console.WriteLine($"{package.Library.Name} nupkg download - {sw.Elapsed}");
 
@@ -113,7 +119,7 @@
                     using var archive = new ZipArchive(memoryStream);
 
                     sw.Restart();
-                    var dlls = ExtractDlls(archive.Entries, package.Framework, package.Library.Name);
+                    var dlls = ExtractDlls(archive.Entries, package.Framework);
                     foreach (var file in dlls)
                     {
                         result.DllFiles.Add(file);
@@ -152,8 +158,13 @@
             const string NuGetSearchPackagesEndpointFormat =
                 "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&semVerLevel=2.0.0&prerelease=false";
 
-            var result = await this.httpClient.GetFromJsonAsync<NuGetPackagesSearchResponse>(
-                string.Format(NuGetSearchPackagesEndpointFormat, query, take));
+            var url = string.Format(NuGetSearchPackagesEndpointFormat, query, take);
+            var response = await this.httpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
+
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<NuGetPackagesSearchResponse>();
 
             return result?.Data ?? Enumerable.Empty<string>();
         }
@@ -169,15 +180,15 @@
             const string NuGetPackageVersionsEndpointFormat =
                 "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&semVerLevel=2.0.0&prerelease=false";
 
-            var result = await this.httpClient.GetFromJsonAsync<NuGetPackageVersionsResponse>(
-                string.Format(NuGetPackageVersionsEndpointFormat, packageName));
+            var url = string.Format(NuGetPackageVersionsEndpointFormat, packageName);
+            var response = await this.httpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
 
-            if (result?.Data == null)
-            {
-                return Enumerable.Empty<string>();
-            }
+            response.EnsureSuccessStatusCode();
 
-            return result.Data.Reverse().ToList();
+            var result = await response.Content.ReadFromJsonAsync<NuGetPackageVersionsResponse>();
+
+            return result?.Data?.Reverse().ToList() ?? Enumerable.Empty<string>();
         }
 
         public void Dispose()
@@ -187,11 +198,8 @@
             this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
-        // TODO: Abstract .NET 5.0 hard-coded stuff
-        private static IDictionary<string, byte[]> ExtractDlls(
-            IEnumerable<ZipArchiveEntry> entries,
-            NuGetFramework framework,
-            string packageName)
+        // TODO: Abstract .NET 5.0 hard-coded stuff everywhere
+        private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)
         {
             var allDllEntries = entries.Where(e =>
                 Path.GetExtension(e.FullName) == ".dll" &&
