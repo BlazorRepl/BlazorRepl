@@ -232,7 +232,6 @@
             this.PackageManagerVisible = !this.PackageManagerVisible;
 
             this.StateHasChanged();
-
             await Task.Delay(1); // Ensure rendering has time to be called
 
             this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
@@ -295,7 +294,6 @@
             this.PackageManagerVisible = packageManagerVisible;
 
             this.StateHasChanged();
-
             await Task.Delay(1); // Ensure rendering has time to be called
 
             this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
@@ -317,7 +315,6 @@
             this.LoaderText = loaderText;
 
             this.StateHasChanged();
-
             return Task.Delay(1); // Ensure rendering has time to be called
         }
     }
