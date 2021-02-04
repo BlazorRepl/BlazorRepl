@@ -93,7 +93,17 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
         initEditor: initEditor,
         getValue: getValue,
         setValue: setValue,
+        setLanguage: function (language) {
+            if (!_editor || _currentLanguage === language) {
+                return;
+            }
+
+            monaco.editor.setModelLanguage(_editor.getModel(), language);
+        },
         focus: focus,
+        resize: function () {
+            _editor && _editor.layout();
+        },
         dispose: function () {
             _editor = null;
         }
@@ -108,7 +118,6 @@ window.App.Repl = window.App.Repl || (function () {
     let _dotNetInstance;
     let _editorContainerId;
     let _resultContainerId;
-    let _editorId;
     let _originalHistoryPushStateFunction;
 
     function setElementHeight(elementId, excludeTabsHeight) {
@@ -142,32 +151,22 @@ window.App.Repl = window.App.Repl || (function () {
 
             throttleLastTimeFuncNameMappings['resetEditor'] = new Date();
             Split(['#' + _editorContainerId, '#' + _resultContainerId], {
-                elementStyle: (dimension, size, gutterSize) => ({
-                    'flex-basis': `calc(${size}% - ${gutterSize + 1}px)`,
+                elementStyle: (_, size, gutterSize) => ({
+                    'width': `calc(${size}% - ${gutterSize + 1}px)`,
                 }),
-                gutterStyle: (dimension, gutterSize) => ({
-                    'flex-basis': `${gutterSize}px`,
+                gutterStyle: (_, gutterSize) => ({
+                    'width': `${gutterSize}px`,
                 }),
-                onDrag: () => throttle(resetEditor, 100, 'resetEditor'),
-                onDragEnd: resetEditor
+                onDrag: () => throttle(window.App.CodeEditor.resize, 50, 'resetEditor'),
+                onDragEnd: window.App.CodeEditor.resize
             });
         }
-    }
-
-    function resetEditor(newLanguage) {
-        const value = window.App.CodeEditor.getValue();
-        const oldEditorElement = document.getElementById(_editorId);
-        if (oldEditorElement && oldEditorElement.childNodes) {
-            oldEditorElement.childNodes.forEach(c => oldEditorElement.removeChild(c));
-        }
-
-        window.App.CodeEditor.initEditor(_editorId, value, newLanguage);
     }
 
     function onWindowResize() {
         setElementHeight(_resultContainerId);
         setElementHeight(_editorContainerId, true);
-        resetEditor();
+        window.App.CodeEditor.resize();
     }
 
     function onKeyDown(e) {
@@ -235,7 +234,8 @@ window.App.Repl = window.App.Repl || (function () {
         },
         setCodeEditorContainerHeight: function (newLanguage) {
             setElementHeight(_editorContainerId, true);
-            resetEditor(newLanguage);
+            window.App.CodeEditor.setLanguage(newLanguage);
+            window.App.CodeEditor.resize();
         },
         dispose: async function (sessionId) {
             _dotNetInstance = null;
