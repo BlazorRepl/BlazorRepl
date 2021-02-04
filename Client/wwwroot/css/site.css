@@ -195,7 +195,7 @@ app {
 /* Package Manager */
 .package-manager {
     padding: 8px;
-    width: 20%;
+    min-width: 18%;
 }
 
 .package-container {
@@ -209,7 +209,7 @@ app {
         overflow: hidden;
         text-overflow: ellipsis;
         display: inline-block;
-        max-width: 250px;
+        max-width: calc(100% - 50px);
     }
 
 .search-package-wrapper input,
