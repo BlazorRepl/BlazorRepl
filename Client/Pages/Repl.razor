@@ -9,7 +9,7 @@
             <button @onclick="@CompileAsync" class="btn btn-link nav-action" disabled="@Loading" title="Run (Ctrl+S)">
                 <i class="icon-play4"></i> RUN
             </button>
-            <button @onclick="@TogglePackageManager" class="btn btn-link nav-action" disabled="@Loading" title="Show Package Manager">
+            <button @onclick="@TogglePackageManagerAsync" class="btn btn-link nav-action" disabled="@Loading" title="Show Package Manager">
                 <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image" /> PACKAGES
                 @if (PackagesCount > 0)
                 {
@@ -39,23 +39,26 @@
 
     <PackageManager @ref="@PackageManagerComponent"
                     @bind-Loading="@Loading"
-                    @bind-Visible="@PackageManagerVisible"
+                    Visible="@PackageManagerVisible"
+                    VisibleChanged="HandlePackageManagerVisibleChangedAsync"
                     UpdateLoaderTextFunc="UpdateLoaderTextAsync"
                     PackagesToRestore="PackagesToRestore"
                     SessionId="@SessionId"></PackageManager>
 
-    <div id="user-code-editor-container">
-        <TabManager Tabs="@CodeFileNames"
-                    OnTabActivate="@HandleTabActivate"
-                    OnTabClose="@HandleTabClose"
-                    OnTabCreate="@HandleTabCreate"></TabManager>
+    <div class="flex @SplitterContainerClass">
+        <div id="user-code-editor-container">
+            <TabManager Tabs="@CodeFileNames"
+                        OnTabActivate="@HandleTabActivate"
+                        OnTabClose="@HandleTabClose"
+                        OnTabCreate="@HandleTabCreate"></TabManager>
 
-        <CodeEditor @ref="@CodeEditorComponent"
-                    Code="@CodeEditorContent"
-                    CodeFileType="@CodeFileType"></CodeEditor>
-    </div>
-    <div id="user-page-window-container">
-        <iframe id="user-page-window" src="/user-page"></iframe>
+            <CodeEditor @ref="@CodeEditorComponent"
+                        Code="@CodeEditorContent"
+                        CodeFileType="@CodeFileType"></CodeEditor>
+        </div>
+        <div id="user-page-window-container">
+            <iframe id="user-page-window" src="/user-page"></iframe>
+        </div>
     </div>
 </div>
 

@@ -60,6 +60,9 @@
 
         private bool PackageManagerVisible { get; set; }
 
+        private string SplitterContainerClass =>
+            this.PackageManagerVisible ? "splitter-container-shrunk-width" : "splitter-container-full-width";
+
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
         private bool AreDiagnosticsShown { get; set; }
@@ -97,7 +100,6 @@
                     "App.Repl.init",
                     "user-code-editor-container",
                     "user-page-window-container",
-                    "user-code-editor",
                     this.dotNetInstance);
             }
 
@@ -163,7 +165,7 @@
             this.Loading = true;
             this.LoaderText = "Processing";
 
-            await Task.Delay(10); // Ensure rendering has time to be called
+            await Task.Delay(1); // Ensure rendering has time to be called
 
             if (this.PackagesToRestore?.Any() ?? false)
             {
@@ -225,7 +227,16 @@
             Console.WriteLine($"FULL RUN: {sw.Elapsed}");
         }
 
-        private void TogglePackageManager() => this.PackageManagerVisible = !this.PackageManagerVisible;
+        private async Task TogglePackageManagerAsync()
+        {
+            this.PackageManagerVisible = !this.PackageManagerVisible;
+
+            this.StateHasChanged();
+
+            await Task.Delay(1); // Ensure rendering has time to be called
+
+            this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
+        }
 
         private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
 
@@ -279,6 +290,17 @@
                 newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");
         }
 
+        private async Task HandlePackageManagerVisibleChangedAsync(bool packageManagerVisible)
+        {
+            this.PackageManagerVisible = packageManagerVisible;
+
+            this.StateHasChanged();
+
+            await Task.Delay(1); // Ensure rendering has time to be called
+
+            this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
+        }
+
         private void UpdateActiveCodeFileContent()
         {
             if (this.activeCodeFile == null)
@@ -296,7 +318,7 @@
 
             this.StateHasChanged();
 
-            return Task.Delay(10); // Ensure rendering has time to be called
+            return Task.Delay(1); // Ensure rendering has time to be called
         }
     }
 }

@@ -157,7 +157,7 @@ window.App.Repl = window.App.Repl || (function () {
                 gutterStyle: (_, gutterSize) => ({
                     'width': `${gutterSize}px`,
                 }),
-                onDrag: () => throttle(window.App.CodeEditor.resize, 50, 'resetEditor'),
+                onDrag: () => throttle(window.App.CodeEditor.resize, 20, 'resetEditor'),
                 onDragEnd: window.App.CodeEditor.resize
             });
         }
@@ -214,11 +214,10 @@ window.App.Repl = window.App.Repl || (function () {
     }
 
     return {
-        init: function (editorContainerId, resultContainerId, editorId, dotNetInstance) {
+        init: function (editorContainerId, resultContainerId, dotNetInstance) {
             _dotNetInstance = dotNetInstance;
             _editorContainerId = editorContainerId;
             _resultContainerId = resultContainerId;
-            _editorId = editorId;
 
             throttleLastTimeFuncNameMappings['compile'] = new Date();
 
@@ -241,7 +240,6 @@ window.App.Repl = window.App.Repl || (function () {
             _dotNetInstance = null;
             _editorContainerId = null;
             _resultContainerId = null;
-            _editorId = null;
 
             window.removeEventListener('resize', onWindowResize);
             window.removeEventListener('keydown', onKeyDown);

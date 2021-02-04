@@ -195,7 +195,7 @@ app {
 /* Package Manager */
 .package-manager {
     padding: 8px;
-    min-width: 18%;
+    width: 18%;
 }
 
 .package-container {
@@ -297,6 +297,14 @@ app {
 .gutter.gutter-horizontal {
     cursor: ew-resize;
     background-color: #ccc;
+}
+
+.splitter-container-full-width {
+    width: 100%;
+}
+
+.splitter-container-shrunk-width {
+    width: 82%;
 }
 
 /* Editor */
