@@ -118,7 +118,7 @@ namespace BlazorRepl.Client
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
             }
 
-            Console.WriteLine($"loading DLLs- {sw.Elapsed}");
+            Console.WriteLine($"loading DLLs: {sw.Elapsed}");
         }
 
         private static bool TryExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)

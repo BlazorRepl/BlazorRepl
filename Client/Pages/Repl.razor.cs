@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -157,6 +158,8 @@
 
         private async Task CompileAsync()
         {
+            var sw = Stopwatch.StartNew();
+
             this.Loading = true;
             this.LoaderText = "Processing";
 
@@ -218,6 +221,8 @@
                 // TODO: Add error page in iframe
                 this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", userPagePath);
             }
+
+            Console.WriteLine($"FULL RUN: {sw.Elapsed}");
         }
 
         private void TogglePackageManager() => this.PackageManagerVisible = !this.PackageManagerVisible;
