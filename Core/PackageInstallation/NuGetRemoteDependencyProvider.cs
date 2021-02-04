@@ -7,7 +7,6 @@
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Components.WebAssembly.Http;
     using Microsoft.CodeAnalysis;
     using NuGet.Common;
     using NuGet.Configuration;
@@ -105,14 +104,9 @@
 
             const string NuGetNuspecEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.nuspec";
 
-            var url = string.Format(NuGetNuspecEndpointFormat, libraryIdentity.Name, libraryIdentity.Version);
-            var response = await this.httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors),
+            var nuspecStream = await this.httpClient.GetStreamAsync(
+                string.Format(NuGetNuspecEndpointFormat, libraryIdentity.Name, libraryIdentity.Version),
                 cancellationToken);
-
-            response.EnsureSuccessStatusCode();
-
-            var nuspecStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
             var nuspecReader = new NuspecReader(nuspecStream);
 

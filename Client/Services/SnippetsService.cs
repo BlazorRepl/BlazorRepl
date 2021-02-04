@@ -12,7 +12,6 @@
     using BlazorRepl.Client.Models;
     using BlazorRepl.Core;
     using BlazorRepl.Core.PackageInstallation;
-    using Microsoft.AspNetCore.Components.WebAssembly.Http;
     using Microsoft.Extensions.Options;
 
     public class SnippetsService
@@ -105,12 +104,7 @@
 
             var requestData = new CreateSnippetRequest { Files = codeFiles, InstalledPackages = installedPackages };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, this.snippetsOptions.CreateUrl)
-                .SetBrowserRequestMode(BrowserRequestMode.Cors);
-
-            request.Content = JsonContent.Create(requestData);
-
-            var response = await this.httpClient.SendAsync(request);
+            var response = await this.httpClient.PostAsJsonAsync(this.snippetsOptions.CreateUrl, requestData);
             response.EnsureSuccessStatusCode();
 
             var id = await response.Content.ReadAsStringAsync();
@@ -130,9 +124,7 @@
             var id = snippetId[8..];
 
             var url = string.Format(this.snippetsOptions.ReadUrlFormat, yearFolder, monthFolder, dayAndHourFolder, id);
-            var snippetResponse = await this.httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
-
+            var snippetResponse = await this.httpClient.GetAsync(url);
             snippetResponse.EnsureSuccessStatusCode();
 
             var snippetFiles = await ExtractSnippetFilesFromResponseAsync(snippetResponse);

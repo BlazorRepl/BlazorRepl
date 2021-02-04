@@ -9,7 +9,6 @@
     using System.Net.Http;
     using System.Net.Http.Json;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Components.WebAssembly.Http;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
@@ -104,14 +103,9 @@
                 {
                     sw.Restart();
 
-                    var url = string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version);
-                    var response = await this.httpClient.SendAsync(
-                        new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
-
-                    response.EnsureSuccessStatusCode();
-
                     // Get byte[] instead of Stream because for some reason the stream later (when storing) is not the same
-                    var packageBytes = await response.Content.ReadAsByteArrayAsync();
+                    var packageBytes = await this.httpClient.GetByteArrayAsync(
+                        string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
 
                     Console.WriteLine($"{package.Library.Name} nupkg download - {sw.Elapsed}");
 
@@ -158,13 +152,8 @@
             const string NuGetSearchPackagesEndpointFormat =
                 "https://api-v2v3search-0.nuget.org/autocomplete?q={0}&take={1}&packageType=dependency&semVerLevel=2.0.0&prerelease=false";
 
-            var url = string.Format(NuGetSearchPackagesEndpointFormat, query, take);
-            var response = await this.httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
-
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadFromJsonAsync<NuGetPackagesSearchResponse>();
+            var result = await this.httpClient.GetFromJsonAsync<NuGetPackagesSearchResponse>(
+                string.Format(NuGetSearchPackagesEndpointFormat, query, take));
 
             return result?.Data ?? Enumerable.Empty<string>();
         }
@@ -180,13 +169,8 @@
             const string NuGetPackageVersionsEndpointFormat =
                 "https://api-v2v3search-0.nuget.org/autocomplete?id={0}&semVerLevel=2.0.0&prerelease=false";
 
-            var url = string.Format(NuGetPackageVersionsEndpointFormat, packageName);
-            var response = await this.httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Get, url).SetBrowserRequestMode(BrowserRequestMode.Cors));
-
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadFromJsonAsync<NuGetPackageVersionsResponse>();
+            var result = await this.httpClient.GetFromJsonAsync<NuGetPackageVersionsResponse>(
+                string.Format(NuGetPackageVersionsEndpointFormat, packageName));
 
             return result?.Data?.Reverse().ToList() ?? Enumerable.Empty<string>();
         }
