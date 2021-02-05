@@ -112,7 +112,6 @@
                     using var memoryStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(memoryStream);
 
-                    sw.Restart();
                     var dlls = ExtractDlls(archive.Entries, package.Framework);
                     foreach (var file in dlls)
                     {
@@ -130,8 +129,6 @@
                     {
                         result.CssFiles.Add(file);
                     }
-
-                    Console.WriteLine($"{package.Library.Name} contents extract - {sw.Elapsed}");
                 }
 
                 this.installedPackages.Add(this.currentlyInstallingPackage);
