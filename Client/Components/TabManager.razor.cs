@@ -29,10 +29,15 @@
         [Parameter]
         public EventCallback<string> OnTabCreate { get; set; }
 
+        [Parameter]
+        public EventCallback OnScaffoldStartupSettingClick { get; set; }
+
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
         private int ActiveIndex { get; set; } = DefaultActiveIndex;
+
+        private bool TabSettingsPopupVisible { get; set; }
 
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
 
@@ -81,6 +86,11 @@
             {
                 await this.ActivateTabAsync(DefaultActiveIndex);
             }
+        }
+
+        private void ToggleTabSettings()
+        {
+            this.TabSettingsPopupVisible = !this.TabSettingsPopupVisible;
         }
 
         private void InitTabCreating()

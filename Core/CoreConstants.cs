@@ -3,10 +3,25 @@
     public static class CoreConstants
     {
         public const string MainComponentFilePath = "__Main.razor";
+        public const string StartupClassFilePath = "Startup.cs";
         public const string MainComponentDefaultFileContent = @"<h1>Hello, Blazor REPL!</h1>
 
 @code {
 
+}
+";
+
+        public const string StartupClassDefaultFileContent = @"namespace BlazorRepl.UserComponents  
+{
+    using Microsoft.AspNetCore.Components.WebAssembly.Hosting;  
+    using Microsoft.Extensions.DependencyInjection;
+
+    public static class Startup  
+    {  
+        public static void Configure(WebAssemblyHostBuilder builder)  
+        {
+        }
+    }
 }
 ";
 

@@ -310,6 +310,21 @@
             this.activeCodeFile.Content = this.CodeEditorComponent.GetCode();
         }
 
+        private void HandleScaffoldStartupSettingClick()
+        {
+            var newCodeFile = new CodeFile { Path = CoreConstants.StartupClassFilePath, Content = CoreConstants.StartupClassDefaultFileContent };
+
+            if (this.CodeFiles.TryAdd(CoreConstants.StartupClassFilePath, newCodeFile))
+            {
+                this.CodeFileNames = this.CodeFiles.Keys.ToList();
+
+                // TODO: update method name when refactoring the coded editor JS module
+                this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
+
+                this.StateHasChanged();
+            }
+        }
+
         private Task UpdateLoaderTextAsync(string loaderText)
         {
             this.LoaderText = loaderText;

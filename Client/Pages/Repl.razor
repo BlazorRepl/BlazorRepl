@@ -50,7 +50,8 @@
             <TabManager Tabs="@CodeFileNames"
                         OnTabActivate="@HandleTabActivate"
                         OnTabClose="@HandleTabClose"
-                        OnTabCreate="@HandleTabCreate"></TabManager>
+                        OnTabCreate="@HandleTabCreate"
+                        OnScaffoldStartupSettingClick="@HandleScaffoldStartupSettingClick"></TabManager>
 
             <CodeEditor @ref="@CodeEditorComponent"
                         Code="@CodeEditorContent"

@@ -40,6 +40,20 @@
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
+        },
+        closePopupOnWindowClick: function (e, dotNetInstance, id, invokerId) {
+            if (!e || !e.target || !dotNetInstance || !id) {
+                return;
+            }
+
+            let currentElement = e.target;
+            while (currentElement.id !== id && (!invokerId || currentElement.id !== invokerId)) {
+                currentElement = currentElement.parentNode;
+                if (!currentElement) {
+                    dotNetInstance.invokeMethodAsync('CloseAsync');
+                    break;
+                }
+            }
         }
     };
 }());
@@ -134,7 +148,7 @@ window.App.Repl = window.App.Repl || (function () {
                 height -= document.getElementsByClassName('tabs-wrapper')[0].offsetHeight;
             }
 
-            const heightString = `${height}px`;
+            const heightString = `${height - 2}px`;
             element.style.height = heightString;
 
             return oldHeight !== heightString;
@@ -257,18 +271,34 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
     let _id;
 
     function closePopupOnWindowClick(e) {
-        if (!_dotNetInstance || !_invokerId || !_id) {
-            return;
-        }
+        window.App.closePopupOnWindowClick(e, _dotNetInstance, _id, _invokerId);
+    }
 
-        let currentElement = e.target;
-        while (currentElement.id !== _id && currentElement.id !== _invokerId) {
-            currentElement = currentElement.parentNode;
-            if (!currentElement) {
-                _dotNetInstance.invokeMethodAsync('CloseAsync');
-                break;
-            }
+    return {
+        init: function (id, invokerId, dotNetInstance) {
+            _dotNetInstance = dotNetInstance;
+            _invokerId = invokerId;
+            _id = id;
+
+            window.addEventListener('click', closePopupOnWindowClick);
+        },
+        dispose: function () {
+            _dotNetInstance = null;
+            _invokerId = null;
+            _id = null;
+
+            window.removeEventListener('click', closePopupOnWindowClick);
         }
+    };
+}());
+
+window.App.TabSettingsPopup = window.App.TabSettingsPopup || (function () {
+    let _dotNetInstance;
+    let _invokerId;
+    let _id;
+
+    function closePopupOnWindowClick(e) {
+        window.App.closePopupOnWindowClick(e, _dotNetInstance, _id, _invokerId);
     }
 
     return {

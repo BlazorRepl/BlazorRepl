@@ -1,5 +1,5 @@
-﻿<div class="tabs-wrapper">
-    <ul class="nav nav-tabs">
+﻿<div class="tabs-wrapper" style="display: flex; justify-content: space-between; position:relative;">
+    <ul class="nav nav-tabs" style="width: 90%;">
         @if (Tabs != null)
         {
             @for (var i = 0; i < Tabs.Count; i++)
@@ -42,4 +42,9 @@
             </a>
         </li>
     </ul>
+    <span id="tab-settings-btn" 
+          class="icon-cog"
+          @onclick="@ToggleTabSettings"></span>
+
+    <TabSettingsPopup @bind-Visible="@TabSettingsPopupVisible" OnScaffoldStartupSettingClick="@OnScaffoldStartupSettingClick"></TabSettingsPopup>
 </div>
