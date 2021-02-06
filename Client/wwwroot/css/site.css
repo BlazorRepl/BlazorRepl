@@ -309,11 +309,11 @@ app {
     background-color: #ccc;
 }
 
-.splittable-container-full-width {
+.splittable-container-full {
     width: 100%;
 }
 
-.splittable-container-shrunk-width {
+.splittable-container-shrunk {
     width: 82%;
 }
 

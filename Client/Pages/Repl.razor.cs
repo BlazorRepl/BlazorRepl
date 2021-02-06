@@ -63,7 +63,7 @@
         private bool SaveSnippetPopupVisible { get; set; }
 
         private string SplittableContainerClass =>
-            this.PackageManagerVisible ? "splittable-container-shrunk-width" : "splittable-container-full-width";
+            this.PackageManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
@@ -291,11 +291,9 @@
 
         private void HandleScaffoldStartupSettingClick()
         {
-            if (this.CodeFiles.TryGetValue(CoreConstants.StartupClassFilePath, out var startupCodeFile))
-            {
-                this.activeCodeFile = startupCodeFile;
-            }
-            else
+            this.UpdateActiveCodeFileContent();
+
+            if (!this.CodeFiles.TryGetValue(CoreConstants.StartupClassFilePath, out var startupCodeFile))
             {
                 startupCodeFile = new CodeFile
                 {
@@ -306,12 +304,12 @@
                 this.CodeFiles.Add(CoreConstants.StartupClassFilePath, startupCodeFile);
 
                 this.CodeFileNames = this.CodeFiles.Keys.ToList();
-
-                this.activeCodeFile = startupCodeFile;
-
-                // TODO: update method name when refactoring the code editor JS module
-                this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
             }
+
+            this.activeCodeFile = startupCodeFile;
+
+            // TODO: update method name when refactoring the code editor JS module
+            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
         }
 
         private async Task HandlePackageManagerVisibleChangedAsync(bool packageManagerVisible)
