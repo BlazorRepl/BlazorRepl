@@ -299,11 +299,11 @@ app {
     background-color: #ccc;
 }
 
-.splitter-container-full-width {
+.splittable-content-full-width {
     width: 100%;
 }
 
-.splitter-container-shrunk-width {
+.splittable-content-shrunk-width {
     width: 82%;
 }
 
@@ -313,7 +313,6 @@ app {
 }
 
 #user-code-editor {
-    /*padding-top: 10px;*/
     background-color: #FFF;
 }
 
