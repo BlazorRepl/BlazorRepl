@@ -44,6 +44,8 @@
 
         private IList<string> CodeFileNames { get; set; } = new List<string>();
 
+        private string CodeEditorPath => this.activeCodeFile?.Path;
+
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
         private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
@@ -56,9 +58,9 @@
 
         private int PackagesCount => (this.InstalledPackages?.Count ?? 0) + (this.PackagesToRestore?.Count ?? 0);
 
-        private bool SaveSnippetPopupVisible { get; set; }
-
         private bool PackageManagerVisible { get; set; }
+
+        private bool SaveSnippetPopupVisible { get; set; }
 
         private string SplitterContainerClass =>
             this.PackageManagerVisible ? "splitter-container-shrunk-width" : "splitter-container-full-width";
@@ -289,15 +291,23 @@
 
         private void HandleScaffoldStartupSettingClick()
         {
-            var newCodeFile = new CodeFile
+            if (this.CodeFiles.TryGetValue(CoreConstants.StartupClassFilePath, out var startupCodeFile))
             {
-                Path = CoreConstants.StartupClassFilePath,
-                Content = CoreConstants.StartupClassDefaultFileContent,
-            };
+                this.activeCodeFile = startupCodeFile;
+            }
+            else
+            {
+                startupCodeFile = new CodeFile
+                {
+                    Path = CoreConstants.StartupClassFilePath,
+                    Content = CoreConstants.StartupClassDefaultFileContent,
+                };
 
-            if (this.CodeFiles.TryAdd(CoreConstants.StartupClassFilePath, newCodeFile))
-            {
+                this.CodeFiles.Add(CoreConstants.StartupClassFilePath, startupCodeFile);
+
                 this.CodeFileNames = this.CodeFiles.Keys.ToList();
+
+                this.activeCodeFile = startupCodeFile;
 
                 // TODO: update method name when refactoring the code editor JS module
                 this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");

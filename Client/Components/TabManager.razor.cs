@@ -20,6 +20,9 @@
         public IList<string> Tabs { get; set; }
 
         [Parameter]
+        public string ActiveTab { get; set; }
+
+        [Parameter]
         public EventCallback<string> OnTabActivate { get; set; }
 
         [Parameter]
@@ -40,6 +43,20 @@
 
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
 
+        public override Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.TryGetValue<string>(nameof(this.ActiveTab), out var newActiveTab))
+            {
+                var activeIndex = this.Tabs?.IndexOf(newActiveTab);
+                if (activeIndex >= 0)
+                {
+                    this.ActiveIndex = activeIndex.Value;
+                }
+            }
+
+            return base.SetParametersAsync(parameters);
+        }
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (this.shouldFocusNewTabInput)
@@ -59,6 +76,7 @@
                 return Task.CompletedTask;
             }
 
+            this.ActiveTab = this.Tabs[activeIndex];
             this.ActiveIndex = activeIndex;
 
             return this.OnTabActivate.InvokeAsync(this.Tabs[activeIndex]);
@@ -87,7 +105,7 @@
             }
         }
 
-        private void ToggleTabSettings() => this.TabSettingsPopupVisible = !this.TabSettingsPopupVisible;
+        private void ToggleTabSettingsPopup() => this.TabSettingsPopupVisible = !this.TabSettingsPopupVisible;
 
         private void InitTabCreating()
         {

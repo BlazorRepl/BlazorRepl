@@ -43,7 +43,7 @@
         </li>
     </ul>
 
-    <span id="tab-settings-btn" class="icon-cog" @onclick="@ToggleTabSettings"></span>
+    <span id="tab-settings-btn" class="icon-cog" @onclick="@ToggleTabSettingsPopup"></span>
 
     <TabSettingsPopup @bind-Visible="@TabSettingsPopupVisible"
                       OnScaffoldStartupSettingClick="@OnScaffoldStartupSettingClick"></TabSettingsPopup>

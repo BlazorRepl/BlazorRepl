@@ -23,9 +23,9 @@
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
-            if (parameters.TryGetValue<string>(nameof(this.Code), out var parameterValue))
+            if (parameters.TryGetValue<string>(nameof(this.Code), out var newCode))
             {
-                this.hasCodeChanged = this.Code != parameterValue;
+                this.hasCodeChanged = this.Code != newCode;
             }
 
             return base.SetParametersAsync(parameters);

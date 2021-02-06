@@ -48,6 +48,7 @@
     <div class="flex @SplitterContainerClass">
         <div id="user-code-editor-container">
             <TabManager Tabs="@CodeFileNames"
+                        ActiveTab="@CodeEditorPath"
                         OnTabActivate="@HandleTabActivate"
                         OnTabClose="@HandleTabClose"
                         OnTabCreate="@HandleTabCreate"
