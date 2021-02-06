@@ -385,7 +385,7 @@ app {
     }
 }
 
-/* Settings */
+/* Tab Settings */
 #tab-settings-btn {
     align-self: center;
     margin-right: 15px;
@@ -566,18 +566,28 @@ app {
 }
 
 /* Tabs Manager */
-.nav-tabs > li {
-    height: 40px;
+.tabs-wrapper .nav-tabs {
+    width: 90%;
 }
+
+    .tabs-wrapper .nav-tabs > li {
+        height: 40px;
+    }
 
 #new-tab-input {
     height: 27px;
     width: 160px;
 }
 
-.tabs-wrapper .tab {
-    cursor: pointer;
+.tabs-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
 }
+
+    .tabs-wrapper .tab {
+        cursor: pointer;
+    }
 
 .tab-name {
     display: flex;

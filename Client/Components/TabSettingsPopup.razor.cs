@@ -47,7 +47,7 @@
             base.OnAfterRender(firstRender);
         }
 
-        private async Task ScaffoldStartupClass()
+        private async Task ScaffoldStartupClassAsync()
         {
             await this.OnScaffoldStartupSettingClick.InvokeAsync();
 

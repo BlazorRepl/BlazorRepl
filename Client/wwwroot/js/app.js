@@ -41,13 +41,13 @@
             document.execCommand('copy');
             document.body.removeChild(input);
         },
-        closePopupOnWindowClick: function (e, dotNetInstance, id, invokerId) {
-            if (!e || !e.target || !dotNetInstance || !id) {
+        closePopupOnWindowClick: function (e, id, invokerId, dotNetInstance) {
+            if (!e || !e.target || !id || !invokerId || !dotNetInstance) {
                 return;
             }
 
             let currentElement = e.target;
-            while (currentElement.id !== id && (!invokerId || currentElement.id !== invokerId)) {
+            while (currentElement.id !== id && currentElement.id !== invokerId) {
                 currentElement = currentElement.parentNode;
                 if (!currentElement) {
                     dotNetInstance.invokeMethodAsync('CloseAsync');
@@ -243,7 +243,7 @@ window.App.Repl = window.App.Repl || (function () {
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('keydown', onKeyDown);
 
-            //enableNavigateAwayConfirmation();
+            enableNavigateAwayConfirmation();
         },
         setCodeEditorContainerHeight: function (newLanguage) {
             setElementHeight(_editorContainerId, true);
@@ -271,7 +271,7 @@ window.App.SaveSnippetPopup = window.App.SaveSnippetPopup || (function () {
     let _id;
 
     function closePopupOnWindowClick(e) {
-        window.App.closePopupOnWindowClick(e, _dotNetInstance, _id, _invokerId);
+        window.App.closePopupOnWindowClick(e, _id, _invokerId, _dotNetInstance);
     }
 
     return {
@@ -298,7 +298,7 @@ window.App.TabSettingsPopup = window.App.TabSettingsPopup || (function () {
     let _id;
 
     function closePopupOnWindowClick(e) {
-        window.App.closePopupOnWindowClick(e, _dotNetInstance, _id, _invokerId);
+        window.App.closePopupOnWindowClick(e, _id, _invokerId, _dotNetInstance);
     }
 
     return {

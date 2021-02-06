@@ -212,9 +212,7 @@
             if (compilationResult?.AssemblyBytes?.Length > 0)
             {
                 // Make sure the DLL is updated before reloading the user page
-                await this.JsRuntime.InvokeVoidAsync(
-                    "App.CodeExecution.updateUserComponentsDll",
-                    compilationResult.AssemblyBytes);
+                await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateUserComponentsDll", compilationResult.AssemblyBytes);
 
                 var userPagePath = this.InstalledPackages?.Any() ?? false
                     ? $"{MainUserPagePath}#{this.SessionId}"
@@ -283,10 +281,27 @@
 
             this.CodeFiles.TryAdd(name, newCodeFile);
 
-            // TODO: update method name when refactoring the coded editor JS module
+            // TODO: update method name when refactoring the code editor JS module
             this.JsRuntime.InvokeVoid(
                 "App.Repl.setCodeEditorContainerHeight",
                 newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");
+        }
+
+        private void HandleScaffoldStartupSettingClick()
+        {
+            var newCodeFile = new CodeFile
+            {
+                Path = CoreConstants.StartupClassFilePath,
+                Content = CoreConstants.StartupClassDefaultFileContent,
+            };
+
+            if (this.CodeFiles.TryAdd(CoreConstants.StartupClassFilePath, newCodeFile))
+            {
+                this.CodeFileNames = this.CodeFiles.Keys.ToList();
+
+                // TODO: update method name when refactoring the code editor JS module
+                this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
+            }
         }
 
         private async Task HandlePackageManagerVisibleChangedAsync(bool packageManagerVisible)
@@ -308,21 +323,6 @@
             }
 
             this.activeCodeFile.Content = this.CodeEditorComponent.GetCode();
-        }
-
-        private void HandleScaffoldStartupSettingClick()
-        {
-            var newCodeFile = new CodeFile { Path = CoreConstants.StartupClassFilePath, Content = CoreConstants.StartupClassDefaultFileContent };
-
-            if (this.CodeFiles.TryAdd(CoreConstants.StartupClassFilePath, newCodeFile))
-            {
-                this.CodeFileNames = this.CodeFiles.Keys.ToList();
-
-                // TODO: update method name when refactoring the coded editor JS module
-                this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
-
-                this.StateHasChanged();
-            }
         }
 
         private Task UpdateLoaderTextAsync(string loaderText)
