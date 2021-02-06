@@ -10,6 +10,8 @@
 
         public string Code { get; set; }
 
+        public string FilePath { get; set; }
+
         public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; } = Enumerable.Empty<CompilationDiagnostic>();
     }
 }
