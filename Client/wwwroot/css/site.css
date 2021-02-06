@@ -134,9 +134,19 @@ app {
     background-color: #FFF;
 }
 
-.toggle-error-list-btn:focus {
-    outline-width: 0;
+    .main .error-list .error-list-title {
+        margin-right: auto;
+        font-weight: bold;
+    }
+
+.toggle-error-list-btn {
+    margin-left: 0.5rem;
+    margin-bottom: 0.25rem;
 }
+
+    .toggle-error-list-btn:focus {
+        outline-width: 0;
+    }
 
 @keyframes spinner-border {
     to {
@@ -299,11 +309,11 @@ app {
     background-color: #ccc;
 }
 
-.splittable-content-full-width {
+.splittable-container-full-width {
     width: 100%;
 }
 
-.splittable-content-shrunk-width {
+.splittable-container-shrunk-width {
     width: 82%;
 }
 

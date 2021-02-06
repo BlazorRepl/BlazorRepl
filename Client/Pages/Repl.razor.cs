@@ -62,8 +62,8 @@
 
         private bool SaveSnippetPopupVisible { get; set; }
 
-        private string SplittableContentContainerClass =>
-            this.PackageManagerVisible ? "splittable-content-container-shrunk-width" : "splittable-content-container-full-width";
+        private string SplittableContainerClass =>
+            this.PackageManagerVisible ? "splittable-container-shrunk-width" : "splittable-container-full-width";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
