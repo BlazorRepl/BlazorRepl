@@ -156,7 +156,8 @@
             var syntaxTrees = new SyntaxTree[cSharpResults.Count];
             for (var i = 0; i < cSharpResults.Count; i++)
             {
-                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResults[i].Code, cSharpParseOptions);
+                var cSharpResult = cSharpResults[i];
+                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResult.Code, cSharpParseOptions, cSharpResult.FilePath);
             }
 
             var finalCompilation = baseCompilation.AddSyntaxTrees(syntaxTrees);
@@ -228,6 +229,7 @@
 
                     declarations[index] = new CompileToCSharpResult
                     {
+                        FilePath = codeFile.Path,
                         ProjectItem = projectItem,
                         Code = cSharpDocument.GeneratedCode,
                         Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),
@@ -237,6 +239,7 @@
                 {
                     declarations[index] = new CompileToCSharpResult
                     {
+                        FilePath = codeFile.Path,
                         Code = codeFile.Content,
                         Diagnostics = Enumerable.Empty<CompilationDiagnostic>(), // Will actually be evaluated later
                     };
@@ -271,6 +274,7 @@
 
                     results[index] = new CompileToCSharpResult
                     {
+                        FilePath = declaration.FilePath,
                         ProjectItem = declaration.ProjectItem,
                         Code = cSharpDocument.GeneratedCode,
                         Diagnostics = cSharpDocument.Diagnostics.Select(CompilationDiagnostic.FromRazorDiagnostic).ToList(),

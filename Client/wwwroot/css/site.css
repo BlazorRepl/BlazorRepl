@@ -73,7 +73,7 @@ app {
     padding-top: 0;
 }
 
-#unapp-page a:focus {
+#unapp-page a.btn-primary:focus {
     color: #fff;
 }
 
