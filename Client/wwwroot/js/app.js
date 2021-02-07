@@ -376,10 +376,6 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const fileAsBase64String = typeof fileContent === 'string' ? fileContent : BINDING.conv_string(fileContent);
 
             const cache = await caches.open('blazor-resources-/');
-            if (!cache) {
-                alert(UNEXPECTED_ERROR_MESSAGE);
-                return;
-            }
 
             const cacheKeys = await cache.keys();
             const userComponentsDllCacheKey = cacheKeys.find(x => x.url.indexOf('BlazorRepl.UserComponents.dll') > -1);
@@ -403,9 +399,6 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
 
             const packagesCache = await caches.open(`packages-${sessionId}/`);
-            if (!packagesCache) {
-                return;
-            }
 
             await putInCacheStorage(packagesCache, fileName, fileBytes);
         },
@@ -417,8 +410,9 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
-            const packagesCache = await caches.open(`packages-${sessionId}/`);
-            if (!packagesCache) {
+            const cacheName = `packages-${sessionId}/`;
+            const cacheExists = await caches.has(cacheName);
+            if (!cacheExists) {
                 // Prevent endless loop on getting the loaded DLLs
                 _loadedPackageDlls = [];
                 return;
@@ -426,6 +420,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
 
             const dlls = [];
 
+            const packagesCache = await caches.open(cacheName);
             const files = await packagesCache.keys();
             for (const file of files) {
                 const response = await packagesCache.match(file.url);
