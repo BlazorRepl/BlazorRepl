@@ -140,7 +140,7 @@ window.App.Repl = window.App.Repl || (function () {
                     'flex-basis': `${gutterSize}px`,
                 }),
                 onDrag: () => throttle(resetEditor, 100, 'resetEditor'),
-                onDragEnd: resetEditor
+                onDragEnd: () => resetEditor
             });
         }
     }
