@@ -166,6 +166,61 @@ app {
     animation: spinner-border .75s linear infinite;
 }
 
+/* Activity Bar*/
+.activity-bar {
+    display: flex;
+    align-items: stretch;
+}
+
+.activity-manager-expanded {
+    width: calc(18% + 50px);
+}
+
+.activity-manager-collapsed {
+    width: 50px;
+}
+
+.activity-options-wrapper {
+    width: 50px
+}
+
+.activity-option {
+    padding: 11px;
+    cursor: pointer;
+    position: relative;
+}
+
+    .activity-option:after {
+        content: "";
+        display: block;
+        width: 80%;
+        margin-left: 13%;
+        background: #4aca85;
+        height: 3px;
+        bottom: -1px;
+        left: 0;
+        position: absolute;
+        pointer-events: none;
+        border-radius: 3px;
+        transition: all .15s;
+        opacity: 0;
+        transform: scale(.95);
+    }
+
+    .activity-option:hover:after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .activity-option span {
+        font-size: 28px;
+        padding-left: 3px;
+    }
+
+    .activity-option .nuget-package-image {
+        width: 34px;
+    }
+
 /* User Page */
 #user-page-window {
     width: 100%;
@@ -205,7 +260,8 @@ app {
 /* Package Manager */
 .package-manager {
     padding: 8px;
-    width: 18%;
+    background-color: white;
+    width: calc(100% - 50px);
 }
 
 .package-container {
@@ -237,7 +293,6 @@ app {
 .package-manager-header {
     padding-right: 0.25em;
     margin-bottom: 20px;
-    background-color: #F5F5F5
 }
 
 .package-manager-close-btn {
@@ -291,11 +346,6 @@ app {
 .repl-navbar {
     margin-bottom: 0;
     color: #303133;
-}
-
-.nuget-package-image {
-    width: 25px;
-    padding-bottom: 5px;
 }
 
 /* Splitter */

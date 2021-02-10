@@ -37,13 +37,11 @@
     <ReplLoader Show="@Loading"
                 Message="@LoaderText"></ReplLoader>
 
-    <PackageManager @ref="@PackageManagerComponent"
-                    @bind-Loading="@Loading"
-                    Visible="@PackageManagerVisible"
-                    VisibleChanged="HandlePackageManagerVisibleChangedAsync"
-                    UpdateLoaderTextFunc="UpdateLoaderTextAsync"
-                    PackagesToRestore="PackagesToRestore"
-                    SessionId="@SessionId"></PackageManager>
+    <ActivityBar @bind-PackageManagerVisible="@PackageManagerVisible"
+                 PackagesToRestore="@PackagesToRestore"
+                 UpdateLoaderTextAsync="@UpdateLoaderTextAsync"
+                 @bind-Loading="@Loading"
+                 SessionId="@SessionId"></ActivityBar>
 
     <div class="flex @SplittableContainerClass">
         <div id="user-code-editor-container">
