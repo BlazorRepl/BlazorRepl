@@ -9,13 +9,6 @@
             <button @onclick="@CompileAsync" class="btn btn-link nav-action" disabled="@Loading" title="Run (Ctrl+S)">
                 <i class="icon-play4"></i> RUN
             </button>
-            <button @onclick="@TogglePackageManagerAsync" class="btn btn-link nav-action" disabled="@Loading" title="Show Package Manager">
-                <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image" /> PACKAGES
-                @if (PackagesCount > 0)
-                {
-                    @: (@PackagesCount)
-                }
-            </button>
             <button @onclick="@ShowSaveSnippetPopup"
                     class="btn btn-link nav-action"
                     id="save-snippet-btn"
@@ -37,7 +30,8 @@
     <ReplLoader Show="@Loading"
                 Message="@LoaderText"></ReplLoader>
 
-    <ActivityBar @bind-PackageManagerVisible="@PackageManagerVisible"
+    <ActivityBar PackageManagerVisible="@PackageManagerVisible"
+                 PackageManagerVisibleChanged="HandlePackageManagerVisibleChangedAsync"
                  PackagesToRestore="@PackagesToRestore"
                  UpdateLoaderTextAsync="@UpdateLoaderTextAsync"
                  @bind-Loading="@Loading"

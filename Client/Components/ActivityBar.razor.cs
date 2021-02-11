@@ -9,6 +9,7 @@
     // TODO: Rename to ActivityManager
     public partial class ActivityBar
     {
+        // Package Manager
         [Parameter]
         public bool PackageManagerVisible { get; set; }
 
@@ -30,16 +31,41 @@
         [Parameter]
         public EventCallback<bool> LoadingChanged { get; set; }
 
-        private bool ActivityVisible => this.PackageManagerVisible; // || StaticAssetManagerVisible...
+        // Static Asset Manager
+        [Parameter]
+        public bool StaticAssetManagerVisible { get; set; }
+
+        [Parameter]
+        public EventCallback<bool> StaticAssetManagerVisibleChanged { get; set; }
+
+        private bool ActivityVisible => this.PackageManagerVisible || this.StaticAssetManagerVisible;
 
         private string ActivityVisibleClass => this.ActivityVisible ? "activity-manager-expanded" : "activity-manager-collapsed";
 
         private PackageManager PackageManagerComponent { get; set; }
 
-        private Task TogglePackageManagerAsync()
+        private StaticAssetManager StaticAssetManagerComponent { get; set; }
+
+        private async Task TogglePackageManagerAsync()
         {
+            if (this.StaticAssetManagerVisible)
+            {
+                await this.ToggleStaticAssetManagerAsync();
+            }
+
             this.PackageManagerVisible = !this.PackageManagerVisible;
-            return this.PackageManagerVisibleChanged.InvokeAsync(this.PackageManagerVisible);
+            await this.PackageManagerVisibleChanged.InvokeAsync(this.PackageManagerVisible);
+        }
+
+        private async Task ToggleStaticAssetManagerAsync()
+        {
+            if (this.PackageManagerVisible)
+            {
+                await this.TogglePackageManagerAsync();
+            }
+
+            this.StaticAssetManagerVisible = !this.StaticAssetManagerVisible;
+            await this.StaticAssetManagerVisibleChanged.InvokeAsync(this.StaticAssetManagerVisible);
         }
     }
 }

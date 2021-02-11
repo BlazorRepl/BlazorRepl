@@ -56,8 +56,6 @@
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
-        private int PackagesCount => (this.InstalledPackages?.Count ?? 0) + (this.PackagesToRestore?.Count ?? 0);
-
         private bool PackageManagerVisible { get; set; }
 
         private bool SaveSnippetPopupVisible { get; set; }
@@ -227,16 +225,6 @@
             Console.WriteLine($"FULL RUN: {sw.Elapsed}");
         }
 
-        private async Task TogglePackageManagerAsync()
-        {
-            this.PackageManagerVisible = !this.PackageManagerVisible;
-
-            this.StateHasChanged();
-            await Task.Delay(1); // Ensure rendering has time to be called
-
-            this.CodeEditorComponent.Resize();
-        }
-
         private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
 
         private void HandleTabActivate(string name)
@@ -312,6 +300,7 @@
             this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
         }
 
+        // TODO: handle activity manager visibility change
         private async Task HandlePackageManagerVisibleChangedAsync(bool packageManagerVisible)
         {
             this.PackageManagerVisible = packageManagerVisible;
