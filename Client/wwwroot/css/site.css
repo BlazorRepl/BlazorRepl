@@ -543,7 +543,7 @@ app {
 .save-snippets-popup {
     position: absolute;
     top: 55px;
-    left: 285px;
+    left: 125px;
     width: 340px;
     height: 200px;
     z-index: 100;
