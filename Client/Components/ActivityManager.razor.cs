@@ -6,6 +6,7 @@
     using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
 
+    // TODO: extract components to caller component and have only the logic for activity show/hide here (rename to "bar")
     public partial class ActivityManager
     {
         [Parameter]
@@ -44,28 +45,34 @@
 
         internal Task RestorePackagesAsync() => this.PackageManagerComponent?.RestorePackagesAsync();
 
-        private async Task TogglePackageManagerAsync()
+        private async Task TogglePackageManagerAsync(bool calledByOtherManagerToggle = false)
         {
             if (this.StaticAssetManagerVisible)
             {
-                await this.ToggleStaticAssetManagerAsync();
+                await this.ToggleStaticAssetManagerAsync(calledByOtherManagerToggle: true);
             }
 
             this.PackageManagerVisible = !this.PackageManagerVisible;
 
-            await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
+            if (!calledByOtherManagerToggle)
+            {
+                await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
+            }
         }
 
-        private async Task ToggleStaticAssetManagerAsync()
+        private async Task ToggleStaticAssetManagerAsync(bool calledByOtherManagerToggle = false)
         {
             if (this.PackageManagerVisible)
             {
-                await this.TogglePackageManagerAsync();
+                await this.TogglePackageManagerAsync(calledByOtherManagerToggle: true);
             }
 
             this.StaticAssetManagerVisible = !this.StaticAssetManagerVisible;
 
-            await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
+            if (!calledByOtherManagerToggle)
+            {
+                await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
+            }
         }
     }
 }
