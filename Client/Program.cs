@@ -96,7 +96,7 @@ namespace BlazorRepl.Client
 
             var sw = Stopwatch.StartNew();
 
-            jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadPackageFiles", sessionId);
+            jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadResources", sessionId);
 
             IEnumerable<byte[]> dllsBytes;
             while (true)

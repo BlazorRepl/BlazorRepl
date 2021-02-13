@@ -260,7 +260,7 @@ window.App.Repl = window.App.Repl || (function () {
 
             disableNavigateAwayConfirmation();
 
-            await window.App.CodeExecution.clearPackages(sessionId);
+            await window.App.CodeExecution.clearResources(sessionId);
         }
     };
 }());
@@ -321,6 +321,8 @@ window.App.TabSettingsPopup = window.App.TabSettingsPopup || (function () {
 
 window.App.CodeExecution = window.App.CodeExecution || (function () {
     const UNEXPECTED_ERROR_MESSAGE = 'An unexpected error has occurred. Please try again later or contact the team.';
+    const CACHE_NAME_PREFIX = 'blazor-repl-resources-';
+    const STATIC_ASSETS_FILE_NAME = '__static-assets.json';
 
     let _loadedPackageDlls = null;
 
@@ -335,12 +337,12 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         return dotNetArray;
     }
 
-    async function putInCacheStorage(cache, fileName, fileBytes) {
+    async function putInCacheStorage(cache, fileName, fileBytes, contentType) {
         const cachedResponse = new Response(
             new Blob([fileBytes]),
             {
                 headers: {
-                    'Content-Type': 'application/octet-stream',
+                    'Content-Type': contentType || 'application/octet-stream',
                     'Content-Length': fileBytes.length.toString()
                 }
             });
@@ -398,11 +400,12 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const fileName = BINDING.conv_string(rawFileName);
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
 
-            const packagesCache = await caches.open(`packages-${sessionId}/`);
+            const cacheName = CACHE_NAME_PREFIX + sessionId;
+            const cache = await caches.open(cacheName);
 
-            await putInCacheStorage(packagesCache, fileName, fileBytes);
+            await putInCacheStorage(cache, fileName, fileBytes);
         },
-        loadPackageFiles: async function (rawSessionId) {
+        loadResources: async function (rawSessionId) {
             if (!rawSessionId) {
                 // Prevent endless loop on getting the loaded DLLs
                 _loadedPackageDlls = [];
@@ -410,7 +413,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const sessionId = BINDING.conv_string(rawSessionId);
-            const cacheName = `packages-${sessionId}/`;
+            const cacheName = CACHE_NAME_PREFIX + sessionId;
             const cacheExists = await caches.has(cacheName);
             if (!cacheExists) {
                 // Prevent endless loop on getting the loaded DLLs
@@ -420,12 +423,13 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
 
             const dlls = [];
 
-            const packagesCache = await caches.open(cacheName);
-            const files = await packagesCache.keys();
+            const cache = await caches.open(cacheName);
+            const files = await cache.keys();
             for (const file of files) {
-                const response = await packagesCache.match(file.url);
+                const response = await cache.match(file.url);
                 const bytes = new Uint8Array(await response.arrayBuffer());
 
+                // TODO: handle static assets file
                 if (file.url.endsWith('.css')) {
                     const fileContent = convertBytesToBase64String(bytes);
                     const link = document.createElement('link');
@@ -449,12 +453,29 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         getLoadedPackageDlls: function () {
             return _loadedPackageDlls;
         },
-        clearPackages: async function (sessionId) {
+        updateStaticAssets: async function (sessionId, staticAssets) {
+            if (!sessionId || !staticAssets) {
+                return;
+            }
+
+            const cacheName = CACHE_NAME_PREFIX + sessionId;
+            const cache = await caches.open(cacheName);
+
+            if (staticAssets.length) {
+                const fileBytes = new TextEncoder().encode(JSON.stringify(staticAssets));
+
+                await putInCacheStorage(cache, STATIC_ASSETS_FILE_NAME, fileBytes, 'application/json');
+            } else {
+                await cache.delete(STATIC_ASSETS_FILE_NAME);
+            }
+        },
+        clearResources: async function (sessionId) {
             if (!sessionId) {
                 return;
             }
 
-            await caches.delete(`packages-${sessionId}/`);
+            const cacheName = CACHE_NAME_PREFIX + sessionId;
+            await caches.delete(cacheName);
         }
     };
 }());

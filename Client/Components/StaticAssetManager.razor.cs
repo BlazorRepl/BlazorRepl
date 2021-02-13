@@ -13,6 +13,9 @@
     {
         private static readonly string[] SupportedStaticAssetFileExtensions = { ".js", ".css" };
 
+        [Inject]
+        public IJSRuntime JsRuntime { get; set; }
+
         [Parameter]
         public bool Visible { get; set; }
 
@@ -32,10 +35,22 @@
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
 
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.TryGetValue<ICollection<string>>(nameof(this.StaticAssets), out var staticAssets) &&
+                staticAssets != null &&
+                staticAssets.Any())
+            {
+                await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
+            }
+
+            await base.SetParametersAsync(parameters);
+        }
+
         [JSInvokable]
         public Task CloseAsync() => this.CloseInternalAsync();
 
-        private void AddStaticAsset()
+        private async Task AddStaticAssetAsync()
         {
             if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
             {
@@ -65,6 +80,9 @@
             }
 
             this.StaticAssets.Add(uri.AbsoluteUri);
+
+            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
+
             this.StaticAssetUrl = null;
         }
 
