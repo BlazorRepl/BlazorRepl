@@ -38,7 +38,8 @@
 
         private void AddStaticAsset()
         {
-            if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
+            // TODO: handle duplicates with ignore case or non normalized urls
+            if (string.IsNullOrWhiteSpace(this.StaticAssetUrl) || this.StaticAssets.Contains(this.StaticAssetUrl))
             {
                 return;
             }

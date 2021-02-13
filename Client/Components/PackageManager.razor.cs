@@ -54,9 +54,9 @@
 
         private string SelectedPackageVersion { get; set; }
 
-        private IEnumerable<string> Packages { get; set; } = Enumerable.Empty<string>();
+        private IEnumerable<string> PackageSearchResults { get; set; } = Enumerable.Empty<string>();
 
-        private IEnumerable<string> PackageVersions { get; set; } = Enumerable.Empty<string>();
+        private IEnumerable<string> SelectedPackageVersions { get; set; } = Enumerable.Empty<string>();
 
         private IEnumerable<PackageLicenseInfo> PackagesToAcceptLicense { get; set; } = Enumerable.Empty<PackageLicenseInfo>();
 
@@ -123,7 +123,7 @@
         {
             try
             {
-                this.Packages = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
+                this.PackageSearchResults = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
             }
             catch (Exception ex)
             {
@@ -143,7 +143,7 @@
         {
             try
             {
-                this.PackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
+                this.SelectedPackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
             }
             catch (Exception ex)
             {
@@ -157,7 +157,7 @@
 
             this.PackageSearchQuery = selectedPackage;
             this.SelectedPackageName = selectedPackage;
-            this.SelectedPackageVersion = this.PackageVersions.FirstOrDefault();
+            this.SelectedPackageVersion = this.SelectedPackageVersions.FirstOrDefault();
         }
 
         private async Task PreparePackageToInstallAsync()
@@ -237,8 +237,8 @@
             this.PackageSearchQuery = null;
             this.SelectedPackageName = null;
             this.SelectedPackageVersion = null;
-            this.Packages = Enumerable.Empty<string>();
-            this.PackageVersions = Enumerable.Empty<string>();
+            this.PackageSearchResults = Enumerable.Empty<string>();
+            this.SelectedPackageVersions = Enumerable.Empty<string>();
             this.PackageSearchResultsFetched = false;
         }
 

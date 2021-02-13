@@ -50,7 +50,7 @@
 
     @if (string.IsNullOrEmpty(SelectedPackageName))
     {
-        @foreach (var package in Packages)
+        @foreach (var package in PackageSearchResults)
         {
             <div class="package-container">
                 <span class="font-weight-bold package-title" title="@package">@package</span>
@@ -60,7 +60,7 @@
             </div>
         }
 
-        if (PackageSearchResultsFetched && !Packages.Any())
+        if (PackageSearchResultsFetched && !PackageSearchResults.Any())
         {
             <div>No packages found.</div>
         }
@@ -70,7 +70,7 @@
         <label for="version-select">Version</label>
         <div class="search-package-wrapper">
             <select class="form-control" id="version-select" @bind="@SelectedPackageVersion">
-                @foreach (var version in PackageVersions)
+                @foreach (var version in SelectedPackageVersions)
                 {
                     <option value="@version">@version</option>
                 }
