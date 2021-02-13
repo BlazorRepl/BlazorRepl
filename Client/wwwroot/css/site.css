@@ -184,6 +184,10 @@ app {
     width: 50px
 }
 
+.active-activity-option {
+    background-color: #fff;
+}
+
 .activity-option {
     padding: 11px;
     cursor: pointer;

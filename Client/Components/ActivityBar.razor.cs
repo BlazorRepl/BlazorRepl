@@ -42,6 +42,10 @@
 
         private string ActivityVisibleClass => this.ActivityVisible ? "activity-manager-expanded" : "activity-manager-collapsed";
 
+        private string PackageManagerActivityActiveClass => this.PackageManagerVisible ? "active-activity-option" : string.Empty;
+
+        private string StaticAssetManagerActivityActiveClass => this.StaticAssetManagerVisible ? "active-activity-option" : string.Empty;
+
         private PackageManager PackageManagerComponent { get; set; }
 
         private StaticAssetManager StaticAssetManagerComponent { get; set; }

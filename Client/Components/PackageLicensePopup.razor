@@ -5,28 +5,31 @@
         </div>
 
         <ul class="list-unstyled license-packages-container">
-            @foreach (var package in PackagesToAcceptLicense)
+            @if (PackagesToAcceptLicense != null)
             {
-                var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
+                @foreach (var package in PackagesToAcceptLicense)
+                {
+                    var actualLicense = string.IsNullOrWhiteSpace(package.License) ? "View License" : package.License;
 
-                <li>
-                    <span class="font-weight-bold">@package.Package</span>
-                    @if (!string.IsNullOrWhiteSpace(package.Authors))
-                    {
-                        @: (Author(s): @package.Authors)
-                    }
+                    <li>
+                        <span class="font-weight-bold">@package.Package</span>
+                        @if (!string.IsNullOrWhiteSpace(package.Authors))
+                        {
+                            @: (Author(s): @package.Authors)
+                        }
 
-                    <div class="package-license-link-container">
-                        @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
-                        {
-                            @actualLicense
-                        }
-                        else
-                        {
-                            <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
-                        }
-                    </div>
-                </li>
+                        <div class="package-license-link-container">
+                            @if (string.IsNullOrWhiteSpace(package.LicenseUrl))
+                            {
+                                @actualLicense
+                            }
+                            else
+                            {
+                                <a href="@package.LicenseUrl" target="_blank">@actualLicense</a>
+                            }
+                        </div>
+                    </li>
+                }
             }
         </ul>
 

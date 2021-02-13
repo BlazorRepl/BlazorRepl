@@ -4,7 +4,7 @@
         <span class="package-manager-close-btn" @onclick="@CloseInternalAsync">&times;</span>
     </div>
 
-    @foreach (var asset in StaticAssets)
+    @foreach (var asset in StaticAssets ?? Enumerable.Empty<string>())
     {
         <div class="package-container">
             <span class="font-weight-bold package-title" title="@asset">@asset</span>
