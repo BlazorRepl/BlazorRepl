@@ -11,7 +11,7 @@
     public partial class ErrorList
     {
         [Parameter]
-        public IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
+        public IEnumerable<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
         [Parameter]
         public bool Show { get; set; }

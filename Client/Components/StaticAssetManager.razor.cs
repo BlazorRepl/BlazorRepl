@@ -6,13 +6,12 @@
     using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
-    using BlazorRepl.Core;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
     public partial class StaticAssetManager
     {
-        private static readonly string[] AllowedStaticAssetFileExtensions = { ".js", ".css" };
+        private static readonly string[] SupportedStaticAssetFileExtensions = { ".js", ".css" };
 
         [Parameter]
         public bool Visible { get; set; }
@@ -56,11 +55,11 @@
             }
 
             var fileExtension = Path.GetExtension(uri.AbsoluteUri);
-            if (!AllowedStaticAssetFileExtensions.Contains(fileExtension))
+            if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
-                    $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", AllowedStaticAssetFileExtensions)}");
+                    $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", SupportedStaticAssetFileExtensions)}");
 
                 return;
             }
