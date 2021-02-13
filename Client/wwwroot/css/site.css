@@ -305,6 +305,11 @@ app {
     font-weight: bold;
 }
 
+/* Static Asset Manager */
+.static-asset {
+
+}
+
 /* App Loader */
 .app-loader {
     position: fixed;
