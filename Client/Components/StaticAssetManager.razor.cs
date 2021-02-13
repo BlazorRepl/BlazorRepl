@@ -72,6 +72,7 @@
             var fileExtension = Path.GetExtension(uri.AbsoluteUri);
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
+                // TODO: double check content-type (http request to url)
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", SupportedStaticAssetFileExtensions)}");

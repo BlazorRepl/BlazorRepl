@@ -6,13 +6,13 @@
     <div class="container-fluid">
         <div class="navbar-header">
             <a href="/" class="navbar-brand">Blazor REPL</a>
-            <button @onclick="@CompileAsync" class="btn btn-link nav-action" disabled="@Loading" title="Run (Ctrl+S)">
+            <button @onclick="@CompileAsync" class="btn btn-link nav-action" disabled="@ShowLoader" title="Run (Ctrl+S)">
                 <i class="icon-play4"></i> RUN
             </button>
             <button @onclick="@ShowSaveSnippetPopup"
                     class="btn btn-link nav-action"
                     id="save-snippet-btn"
-                    disabled="@Loading"
+                    disabled="@ShowLoader"
                     title="Save public snippet">
                 <i class="icon-floppy-disk"></i> SAVE
             </button>
@@ -27,15 +27,15 @@
                   UpdateActiveCodeFileContentAction="UpdateActiveCodeFileContent"></SaveSnippetPopup>
 
 <div class="row flex m-0">
-    <ReplLoader Show="@Loading"
+    <ReplLoader Show="@ShowLoader"
                 Message="@LoaderText"></ReplLoader>
 
-    <ActivityBar PackageManagerVisible="@PackageManagerVisible"
-                 PackageManagerVisibleChanged="HandlePackageManagerVisibleChangedAsync"
-                 PackagesToRestore="@PackagesToRestore"
-                 UpdateLoaderTextAsync="@UpdateLoaderTextAsync"
-                 @bind-Loading="@Loading"
-                 SessionId="@SessionId"></ActivityBar>
+    <ActivityManager @ref="ActivityManagerComponent"
+                     VisibleChanged="HandleActivityManagerVisibleChangedAsync"
+                     PackagesToRestore="@PackagesToRestore"
+                     UpdateLoaderTextAsync="@UpdateLoaderTextAsync"
+                     @bind-ShowLoader="@ShowLoader"
+                     SessionId="@SessionId"></ActivityManager>
 
     <div class="flex @SplittableContainerClass">
         <div id="user-code-editor-container">

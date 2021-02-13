@@ -50,18 +50,15 @@
 
         private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
 
-        private PackageManager PackageManagerComponent { get; set; }
+        private ActivityManager ActivityManagerComponent { get; set; }
 
-        private IReadOnlyCollection<Package> InstalledPackages => this.PackageManagerComponent?.GetInstalledPackages();
+        private IEnumerable<Package> InstalledPackages => this.ActivityManagerComponent?.GetInstalledPackages();
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
-        private bool PackageManagerVisible { get; set; }
-
         private bool SaveSnippetPopupVisible { get; set; }
 
-        private string SplittableContainerClass =>
-            this.PackageManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
+        private string SplittableContainerClass { get; set; } = "splittable-container-full";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
@@ -69,7 +66,7 @@
 
         private string LoaderText { get; set; }
 
-        private bool Loading { get; set; }
+        private bool ShowLoader { get; set; }
 
         private string SessionId { get; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
@@ -162,14 +159,14 @@
         {
             var sw = Stopwatch.StartNew();
 
-            this.Loading = true;
+            this.ShowLoader = true;
             this.LoaderText = "Processing";
 
             await Task.Delay(1); // Ensure rendering has time to be called
 
             if (this.PackagesToRestore?.Any() ?? false)
             {
-                await this.PackageManagerComponent.RestorePackagesAsync();
+                await this.ActivityManagerComponent.RestorePackagesAsync();
             }
 
             CompileToAssemblyResult compilationResult = null;
@@ -206,7 +203,7 @@
                     mainComponent.Content = originalMainComponentContent;
                 }
 
-                this.Loading = false;
+                this.ShowLoader = false;
             }
 
             if (compilationResult?.AssemblyBytes?.Length > 0)
@@ -300,10 +297,9 @@
             this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
         }
 
-        // TODO: handle activity manager visibility change
-        private async Task HandlePackageManagerVisibleChangedAsync(bool packageManagerVisible)
+        private async Task HandleActivityManagerVisibleChangedAsync(bool activityManagerVisible)
         {
-            this.PackageManagerVisible = packageManagerVisible;
+            this.SplittableContainerClass = activityManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
 
             this.StateHasChanged();
             await Task.Delay(1); // Ensure rendering has time to be called

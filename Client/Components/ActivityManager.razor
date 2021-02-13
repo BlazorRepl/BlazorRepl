@@ -1,4 +1,4 @@
-﻿<div class="activity-bar @ActivityVisibleClass">
+﻿<div class="activity-manager @ActivityVisibleClass">
     <div class="activity-options-wrapper">
         <div class="activity-option @PackageManagerActivityActiveClass" @onclick="@TogglePackageManagerAsync">
             <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image">
@@ -8,17 +8,14 @@
         </div>
     </div>
 
-    <PackageManager @ref="@PackageManagerComponent"
-                    Loading="@Loading"
-                    LoadingChanged="@LoadingChanged"
-                    Visible="@PackageManagerVisible"
-                    VisibleChanged="PackageManagerVisibleChanged"
+    <PackageManager @ref="PackageManagerComponent"
+                    ShowLoader="@ShowLoader"
+                    ShowLoaderChanged="@ShowLoaderChanged"
+                    @bind-Visible="@PackageManagerVisible"
                     UpdateLoaderTextFunc="UpdateLoaderTextAsync"
                     PackagesToRestore="PackagesToRestore"
                     SessionId="@SessionId"></PackageManager>
 
-    <StaticAssetManager @ref="@StaticAssetManagerComponent"
-                        Visible="@StaticAssetManagerVisible"
-                        VisibleChanged="StaticAssetManagerVisibleChanged"
+    <StaticAssetManager @bind-Visible="@StaticAssetManagerVisible"
                         SessionId="@SessionId"></StaticAssetManager>
 </div>

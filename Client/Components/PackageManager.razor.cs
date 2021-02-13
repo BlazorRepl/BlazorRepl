@@ -35,10 +35,10 @@
         public ICollection<Package> PackagesToRestore { get; set; }
 
         [Parameter]
-        public bool Loading { get; set; }
+        public bool ShowLoader { get; set; }
 
         [Parameter]
-        public EventCallback<bool> LoadingChanged { get; set; }
+        public EventCallback<bool> ShowLoaderChanged { get; set; }
 
         [Parameter]
         public Func<string, Task> UpdateLoaderTextFunc { get; set; }
@@ -75,7 +75,7 @@
 
             if (handleLoading)
             {
-                await this.ToggleLoadingAsync(true);
+                await this.ToggleLoaderAsync(true);
             }
 
             try
@@ -110,7 +110,7 @@
 
             if (handleLoading)
             {
-                await this.ToggleLoadingAsync(false);
+                await this.ToggleLoaderAsync(false);
             }
         }
 
@@ -206,7 +206,7 @@
         {
             this.LicensePopupVisible = false;
 
-            await this.ToggleLoadingAsync(true);
+            await this.ToggleLoaderAsync(true);
 
             await (this.UpdateLoaderTextFunc?.Invoke($"Installing package: {this.SelectedPackageName}") ?? Task.CompletedTask);
 
@@ -231,7 +231,7 @@
             }
             finally
             {
-                await this.ToggleLoadingAsync(false);
+                await this.ToggleLoaderAsync(false);
             }
 
             this.PackageSearchQuery = null;
@@ -273,10 +273,10 @@
             return this.VisibleChanged.InvokeAsync(this.Visible);
         }
 
-        private Task ToggleLoadingAsync(bool value)
+        private Task ToggleLoaderAsync(bool value)
         {
-            this.Loading = value;
-            return this.LoadingChanged.InvokeAsync(this.Loading);
+            this.ShowLoader = value;
+            return this.ShowLoaderChanged.InvokeAsync(this.ShowLoader);
         }
     }
 }

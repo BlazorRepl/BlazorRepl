@@ -6,16 +6,8 @@
     using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
 
-    // TODO: Rename to ActivityManager
-    public partial class ActivityBar
+    public partial class ActivityManager
     {
-        // Package Manager
-        [Parameter]
-        public bool PackageManagerVisible { get; set; }
-
-        [Parameter]
-        public EventCallback<bool> PackageManagerVisibleChanged { get; set; }
-
         [Parameter]
         public string SessionId { get; set; }
 
@@ -26,17 +18,19 @@
         public Func<string, Task> UpdateLoaderTextAsync { get; set; }
 
         [Parameter]
-        public bool Loading { get; set; }
+        public bool ShowLoader { get; set; }
 
         [Parameter]
-        public EventCallback<bool> LoadingChanged { get; set; }
-
-        // Static Asset Manager
-        [Parameter]
-        public bool StaticAssetManagerVisible { get; set; }
+        public EventCallback<bool> ShowLoaderChanged { get; set; }
 
         [Parameter]
-        public EventCallback<bool> StaticAssetManagerVisibleChanged { get; set; }
+        public EventCallback<bool> VisibleChanged { get; set; }
+
+        private PackageManager PackageManagerComponent { get; set; }
+
+        private bool PackageManagerVisible { get; set; }
+
+        private bool StaticAssetManagerVisible { get; set; }
 
         private bool ActivityVisible => this.PackageManagerVisible || this.StaticAssetManagerVisible;
 
@@ -46,9 +40,9 @@
 
         private string StaticAssetManagerActivityActiveClass => this.StaticAssetManagerVisible ? "active-activity-option" : string.Empty;
 
-        private PackageManager PackageManagerComponent { get; set; }
+        internal IEnumerable<Package> GetInstalledPackages() => this.PackageManagerComponent?.GetInstalledPackages();
 
-        private StaticAssetManager StaticAssetManagerComponent { get; set; }
+        internal Task RestorePackagesAsync() => this.PackageManagerComponent?.RestorePackagesAsync();
 
         private async Task TogglePackageManagerAsync()
         {
@@ -58,7 +52,8 @@
             }
 
             this.PackageManagerVisible = !this.PackageManagerVisible;
-            await this.PackageManagerVisibleChanged.InvokeAsync(this.PackageManagerVisible);
+
+            await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
         }
 
         private async Task ToggleStaticAssetManagerAsync()
@@ -69,7 +64,8 @@
             }
 
             this.StaticAssetManagerVisible = !this.StaticAssetManagerVisible;
-            await this.StaticAssetManagerVisibleChanged.InvokeAsync(this.StaticAssetManagerVisible);
+
+            await this.VisibleChanged.InvokeAsync(this.ActivityVisible);
         }
     }
 }

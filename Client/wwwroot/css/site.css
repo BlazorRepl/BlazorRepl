@@ -166,8 +166,8 @@ app {
     animation: spinner-border .75s linear infinite;
 }
 
-/* Activity Bar*/
-.activity-bar {
+/* Activity Manager*/
+.activity-manager {
     display: flex;
     align-items: stretch;
 }
