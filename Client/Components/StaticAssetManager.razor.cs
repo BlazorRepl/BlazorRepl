@@ -2,17 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Core;
-    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
     public partial class StaticAssetManager
     {
+        private static readonly string[] AllowedStaticAssetFileExtensions = { ".js", ".css" };
+
         [Parameter]
         public bool Visible { get; set; }
 
@@ -28,7 +29,6 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        // TODO: get type from url
         private string StaticAssetUrl { get; set; }
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
@@ -38,13 +38,35 @@
 
         private void AddStaticAsset()
         {
-            // TODO: handle duplicates with ignore case or non normalized urls
-            if (string.IsNullOrWhiteSpace(this.StaticAssetUrl) || this.StaticAssets.Contains(this.StaticAssetUrl))
+            if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
             {
                 return;
             }
 
-            this.StaticAssets.Add(this.StaticAssetUrl);
+            if (!Uri.TryCreate(this.StaticAssetUrl, UriKind.Absolute, out var uri))
+            {
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Invalid static file URL.");
+                return;
+            }
+
+            if (this.StaticAssets.Any(a => string.Equals(a, uri.AbsoluteUri, StringComparison.OrdinalIgnoreCase)))
+            {
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
+                return;
+            }
+
+            var fileExtension = Path.GetExtension(uri.AbsoluteUri);
+            if (!AllowedStaticAssetFileExtensions.Contains(fileExtension))
+            {
+                this.PageNotificationsComponent.AddNotification(
+                    NotificationType.Error,
+                    $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", AllowedStaticAssetFileExtensions)}");
+
+                return;
+            }
+
+            this.StaticAssets.Add(uri.AbsoluteUri);
+            this.StaticAssetUrl = null;
         }
 
         private Task CloseInternalAsync()
