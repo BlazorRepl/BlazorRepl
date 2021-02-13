@@ -17,7 +17,7 @@
     @if (string.IsNullOrWhiteSpace(SnippetLink))
     {
         <div>
-            <button class="btn btn-primary" disabled="@Loading" @onclick="SaveAsync">Confirm</button>
+            <button class="btn btn-br-primary" disabled="@Loading" @onclick="SaveAsync">Confirm</button>
 
             @if (Loading)
             {
@@ -32,7 +32,7 @@
         <div class="snippet-link-wrapper">
             <input type="text" class="form-control" @bind="SnippetLink" readonly="readonly" />
 
-            <button class="btn btn-primary @CopyButtonIcon" @onclick="CopyLinkToClipboard"></button>
+            <button class="btn btn-br-primary @CopyButtonIcon" @onclick="CopyLinkToClipboard"></button>
         </div>
     }
 

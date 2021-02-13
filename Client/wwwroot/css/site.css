@@ -81,6 +81,12 @@ app {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.btn-br-primary {
+    background: #4aca85;
+    color: #fff;
+    border: 1px solid #4aca85;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
@@ -128,9 +134,19 @@ app {
     background-color: #FFF;
 }
 
-.toggle-error-list-btn:focus {
-    outline-width: 0;
+    .main .error-list .error-list-title {
+        margin-right: auto;
+        font-weight: bold;
+    }
+
+.toggle-error-list-btn {
+    margin-left: 0.5rem;
+    margin-bottom: 0.25rem;
 }
+
+    .toggle-error-list-btn:focus {
+        outline-width: 0;
+    }
 
 @keyframes spinner-border {
     to {
