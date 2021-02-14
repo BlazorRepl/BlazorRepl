@@ -58,7 +58,7 @@ namespace BlazorRepl.Client
 
             try
             {
-                await LoadPackageDllsAsync(jsRuntime);
+                await LoadResourcesAsync(jsRuntime);
 
                 if (TryExecuteUserDefinedConfiguration(builder))
                 {
@@ -84,7 +84,7 @@ namespace BlazorRepl.Client
             await builder.Build().RunAsync();
         }
 
-        private static async Task LoadPackageDllsAsync(IJSUnmarshalledRuntime jsRuntime)
+        private static async Task LoadResourcesAsync(IJSUnmarshalledRuntime jsRuntime)
         {
             var sessionId = jsRuntime.InvokeUnmarshalled<string>("App.getUrlFragmentValue");
 

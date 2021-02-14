@@ -330,7 +330,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         return dotNetArray;
     }
 
-    async function putInCacheStorage(cache, fileName, fileBytes, contentType) {
+    function putInCacheStorage(cache, fileName, fileBytes, contentType) {
         const cachedResponse = new Response(
             new Blob([fileBytes]),
             {
@@ -340,7 +340,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
                 }
             });
 
-        await cache.put(fileName, cachedResponse);
+        return cache.put(fileName, cachedResponse);
     }
 
     function convertBytesToBase64String(bytes) {
@@ -415,31 +415,58 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             }
 
             const dlls = [];
+            const scripts = [];
+            const styles = [];
 
             const cache = await caches.open(cacheName);
             const files = await cache.keys();
             for (const file of files) {
                 const response = await cache.match(file.url);
-                const bytes = new Uint8Array(await response.arrayBuffer());
+                const fileBytes = new Uint8Array(await response.arrayBuffer());
+                const fileUrl = file.url.toLowerCase();
 
-                // TODO: handle static assets file
-                if (file.url.endsWith('.css')) {
-                    const fileContent = convertBytesToBase64String(bytes);
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.type = 'text/css';
-                    link.href = `data:text/css;base64,${fileContent}`;
-                    document.head.appendChild(link);
-                } else if (file.url.endsWith('.js')) {
-                    const fileContent = convertBytesToBase64String(bytes);
-                    const script = document.createElement('script');
-                    script.src = `data:text/javascript;base64,${fileContent}`;
-                    document.body.appendChild(script);
+                if (fileUrl.endsWith('.js')) {
+                    const fileContent = convertBytesToBase64String(fileBytes);
+                    scripts.push(`data:text/javascript;base64,${fileContent}`);
+                } else if (fileUrl.endsWith('.css')) {
+                    const fileContent = convertBytesToBase64String(fileBytes);
+                    styles.push(`data:text/css;base64,${fileContent}`);
+                } else if (fileUrl.endsWith(STATIC_ASSETS_FILE_NAME)) {
+                    const fileContent = new TextDecoder().decode(fileBytes);
+                    const staticAssets = fileContent && JSON.parse(fileContent) || [];
+                    staticAssets.forEach(a => {
+                        const assetUrl = a && a.toLowerCase() || '';
+
+                        const queryStringStartIndex = a.indexOf('?');
+                        const assetUrlWithoutQueryString = queryStringStartIndex < 0
+                            ? assetUrl
+                            : assetUrl.substring(0, queryStringStartIndex);
+
+                        if (assetUrlWithoutQueryString.endsWith('.js')) {
+                            scripts.push(a);
+                        } else if (assetUrlWithoutQueryString.endsWith('.css')) {
+                            styles.push(a);
+                        }
+                    });
                 } else {
                     // Use js_typed_array_to_array instead of jsArrayToDotNetArray so we get a byte[] instead of object[] in .NET code.
-                    dlls.push(BINDING.js_typed_array_to_array(bytes));
+                    dlls.push(BINDING.js_typed_array_to_array(fileBytes));
                 }
             }
+
+            styles.forEach(href => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = href;
+                document.head.appendChild(link);
+            });
+
+            scripts.forEach(src => {
+                const script = document.createElement('script');
+                script.src = src;
+                document.body.appendChild(script);
+            });
 
             _loadedPackageDlls = jsArrayToDotNetArray(dlls);
         },
@@ -466,8 +493,6 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             if (!sessionId) {
                 return;
             }
-
-            _loadedPackageDlls = null;
 
             const cacheName = CACHE_NAME_PREFIX + sessionId;
             await caches.delete(cacheName);
