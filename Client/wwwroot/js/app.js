@@ -63,50 +63,39 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
     let _overrideValue;
     let _currentLanguage;
 
-    function initEditor(editorId, value, language) {
-        if (!editorId) {
-            return;
-        }
-
-        require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
-        require(['vs/editor/editor.main'], () => {
-            _editor = monaco.editor.create(document.getElementById(editorId), {
-                fontSize: '16px',
-                value: _overrideValue || value || '',
-                language: language || _currentLanguage || 'razor'
-            });
-
-            _overrideValue = null;
-            _currentLanguage = language || _currentLanguage;
-        });
-    }
-
-    function getValue() {
-        return _editor && _editor.getValue();
-    }
-
-    function setValue(value, language) {
-        if (_editor) {
-            _editor.setValue(value || '');
-            if (language && language !== _currentLanguage) {
-                monaco.editor.setModelLanguage(_editor.getModel(), language);
-                _currentLanguage = language;
-            }
-        } else {
-            _overrideValue = value;
-            _currentLanguage = language || _currentLanguage;
-        }
-    }
-
-    function focus() {
-        return _editor && _editor.focus();
-    }
-
     return {
-        init: initEditor,
-        initEditor: initEditor,
-        getValue: getValue,
-        setValue: setValue,
+        init: function (editorId, value, language) {
+            if (!editorId) {
+                return;
+            }
+
+            require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
+            require(['vs/editor/editor.main'], () => {
+                _editor = monaco.editor.create(document.getElementById(editorId), {
+                    fontSize: '16px',
+                    value: _overrideValue || value || '',
+                    language: language || _currentLanguage || 'razor'
+                });
+
+                _overrideValue = null;
+                _currentLanguage = language || _currentLanguage;
+            });
+        },
+        getValue: function () {
+            return _editor && _editor.getValue();
+        },
+        setValue: function (value, language) {
+            if (_editor) {
+                _editor.setValue(value || '');
+                if (language && language !== _currentLanguage) {
+                    monaco.editor.setModelLanguage(_editor.getModel(), language);
+                    _currentLanguage = language;
+                }
+            } else {
+                _overrideValue = value;
+                _currentLanguage = language || _currentLanguage;
+            }
+        },
         setLanguage: function (language) {
             if (!_editor || _currentLanguage === language) {
                 return;
@@ -114,12 +103,16 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
 
             monaco.editor.setModelLanguage(_editor.getModel(), language);
         },
-        focus: focus,
+        focus: function () {
+            return _editor && _editor.focus();
+        },
         resize: function () {
             _editor && _editor.layout();
         },
         dispose: function () {
             _editor = null;
+            _overrideValue = null;
+            _currentLanguage = null;
         }
     };
 }());
@@ -171,7 +164,7 @@ window.App.Repl = window.App.Repl || (function () {
                 gutterStyle: (_, gutterSize) => ({
                     'width': `${gutterSize}px`,
                 }),
-                onDrag: () => throttle(window.App.CodeEditor.resize, 20, 'resetEditor'),
+                onDrag: () => throttle(window.App.CodeEditor.resize, 30, 'resetEditor'),
                 onDragEnd: window.App.CodeEditor.resize
             });
         }
@@ -473,6 +466,8 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             if (!sessionId) {
                 return;
             }
+
+            _loadedPackageDlls = null;
 
             const cacheName = CACHE_NAME_PREFIX + sessionId;
             await caches.delete(cacheName);
