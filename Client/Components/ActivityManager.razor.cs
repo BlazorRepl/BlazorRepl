@@ -43,7 +43,7 @@
 
         internal IEnumerable<Package> GetInstalledPackages() => this.PackageManagerComponent?.GetInstalledPackages();
 
-        internal Task RestorePackagesAsync() => this.PackageManagerComponent?.RestorePackagesAsync();
+        internal Task RestorePackagesAsync() => this.PackageManagerComponent?.RestorePackagesAsync() ?? Task.CompletedTask;
 
         private async Task TogglePackageManagerAsync(bool calledByOtherManagerToggle = false)
         {
