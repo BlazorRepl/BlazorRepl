@@ -37,14 +37,12 @@
 
         public override async Task SetParametersAsync(ParameterView parameters)
         {
-            if (parameters.TryGetValue<ICollection<string>>(nameof(this.StaticAssets), out var staticAssets) &&
-                staticAssets != null &&
-                staticAssets.Any())
+            await base.SetParametersAsync(parameters);
+
+            if (this.StaticAssets != null && this.StaticAssets.Any())
             {
                 await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
             }
-
-            await base.SetParametersAsync(parameters);
         }
 
         [JSInvokable]
@@ -72,7 +70,6 @@
             var fileExtension = Path.GetExtension(uri.AbsoluteUri);
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
-                // TODO: double check content-type (http request to url)
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", SupportedStaticAssetFileExtensions)}");
