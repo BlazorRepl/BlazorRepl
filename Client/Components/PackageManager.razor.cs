@@ -64,7 +64,10 @@
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
 
-        public IReadOnlyCollection<Package> GetInstalledPackages() => this.NuGetPackageManagementService.InstalledPackages;
+        public IReadOnlyCollection<Package> GetInstalledPackages() =>
+            this.NuGetPackageManagementService.InstalledPackages
+                .Concat(this.PackagesToRestore ?? Enumerable.Empty<Package>())
+                .ToList();
 
         public async Task RestorePackagesAsync(bool handleLoading = false)
         {
