@@ -23,7 +23,7 @@
         public EventCallback<bool> VisibleChanged { get; set; }
 
         [Parameter]
-        public ICollection<string> StaticAssets { get; set; } = new List<string>();
+        public ISet<string> StaticAssets { get; set; } = new HashSet<string>();
 
         [Parameter]
         public string SessionId { get; set; }
@@ -61,7 +61,7 @@
                 return;
             }
 
-            if (this.StaticAssets.Any(a => string.Equals(a, uri.AbsoluteUri, StringComparison.OrdinalIgnoreCase)))
+            if (this.StaticAssets.Contains(uri.AbsoluteUri))
             {
                 this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
                 return;

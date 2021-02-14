@@ -56,6 +56,9 @@
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
+        // TODO: set when getting snippet data
+        private ISet<string> StaticAssets { get; set; } = new HashSet<string>();
+
         private bool SaveSnippetPopupVisible { get; set; }
 
         private string SplittableContainerClass { get; set; } = "splittable-container-full";
@@ -211,7 +214,7 @@
                 // Make sure the DLL is updated before reloading the user page
                 await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateUserComponentsDll", compilationResult.AssemblyBytes);
 
-                var userPagePath = this.InstalledPackages?.Any() ?? false
+                var userPagePath = (this.InstalledPackages?.Any() ?? false) || (this.StaticAssets?.Any() ?? false)
                     ? $"{MainUserPagePath}#{this.SessionId}"
                     : MainUserPagePath;
 

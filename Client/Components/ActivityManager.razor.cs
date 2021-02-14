@@ -16,6 +16,9 @@
         public ICollection<Package> PackagesToRestore { get; set; }
 
         [Parameter]
+        public ISet<string> StaticAssets { get; set; }
+
+        [Parameter]
         public Func<string, Task> UpdateLoaderTextAsync { get; set; }
 
         [Parameter]
