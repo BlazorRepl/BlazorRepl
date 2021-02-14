@@ -4,10 +4,10 @@
         <span class="package-manager-close-btn" @onclick="@CloseInternalAsync">&times;</span>
     </div>
 
-    @foreach (var asset in StaticAssets ?? Enumerable.Empty<string>())
+    @foreach (var (url, fileName) in StaticAssetUrlToFileNameMappings)
     {
         <div class="package-container">
-            <span class="font-weight-bold static-asset" title="@asset">@asset</span>
+            <span class="font-weight-bold static-asset" title="@url">@fileName</span>
         </div>
     }
 

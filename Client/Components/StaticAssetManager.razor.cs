@@ -31,6 +31,8 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
+        private IDictionary<string, string> StaticAssetUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
+
         private string StaticAssetUrl { get; set; }
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
@@ -41,6 +43,8 @@
 
             if (this.StaticAssets != null && this.StaticAssets.Any())
             {
+                this.StaticAssetUrlToFileNameMappings = this.StaticAssets.ToDictionary(a => a, Path.GetFileName);
+
                 await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
             }
         }
@@ -78,6 +82,7 @@
             }
 
             this.StaticAssets.Add(uri.AbsoluteUri);
+            this.StaticAssetUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
 
             await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
 
