@@ -119,9 +119,6 @@
 
         public void Dispose() => this.NuGetPackageManagementService?.Dispose();
 
-        [JSInvokable]
-        public Task CloseAsync() => this.CloseInternalAsync();
-
         private async Task SearchPackagesAsync()
         {
             try
@@ -268,12 +265,6 @@
             }
 
             Console.WriteLine($"App.CodeExecution.storePackageFile - {sw.Elapsed}");
-        }
-
-        private Task CloseInternalAsync()
-        {
-            this.Visible = false;
-            return this.VisibleChanged.InvokeAsync(this.Visible);
         }
 
         private Task ToggleLoaderAsync(bool value)

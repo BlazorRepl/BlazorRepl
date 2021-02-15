@@ -71,9 +71,6 @@
             }
         }
 
-        [JSInvokable]
-        public Task CloseAsync() => this.CloseInternalAsync();
-
         private async Task AddStaticAssetAsync()
         {
             if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
@@ -123,12 +120,6 @@
             await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
 
             this.StaticAssetUrl = null;
-        }
-
-        private Task CloseInternalAsync()
-        {
-            this.Visible = false;
-            return this.VisibleChanged.InvokeAsync(this.Visible);
         }
     }
 }

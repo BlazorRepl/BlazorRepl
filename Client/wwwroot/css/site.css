@@ -261,23 +261,26 @@ app {
     z-index: 10;
 }
 
-/* Package Manager */
-.package-manager {
+/* Package Manager & Static Asset Manager */
+.package-manager,
+.static-assets-manager {
     padding: 8px;
     background-color: white;
     width: calc(100% - 50px);
 }
 
-    .package-manager .manager-search-input {
+    .package-manager .manager-search-input,
+    .static-assets-manager .manager-search-input {
         width: 283px;
     }
 
-    .package-container {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        margin-bottom: 2px;
-    }
+.package-container,
+.static-asset-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
 
     .package-container .package-title {
         overflow: hidden;
@@ -287,29 +290,26 @@ app {
     }
 
 .search-package-wrapper input,
-.search-package-wrapper select {
+.search-package-wrapper select,
+.search-static-assets-wrapper input,
+.search-static-assets-wrapper select {
     display: inline-block;
     margin-right: 5px;
 }
 
-.package-manager .search-package-wrapper {
+.package-manager .search-package-wrapper,
+.static-assets-manager .search-static-assets-wrapper {
     display: flex;
     justify-content: space-around;
     margin-bottom: 5px;
 }
 
-.package-manager-header {
+.package-manager-header,
+.static-assets-manager-header {
     padding-right: 0.25em;
     margin-bottom: 20px;
 }
 
-.package-manager-close-btn {
-    cursor: pointer;
-    font-size: 1.3em;
-    font-weight: bold;
-}
-
-/* Static Asset Manager */
 .static-asset {
     padding-left: 15px;
 }
