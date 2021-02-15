@@ -311,7 +311,7 @@ app {
 
 /* Static Asset Manager */
 .static-asset {
-
+    padding-left: 15px;
 }
 
 /* App Loader */
