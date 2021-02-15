@@ -11,7 +11,9 @@
 
     public partial class StaticAssetManager
     {
-        private static readonly string[] SupportedStaticAssetFileExtensions = { ".js", ".css" };
+        private const string JsFileExtension = ".js";
+
+        private static readonly string[] SupportedStaticAssetFileExtensions = { JsFileExtension, ".css" };
 
         [Inject]
         public IJSRuntime JsRuntime { get; set; }
@@ -23,7 +25,10 @@
         public EventCallback<bool> VisibleChanged { get; set; }
 
         [Parameter]
-        public ISet<string> StaticAssets { get; set; } = new HashSet<string>();
+        public ISet<string> Scripts { get; set; } = new HashSet<string>();
+
+        [Parameter]
+        public ISet<string> Styles { get; set; } = new HashSet<string>();
 
         [Parameter]
         public string SessionId { get; set; }
@@ -31,7 +36,9 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
-        private IDictionary<string, string> StaticAssetUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
+        private IDictionary<string, string> ScriptUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
+
+        private IDictionary<string, string> StyleUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
 
         private string StaticAssetUrl { get; set; }
 
@@ -41,11 +48,26 @@
         {
             await base.SetParametersAsync(parameters);
 
-            if (this.StaticAssets != null && this.StaticAssets.Any())
+            var updateStaticAssets = false;
+            if (this.Scripts != null && this.Scripts.Any())
             {
-                this.StaticAssetUrlToFileNameMappings = this.StaticAssets.ToDictionary(a => a, Path.GetFileName);
+                this.ScriptUrlToFileNameMappings = this.Scripts.ToDictionary(a => a, Path.GetFileName);
+                updateStaticAssets = true;
+            }
 
-                await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
+            if (this.Styles != null && this.Styles.Any())
+            {
+                this.StyleUrlToFileNameMappings = this.Styles.ToDictionary(a => a, Path.GetFileName);
+                updateStaticAssets = true;
+            }
+
+            if (updateStaticAssets)
+            {
+                await this.JsRuntime.InvokeVoidAsync(
+                    "App.CodeExecution.updateStaticAssets",
+                    this.SessionId,
+                    this.Scripts,
+                    this.Styles);
             }
         }
 
@@ -65,12 +87,6 @@
                 return;
             }
 
-            if (this.StaticAssets.Contains(uri.AbsoluteUri))
-            {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
-                return;
-            }
-
             var fileExtension = Path.GetExtension(uri.AbsolutePath);
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
@@ -81,10 +97,30 @@
                 return;
             }
 
-            this.StaticAssets.Add(uri.AbsoluteUri);
-            this.StaticAssetUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
+            if (fileExtension == JsFileExtension)
+            {
+                if (this.Scripts.Contains(uri.AbsoluteUri))
+                {
+                    this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
+                    return;
+                }
 
-            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.StaticAssets);
+                this.Scripts.Add(uri.AbsoluteUri);
+                this.ScriptUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
+            }
+            else
+            {
+                if (this.Styles.Contains(uri.AbsoluteUri))
+                {
+                    this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
+                    return;
+                }
+
+                this.Styles.Add(uri.AbsoluteUri);
+                this.StyleUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
+            }
+
+            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
 
             this.StaticAssetUrl = null;
         }

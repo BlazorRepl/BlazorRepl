@@ -4,7 +4,14 @@
         <span class="package-manager-close-btn" @onclick="@CloseInternalAsync">&times;</span>
     </div>
 
-    @foreach (var (url, fileName) in StaticAssetUrlToFileNameMappings)
+    @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
+    {
+        <div class="package-container">
+            <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+        </div>
+    }
+
+    @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
     {
         <div class="package-container">
             <span class="font-weight-bold static-asset" title="@url">@fileName</span>
