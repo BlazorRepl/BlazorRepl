@@ -225,7 +225,12 @@
             Console.WriteLine($"FULL RUN: {sw.Elapsed}");
         }
 
-        private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
+        private void ShowSaveSnippetPopup()
+        {
+            this.UpdateActiveCodeFileContent();
+
+            this.SaveSnippetPopupVisible = true;
+        }
 
         private void HandleTabActivate(string name)
         {

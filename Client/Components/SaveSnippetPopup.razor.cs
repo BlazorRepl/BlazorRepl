@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
@@ -34,13 +33,13 @@
         public string InvokerId { get; set; }
 
         [Parameter]
-        public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
+        public IEnumerable<CodeFile> CodeFiles { get; set; }
 
         [Parameter]
-        public IEnumerable<Package> InstalledPackages { get; set; } = Enumerable.Empty<Package>();
+        public IEnumerable<Package> InstalledPackages { get; set; }
 
         [Parameter]
-        public Action UpdateActiveCodeFileContentAction { get; set; }
+        public StaticAssets StaticAssets { get; set; }
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -95,9 +94,7 @@
 
             try
             {
-                this.UpdateActiveCodeFileContentAction?.Invoke();
-
-                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, this.InstalledPackages);
+                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, this.InstalledPackages, this.StaticAssets);
 
                 var urlBuilder = new UriBuilder(this.NavigationManager.BaseUri) { Path = $"repl/{snippetId}" };
                 var url = urlBuilder.Uri.ToString();

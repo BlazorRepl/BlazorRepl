@@ -83,7 +83,10 @@
             this.snippetsOptions = snippetsOptions.Value;
         }
 
-        public async Task<string> SaveSnippetAsync(IEnumerable<CodeFile> codeFiles, IEnumerable<Package> installedPackages)
+        public async Task<string> SaveSnippetAsync(
+            IEnumerable<CodeFile> codeFiles,
+            IEnumerable<Package> installedPackages,
+            StaticAssets staticAssets)
         {
             if (codeFiles == null)
             {
@@ -102,7 +105,18 @@
                 throw new InvalidOperationException(packagesValidationError);
             }
 
-            var requestData = new CreateSnippetRequest { Files = codeFiles, InstalledPackages = installedPackages };
+            var staticAssetsValidationError = StaticAssetsHelper.ValidateStaticAssetsForSnippetCreation(staticAssets);
+            if (!string.IsNullOrWhiteSpace(staticAssetsValidationError))
+            {
+                throw new InvalidOperationException(staticAssetsValidationError);
+            }
+
+            var requestData = new CreateSnippetRequest
+            {
+                Files = codeFiles,
+                InstalledPackages = installedPackages,
+                StaticAssets = staticAssets,
+            };
 
             var response = await this.httpClient.PostAsJsonAsync(this.snippetsOptions.CreateUrl, requestData);
             response.EnsureSuccessStatusCode();
@@ -129,9 +143,15 @@
 
             var snippetFiles = await ExtractSnippetFilesFromResponseAsync(snippetResponse);
             var installedPackages = ExtractPackagesFromResponse(snippetResponse);
+            var staticAssets = ExtractStaticAssetsFromResponse(snippetResponse);
 
-            var responseModel = new SnippetResponse { Files = snippetFiles, InstalledPackages = installedPackages };
-            return responseModel;
+            var result = new SnippetResponse
+            {
+                Files = snippetFiles,
+                InstalledPackages = installedPackages,
+                StaticAssets = staticAssets,
+            };
+            return result;
         }
 
         private static async Task<IEnumerable<CodeFile>> ExtractSnippetFilesFromResponseAsync(HttpResponseMessage snippetResponse)
@@ -161,10 +181,11 @@
 
         private static IEnumerable<Package> ExtractPackagesFromResponse(HttpResponseMessage snippetResponse)
         {
-            if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var installedPackages) && installedPackages.Any())
+            if (snippetResponse.Headers.TryGetValues("x-ms-meta-packages", out var packagesHeaderValue) &&
+                packagesHeaderValue.Any())
             {
                 var packages = JsonSerializer
-                    .Deserialize<IDictionary<string, string>>(installedPackages.First())
+                    .Deserialize<IDictionary<string, string>>(packagesHeaderValue.First())
                     .Select(x => new Package { Name = x.Key, Version = x.Value })
                     .ToList();
 
@@ -172,6 +193,18 @@
             }
 
             return Enumerable.Empty<Package>();
+        }
+
+        private static StaticAssets ExtractStaticAssetsFromResponse(HttpResponseMessage snippetResponse)
+        {
+            if (snippetResponse.Headers.TryGetValues("x-ms-meta-static-assets", out var staticAssetsHeaderValue) &&
+                staticAssetsHeaderValue.Any())
+            {
+                var staticAssets = JsonSerializer.Deserialize<StaticAssets>(staticAssetsHeaderValue.First());
+                return staticAssets;
+            }
+
+            return new StaticAssets();
         }
 
         private static string DecodeDateIdPart(string encodedPart)

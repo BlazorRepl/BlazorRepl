@@ -10,5 +10,7 @@
         public IEnumerable<CodeFile> Files { get; set; } = Enumerable.Empty<CodeFile>();
 
         public IEnumerable<Package> InstalledPackages { get; set; } = Enumerable.Empty<Package>();
+
+        public StaticAssets StaticAssets { get; set; }
     }
 }
