@@ -132,8 +132,8 @@
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
                         this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList() ?? new List<Package>();
-                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts?.ToHashSet() ?? new HashSet<string>();
-                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles?.ToHashSet() ?? new HashSet<string>();
+                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts ?? new HashSet<string>();
+                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles ?? new HashSet<string>();
                     }
                 }
                 catch (ArgumentException)

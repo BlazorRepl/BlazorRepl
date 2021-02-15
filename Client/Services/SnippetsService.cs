@@ -204,7 +204,7 @@
                 return staticAssets;
             }
 
-            return new StaticAssets();
+            return null;
         }
 
         private static string DecodeDateIdPart(string encodedPart)
