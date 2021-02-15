@@ -55,7 +55,7 @@
         private IEnumerable<Package> InstalledPackages =>
             this.ActivityManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
 
-        private ICollection<Package> PackagesToRestore { get; set; }
+        private ICollection<Package> PackagesToRestore { get; set; } = new List<Package>();
 
         private StaticAssets StaticAssets { get; } = new();
 
