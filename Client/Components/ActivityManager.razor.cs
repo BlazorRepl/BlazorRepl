@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using BlazorRepl.Client.Models;
     using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
 
@@ -16,7 +17,7 @@
         public ICollection<Package> PackagesToRestore { get; set; }
 
         [Parameter]
-        public ISet<string> StaticAssets { get; set; }
+        public StaticAssets StaticAssets { get; set; }
 
         [Parameter]
         public Func<string, Task> UpdateLoaderTextAsync { get; set; }

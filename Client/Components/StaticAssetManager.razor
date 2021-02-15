@@ -4,23 +4,35 @@
         <span class="package-manager-close-btn" @onclick="@CloseInternalAsync">&times;</span>
     </div>
 
-    @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
+    @if (ScriptUrlToFileNameMappings.Any())
     {
-        <div class="package-container">
-            <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+        <div>
+            Scripts:
+            @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
+            {
+                <div class="package-container">
+                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                </div>
+            }
         </div>
     }
 
-    @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
+    @if (StyleUrlToFileNameMappings.Any())
     {
-        <div class="package-container">
-            <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+        <div>
+            Styles:
+            @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
+            {
+                <div class="package-container">
+                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                </div>
+            }
         </div>
     }
 
     <h5 class="text-center mt-3">Add</h5>
     <form class="search-package-wrapper mt-1" @onsubmit="@AddStaticAssetAsync">
-        <input @bind="@StaticAssetUrl" class="form-control" placeholder="JS/CSS file URL" />
+        <input @bind="@StaticAssetUrl" class="form-control manager-search-input" placeholder="JS/CSS file URL" />
         <button type="submit" class="btn btn-br-primary">
             <i class="icon-plus"></i>
         </button>

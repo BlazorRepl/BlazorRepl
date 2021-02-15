@@ -52,12 +52,12 @@
 
         private ActivityManager ActivityManagerComponent { get; set; }
 
-        private IEnumerable<Package> InstalledPackages => this.ActivityManagerComponent?.GetInstalledPackages();
+        private IEnumerable<Package> InstalledPackages =>
+            this.ActivityManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
 
         private ICollection<Package> PackagesToRestore { get; set; }
 
-        // TODO: set when getting snippet data
-        private ISet<string> StaticAssets { get; set; } = new HashSet<string>();
+        private StaticAssets StaticAssets { get; } = new();
 
         private bool SaveSnippetPopupVisible { get; set; }
 
@@ -122,6 +122,7 @@
                 try
                 {
                     var snippetResponse = await this.SnippetsService.GetSnippetContentAsync(this.SnippetId);
+
                     this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f) ?? new Dictionary<string, CodeFile>();
                     if (!this.CodeFiles.Any())
                     {
@@ -130,7 +131,9 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
-                        this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList();
+                        this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList() ?? new List<Package>();
+                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts?.ToHashSet() ?? new HashSet<string>();
+                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles?.ToHashSet() ?? new HashSet<string>();
                     }
                 }
                 catch (ArgumentException)
@@ -167,7 +170,7 @@
 
             await Task.Delay(1); // Ensure rendering has time to be called
 
-            if (this.PackagesToRestore?.Any() ?? false)
+            if (this.PackagesToRestore.Any())
             {
                 await this.ActivityManagerComponent.RestorePackagesAsync();
             }
@@ -214,7 +217,7 @@
                 // Make sure the DLL is updated before reloading the user page
                 await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateUserComponentsDll", compilationResult.AssemblyBytes);
 
-                var userPagePath = (this.InstalledPackages?.Any() ?? false) || (this.StaticAssets?.Any() ?? false)
+                var userPagePath = this.InstalledPackages.Any() || this.StaticAssets.Scripts.Any() || this.StaticAssets.Styles.Any()
                     ? $"{MainUserPagePath}#{this.SessionId}"
                     : MainUserPagePath;
 

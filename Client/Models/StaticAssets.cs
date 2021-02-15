@@ -4,8 +4,8 @@
 
     public class StaticAssets
     {
-        public ISet<string> Scripts { get; set; }
+        public ISet<string> Scripts { get; set; } = new HashSet<string>();
 
-        public ISet<string> Styles { get; set; }
+        public ISet<string> Styles { get; set; } = new HashSet<string>();
     }
 }

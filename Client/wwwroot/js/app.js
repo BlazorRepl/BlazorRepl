@@ -433,21 +433,11 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
                     styles.push(`data:text/css;base64,${fileContent}`);
                 } else if (fileUrl.endsWith(STATIC_ASSETS_FILE_NAME)) {
                     const fileContent = new TextDecoder().decode(fileBytes);
-                    const staticAssets = fileContent && JSON.parse(fileContent) || [];
-                    staticAssets.forEach(a => {
-                        const assetUrl = a && a.toLowerCase() || '';
+                    const staticAssets = fileContent && JSON.parse(fileContent) || {};
 
-                        const queryStringStartIndex = a.indexOf('?');
-                        const assetUrlWithoutQueryString = queryStringStartIndex < 0
-                            ? assetUrl
-                            : assetUrl.substring(0, queryStringStartIndex);
-
-                        if (assetUrlWithoutQueryString.endsWith('.js')) {
-                            scripts.push(a);
-                        } else if (assetUrlWithoutQueryString.endsWith('.css')) {
-                            styles.push(a);
-                        }
-                    });
+                    // Place static assets as first
+                    (staticAssets.scripts || []).reverse().forEach(s => scripts.unshift(s));
+                    (staticAssets.styles || []).reverse().forEach(s => styles.unshift(s));
                 } else {
                     // Use js_typed_array_to_array instead of jsArrayToDotNetArray so we get a byte[] instead of object[] in .NET code.
                     dlls.push(BINDING.js_typed_array_to_array(fileBytes));
@@ -465,7 +455,8 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             scripts.forEach(src => {
                 const script = document.createElement('script');
                 script.src = src;
-                document.body.appendChild(script);
+                script.defer = 'defer';
+                document.head.appendChild(script);
             });
 
             _loadedPackageDlls = jsArrayToDotNetArray(dlls);
@@ -473,16 +464,16 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         getLoadedPackageDlls: function () {
             return _loadedPackageDlls;
         },
-        updateStaticAssets: async function (sessionId, staticAssets) {
-            if (!sessionId || !staticAssets) {
+        updateStaticAssets: async function (sessionId, scripts, styles) {
+            if (!sessionId) {
                 return;
             }
 
             const cacheName = CACHE_NAME_PREFIX + sessionId;
             const cache = await caches.open(cacheName);
 
-            if (staticAssets.length) {
-                const fileBytes = new TextEncoder().encode(JSON.stringify(staticAssets));
+            if ((scripts && scripts.length) || (styles && styles.length)) {
+                const fileBytes = new TextEncoder().encode(JSON.stringify({ scripts: scripts, styles: styles }));
 
                 await putInCacheStorage(cache, STATIC_ASSETS_FILE_NAME, fileBytes, 'application/json');
             } else {

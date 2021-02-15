@@ -268,12 +268,16 @@ app {
     width: calc(100% - 50px);
 }
 
-.package-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: 2px;
-}
+    .package-manager .manager-search-input {
+        width: 283px;
+    }
+
+    .package-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 2px;
+    }
 
     .package-container .package-title {
         overflow: hidden;
