@@ -49,11 +49,14 @@
 
     @if (string.IsNullOrEmpty(SelectedPackageName))
     {
+        var allInstalledPackages = GetInstalledPackages();
         @foreach (var package in PackageSearchResults)
         {
+            var alreadyInstalled = allInstalledPackages.Any(p => p.Name == package);
+
             <div class="package-container">
                 <span class="font-weight-bold package-title" title="@package">@package</span>
-                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))" title="Select">
+                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))" title="Select" disabled="@alreadyInstalled">
                     <i class="icon-arrow-right"></i>
                 </button>
             </div>
