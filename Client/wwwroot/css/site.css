@@ -357,7 +357,7 @@ app {
         background: #4aca85;
         height: 3px;
         bottom: -1px;
-        left: 0;
+        left: -1px;
         position: absolute;
         pointer-events: none;
         border-radius: 3px;
