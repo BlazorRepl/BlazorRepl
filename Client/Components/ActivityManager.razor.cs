@@ -37,6 +37,8 @@
 
         private bool StaticAssetManagerVisible { get; set; }
 
+        private int PackagesCount => this.GetInstalledPackages()?.Count ?? 0;
+
         private bool ActivityVisible => this.PackageManagerVisible || this.StaticAssetManagerVisible;
 
         private string ActivityVisibleClass => this.ActivityVisible ? "activity-manager-expanded" : "activity-manager-collapsed";
@@ -45,7 +47,7 @@
 
         private string StaticAssetManagerActivityActiveClass => this.StaticAssetManagerVisible ? "active-activity-option" : string.Empty;
 
-        internal IEnumerable<Package> GetInstalledPackages() => this.PackageManagerComponent?.GetInstalledPackages();
+        internal IReadOnlyCollection<Package> GetInstalledPackages() => this.PackageManagerComponent?.GetInstalledPackages();
 
         internal Task RestorePackagesAsync() => this.PackageManagerComponent?.RestorePackagesAsync() ?? Task.CompletedTask;
 

@@ -216,9 +216,24 @@ app {
         transform: scale(1);
     }
 
-    .activity-option span {
+    .activity-option span.activity-icon {
         font-size: 28px;
         padding-left: 3px;
+    }
+
+    .activity-option span.packages-count-label {
+        position: absolute;
+        top: 3px;
+        right: 2px;
+        height: 16px;
+        width: 16px;
+        border-radius: 8px;
+        background-color: #4aca85;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 12px;
     }
 
     .activity-option .nuget-package-image {
