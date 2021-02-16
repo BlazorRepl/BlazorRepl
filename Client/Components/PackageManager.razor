@@ -42,7 +42,7 @@
     <h5 class="text-center mt-3">Browse</h5>
     <form class="search-package-wrapper mt-1" @onsubmit="@SearchPackagesAsync">
         <input @bind="@PackageSearchQuery" class="form-control manager-search-input" />
-        <button type="submit" class="btn btn-br-primary">
+        <button type="submit" class="btn btn-br-primary" title="Search">
             <i class="icon-search2"></i>
         </button>
     </form>
@@ -53,8 +53,8 @@
         {
             <div class="package-container">
                 <span class="font-weight-bold package-title" title="@package">@package</span>
-                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))">
-                    <i class="icon-download32"></i>
+                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))" title="Select">
+                    <i class="icon-arrow-right"></i>
                 </button>
             </div>
         }
@@ -74,7 +74,7 @@
                     <option value="@version">@version</option>
                 }
             </select>
-            <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync">
+            <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync" title="Install">
                 <i class="icon-download32"></i>
             </button>
         </div>
