@@ -166,6 +166,81 @@ app {
     animation: spinner-border .75s linear infinite;
 }
 
+/* Activity Manager*/
+.activity-manager {
+    display: flex;
+    align-items: stretch;
+}
+
+.activity-manager-expanded {
+    width: calc(18% + 50px);
+}
+
+.activity-manager-collapsed {
+    width: 50px;
+}
+
+.activity-options-wrapper {
+    width: 50px
+}
+
+.active-activity-option {
+    background-color: #fff;
+}
+
+.activity-option {
+    padding: 11px;
+    cursor: pointer;
+    position: relative;
+}
+
+    .activity-option:after {
+        content: "";
+        display: block;
+        width: 80%;
+        margin-left: 13%;
+        background: #4aca85;
+        height: 3px;
+        bottom: -1px;
+        left: 0;
+        position: absolute;
+        pointer-events: none;
+        border-radius: 3px;
+        transition: all .15s;
+        opacity: 0;
+        transform: scale(.95);
+    }
+
+    .activity-option:hover:after {
+        opacity: 1;
+        z-index: 100;
+        transform: scale(1);
+    }
+
+    .activity-option span.activity-icon {
+        font-size: 28px;
+        padding-left: 3px;
+    }
+
+    .activity-option span.packages-count-label {
+        position: absolute;
+        top: 3px;
+        right: 2px;
+        height: 16px;
+        width: 16px;
+        border-radius: 8px;
+        background-color: #4aca85;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 12px;
+    }
+
+    .activity-option .nuget-package-image {
+        width: 34px;
+    }
+
 /* User Page */
 #user-page-window {
     width: 100%;
@@ -202,6 +277,59 @@ app {
     z-index: 10;
 }
 
+/* Package Manager & Static Asset Manager */
+.package-manager,
+.static-assets-manager {
+    padding: 8px;
+    background-color: white;
+    width: calc(100% - 50px);
+}
+
+    .package-manager .manager-search-input,
+    .static-assets-manager .manager-search-input {
+        width: 283px;
+    }
+
+.package-container,
+.static-asset-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+    .package-container .package-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        max-width: calc(100% - 65px);
+    }
+
+.search-package-wrapper input,
+.search-package-wrapper select,
+.search-static-assets-wrapper input,
+.search-static-assets-wrapper select {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.package-manager .search-package-wrapper,
+.static-assets-manager .search-static-assets-wrapper {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5px;
+}
+
+.package-manager-header,
+.static-assets-manager-header {
+    padding-right: 0.25em;
+    margin-bottom: 20px;
+}
+
+.static-asset {
+    padding-left: 15px;
+}
+
 /* App Loader */
 .app-loader {
     position: fixed;
@@ -230,7 +358,7 @@ app {
         background: #4aca85;
         height: 3px;
         bottom: -1px;
-        left: 0;
+        left: -1px;
         position: absolute;
         pointer-events: none;
         border-radius: 3px;
@@ -246,6 +374,7 @@ app {
 
 .repl-navbar {
     margin-bottom: 0;
+    color: #303133;
 }
 
 /* Splitter */
@@ -259,13 +388,20 @@ app {
     background-color: #ccc;
 }
 
+.splittable-container-full {
+    width: 100%;
+}
+
+.splittable-container-shrunk {
+    width: 82%;
+}
+
 /* Editor */
 .overflowingContentWidgets {
     display: none;
 }
 
 #user-code-editor {
-    /*padding-top: 10px;*/
     background-color: #FFF;
 }
 
@@ -336,6 +472,101 @@ app {
         left: 46%;
     }
 }
+
+/* Tab Settings */
+#tab-settings-btn {
+    align-self: center;
+    margin-right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+    #tab-settings-btn:hover {
+        font-weight: bold;
+    }
+
+#tab-settings-popup {
+    position: absolute;
+    top: 35px;
+    right: 10px;
+    width: 145px;
+    z-index: 100;
+    overflow: visible;
+}
+
+.tab-settings-list li {
+    padding: 2px 10px;
+}
+
+    .tab-settings-list li:hover {
+        cursor: pointer;
+        background-color: #F5F5F5;
+    }
+
+/* Package License Popup */
+.package-license-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.package-license-popup {
+    position: absolute;
+    top: 25%;
+    left: calc(50% - 212.5px);
+    max-width: 425px;
+    width: 425px;
+    height: 400px;
+    z-index: 110;
+    background-color: #FFF;
+}
+
+    .package-license-popup .btn-accept {
+        background-color: #4aca85;
+        border-color: #4aca85;
+    }
+
+    .package-license-popup .btn-decline {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: #f5f5f5;
+    }
+
+    .package-license-popup .license-packages-container {
+        margin-bottom: 132px;
+        overflow: auto;
+        height: 277px;
+        padding: 5px 14px;
+        width: 425px;
+        word-break: break-all;
+        background-color: #F5F5F5;
+    }
+
+        .package-license-popup .license-packages-container a {
+            color: #4aca85;
+        }
+
+    .package-license-popup .package-license-link-container {
+        margin-top: -5px;
+    }
+
+    .package-license-popup .license-action-buttons {
+        position: absolute;
+        bottom: 0;
+        text-align: center;
+        padding-bottom: 5px;
+        width: 100%;
+    }
+
+    .package-license-popup .license-disclaimer {
+        line-height: normal;
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
 
 /* Save Snippet Popup */
 .save-snippets-popup {
@@ -423,18 +654,28 @@ app {
 }
 
 /* Tabs Manager */
-.nav-tabs > li {
-    height: 40px;
+.tabs-wrapper .nav-tabs {
+    width: 90%;
 }
+
+    .tabs-wrapper .nav-tabs > li {
+        height: 40px;
+    }
 
 #new-tab-input {
     height: 27px;
     width: 160px;
 }
 
-.tabs-wrapper .tab {
-    cursor: pointer;
+.tabs-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
 }
+
+    .tabs-wrapper .tab {
+        cursor: pointer;
+    }
 
 .tab-name {
     display: flex;

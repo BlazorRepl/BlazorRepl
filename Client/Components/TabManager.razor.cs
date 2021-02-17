@@ -1,13 +1,12 @@
 ﻿namespace BlazorRepl.Client.Components
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using Microsoft.AspNetCore.Components;
 
-    public partial class TabManager : IDisposable
+    public partial class TabManager
     {
         private const int DefaultActiveIndex = 0;
 
@@ -21,6 +20,9 @@
         public IList<string> Tabs { get; set; }
 
         [Parameter]
+        public string ActiveTab { get; set; }
+
+        [Parameter]
         public EventCallback<string> OnTabActivate { get; set; }
 
         [Parameter]
@@ -29,14 +31,31 @@
         [Parameter]
         public EventCallback<string> OnTabCreate { get; set; }
 
+        [Parameter]
+        public EventCallback OnScaffoldStartupSettingClick { get; set; }
+
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
         private int ActiveIndex { get; set; } = DefaultActiveIndex;
 
+        private bool TabSettingsPopupVisible { get; set; }
+
         private string TabCreatingDisplayStyle => this.tabCreating ? string.Empty : "display: none;";
 
-        public void Dispose() => this.PageNotificationsComponent?.Dispose();
+        public override Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.TryGetValue<string>(nameof(this.ActiveTab), out var newActiveTab))
+            {
+                var activeIndex = this.Tabs?.IndexOf(newActiveTab);
+                if (activeIndex >= 0)
+                {
+                    this.ActiveIndex = activeIndex.Value;
+                }
+            }
+
+            return base.SetParametersAsync(parameters);
+        }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -57,6 +76,7 @@
                 return Task.CompletedTask;
             }
 
+            this.ActiveTab = this.Tabs[activeIndex];
             this.ActiveIndex = activeIndex;
 
             return this.OnTabActivate.InvokeAsync(this.Tabs[activeIndex]);
@@ -84,6 +104,8 @@
                 await this.ActivateTabAsync(DefaultActiveIndex);
             }
         }
+
+        private void ToggleTabSettingsPopup() => this.TabSettingsPopupVisible = !this.TabSettingsPopupVisible;
 
         private void InitTabCreating()
         {

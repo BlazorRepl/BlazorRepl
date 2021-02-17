@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using BlazorRepl.Client.Components;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
 
     public partial class MainLayout : IDisposable
@@ -18,7 +19,10 @@
 
         protected override async Task OnInitializedAsync()
         {
+            // Order of init and add to cache is really important
             await CompilationService.InitAsync(this.HttpClient);
+
+            NuGetRemoteDependencyProvider.AddAssemblyDependenciesToCache(CompilationService.BaseAssemblyNames);
 
             await base.OnInitializedAsync();
         }

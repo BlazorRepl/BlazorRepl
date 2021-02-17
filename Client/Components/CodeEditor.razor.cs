@@ -23,9 +23,9 @@
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
-            if (parameters.TryGetValue<string>(nameof(this.Code), out var parameterValue))
+            if (parameters.TryGetValue<string>(nameof(this.Code), out var newCode))
             {
-                this.hasCodeChanged = this.Code != parameterValue;
+                this.hasCodeChanged = this.Code != newCode;
             }
 
             return base.SetParametersAsync(parameters);
@@ -34,6 +34,8 @@
         public void Dispose() => this.JsRuntime.InvokeVoid("App.CodeEditor.dispose");
 
         internal void Focus() => this.JsRuntime.InvokeVoid("App.CodeEditor.focus");
+
+        internal void Resize() => this.JsRuntime.InvokeVoid("App.CodeEditor.resize");
 
         internal string GetCode() => this.JsRuntime.Invoke<string>("App.CodeEditor.getValue");
 

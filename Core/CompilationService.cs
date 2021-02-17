@@ -12,6 +12,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
+    using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
     using Microsoft.AspNetCore.Razor.Language;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -32,16 +33,14 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop";
 
+        private static readonly CSharpParseOptions CSharpParseOptions = new(LanguageVersion.Preview);
+        private static readonly RazorProjectFileSystem RazorProjectFileSystem = new VirtualRazorProjectFileSystem();
+
         // Creating the initial compilation + reading references is on the order of 250ms without caching
         // so making sure it doesn't happen for each run.
         private static CSharpCompilation baseCompilation;
-        private static CSharpParseOptions cSharpParseOptions;
 
-        private readonly RazorProjectFileSystem fileSystem = new VirtualRazorProjectFileSystem();
-        private readonly RazorConfiguration configuration = RazorConfiguration.Create(
-            RazorLanguageVersion.Latest,
-            configurationName: "Blazor",
-            extensions: Array.Empty<RazorExtension>());
+        public static IEnumerable<AssemblyIdentity> BaseAssemblyNames => baseCompilation.ReferencedAssemblyNames;
 
         public static async Task InitAsync(HttpClient httpClient)
         {
@@ -56,6 +55,7 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 
             var assemblyNames = basicReferenceAssemblyRoots
@@ -78,9 +78,8 @@
 
             baseCompilation = CSharpCompilation.Create(
                 "BlazorRepl.UserComponents",
-                Array.Empty<SyntaxTree>(),
-                basicReferenceAssemblies,
-                new CSharpCompilationOptions(
+                references: basicReferenceAssemblies,
+                options: new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
                     concurrentBuild: false,
@@ -90,8 +89,19 @@
                         new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress),
                         new KeyValuePair<string, ReportDiagnostic>("CS1702", ReportDiagnostic.Suppress),
                     }));
+        }
 
-            cSharpParseOptions = new CSharpParseOptions(LanguageVersion.Preview);
+        // TODO: think about removal of packages
+        public void AddAssemblyReferences(IEnumerable<byte[]> dllsBytes)
+        {
+            if (dllsBytes == null)
+            {
+                throw new ArgumentNullException(nameof(dllsBytes));
+            }
+
+            var references = dllsBytes.Select(x => MetadataReference.CreateFromImage(x, MetadataReferenceProperties.Assembly));
+
+            baseCompilation = baseCompilation.AddReferences(references);
         }
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(
@@ -105,7 +115,6 @@
 
             var cSharpResults = await this.CompileToCSharpAsync(codeFiles, updateStatusFunc);
 
-            await (updateStatusFunc?.Invoke("Compiling Assembly") ?? Task.CompletedTask);
             var result = CompileToAssembly(cSharpResults);
 
             return result;
@@ -141,7 +150,7 @@
             for (var i = 0; i < cSharpResults.Count; i++)
             {
                 var cSharpResult = cSharpResults[i];
-                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResult.Code, cSharpParseOptions, cSharpResult.FilePath);
+                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResult.Code, CSharpParseOptions, cSharpResult.FilePath);
             }
 
             var finalCompilation = baseCompilation.AddSyntaxTrees(syntaxTrees);
@@ -190,12 +199,27 @@
                 Encoding.UTF8.GetBytes(fileContent.TrimStart()));
         }
 
+        private static RazorProjectEngine CreateRazorProjectEngine(IReadOnlyList<MetadataReference> references) =>
+            RazorProjectEngine.Create(RazorConfiguration.Default, RazorProjectFileSystem, b =>
+            {
+                b.SetRootNamespace(DefaultRootNamespace);
+                b.AddDefaultImports(DefaultImports);
+
+                // Features that use Roslyn are mandatory for components
+                CompilerFeatures.Register(b);
+
+                b.Features.Add(new CompilationTagHelperFeature());
+                b.Features.Add(new DefaultMetadataReferenceFeature { References = references });
+            });
+
         private async Task<IReadOnlyList<CompileToCSharpResult>> CompileToCSharpAsync(
             ICollection<CodeFile> codeFiles,
             Func<string, Task> updateStatusFunc)
         {
+            await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
+
             // The first phase won't include any metadata references for component discovery. This mirrors what the build does.
-            var projectEngine = this.CreateRazorProjectEngine(Array.Empty<MetadataReference>());
+            var projectEngine = CreateRazorProjectEngine(Array.Empty<MetadataReference>());
 
             // Result of generating declarations
             var declarations = new CompileToCSharpResult[codeFiles.Count];
@@ -237,11 +261,11 @@
                 return new[] { new CompileToCSharpResult { Diagnostics = tempAssembly.Diagnostics } };
             }
 
+            await (updateStatusFunc?.Invoke("Compiling Assembly") ?? Task.CompletedTask);
+
             // Add the 'temp' compilation as a metadata reference
             var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
-            projectEngine = this.CreateRazorProjectEngine(references);
-
-            await (updateStatusFunc?.Invoke("Preparing Project") ?? Task.CompletedTask);
+            projectEngine = CreateRazorProjectEngine(references);
 
             var results = new CompileToCSharpResult[declarations.Length];
             for (index = 0; index < declarations.Length; index++)
@@ -270,18 +294,5 @@
 
             return results;
         }
-
-        private RazorProjectEngine CreateRazorProjectEngine(IReadOnlyList<MetadataReference> references) =>
-            RazorProjectEngine.Create(this.configuration, this.fileSystem, b =>
-            {
-                b.SetRootNamespace(DefaultRootNamespace);
-                b.AddDefaultImports(DefaultImports);
-
-                // Features that use Roslyn are mandatory for components
-                CompilerFeatures.Register(b);
-
-                b.Features.Add(new CompilationTagHelperFeature());
-                b.Features.Add(new DefaultMetadataReferenceFeature { References = references });
-            });
     }
 }

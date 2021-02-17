@@ -9,6 +9,7 @@
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -30,26 +31,36 @@
         [Inject]
         public IJSInProcessRuntime JsRuntime { get; set; }
 
-        [Inject]
-        public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
-
         [Parameter]
         public string SnippetId { get; set; }
-
-        public CodeEditor CodeEditorComponent { get; set; }
-
-        public IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
+        private CodeEditor CodeEditorComponent { get; set; }
+
+        private IDictionary<string, CodeFile> CodeFiles { get; set; } = new Dictionary<string, CodeFile>();
+
         private IList<string> CodeFileNames { get; set; } = new List<string>();
+
+        private string CodeEditorPath => this.activeCodeFile?.Path;
 
         private string CodeEditorContent => this.activeCodeFile?.Content;
 
         private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
 
+        private ActivityManager ActivityManagerComponent { get; set; }
+
+        private IEnumerable<Package> InstalledPackages =>
+            this.ActivityManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
+
+        private ICollection<Package> PackagesToRestore { get; set; } = new List<Package>();
+
+        private StaticAssets StaticAssets { get; } = new();
+
         private bool SaveSnippetPopupVisible { get; set; }
+
+        private string SplittableContainerClass { get; set; } = "splittable-container-full";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
@@ -57,7 +68,9 @@
 
         private string LoaderText { get; set; }
 
-        private bool Loading { get; set; }
+        private bool ShowLoader { get; set; }
+
+        private string SessionId { get; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
         [JSInvokable]
         public async Task TriggerCompileAsync()
@@ -70,9 +83,10 @@
         public void Dispose()
         {
             this.dotNetInstance?.Dispose();
+
             this.PageNotificationsComponent?.Dispose();
 
-            this.JsRuntime.InvokeVoid("App.Repl.dispose");
+            this.JsRuntime.InvokeVoid("App.Repl.dispose", this.SessionId);
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -85,7 +99,6 @@
                     "App.Repl.init",
                     "user-code-editor-container",
                     "user-page-window-container",
-                    "user-code-editor",
                     this.dotNetInstance);
             }
 
@@ -107,7 +120,9 @@
             {
                 try
                 {
-                    this.CodeFiles = (await this.SnippetsService.GetSnippetContentAsync(this.SnippetId)).ToDictionary(f => f.Path, f => f);
+                    var snippetResponse = await this.SnippetsService.GetSnippetContentAsync(this.SnippetId);
+
+                    this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f) ?? new Dictionary<string, CodeFile>();
                     if (!this.CodeFiles.Any())
                     {
                         this.errorMessage = "No files in snippet.";
@@ -115,6 +130,11 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
+                        this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList() ?? new List<Package>();
+                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts ?? new HashSet<string>();
+                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles ?? new HashSet<string>();
+
+                        this.StateHasChanged();
                     }
                 }
                 catch (ArgumentException)
@@ -144,10 +164,15 @@
 
         private async Task CompileAsync()
         {
-            this.Loading = true;
+            this.ShowLoader = true;
             this.LoaderText = "Processing";
 
-            await Task.Delay(10); // Ensure rendering has time to be called
+            await Task.Delay(1); // Ensure rendering has time to be called
+
+            if (this.PackagesToRestore.Any())
+            {
+                await this.ActivityManagerComponent.RestorePackagesAsync();
+            }
 
             CompileToAssemblyResult compilationResult = null;
             CodeFile mainComponent = null;
@@ -181,21 +206,29 @@
                     mainComponent.Content = originalMainComponentContent;
                 }
 
-                this.Loading = false;
+                this.ShowLoader = false;
             }
 
             if (compilationResult?.AssemblyBytes?.Length > 0)
             {
-                this.UnmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
-                    "App.Repl.updateUserAssemblyInCacheStorage",
-                    compilationResult.AssemblyBytes);
+                // Make sure the DLL is updated before reloading the user page
+                await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateUserComponentsDll", compilationResult.AssemblyBytes);
+
+                var userPagePath = this.InstalledPackages.Any() || this.StaticAssets.Scripts.Any() || this.StaticAssets.Styles.Any()
+                    ? $"{MainUserPagePath}#{this.SessionId}"
+                    : MainUserPagePath;
 
                 // TODO: Add error page in iframe
-                this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", MainUserPagePath);
+                this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", userPagePath);
             }
         }
 
-        private void ShowSaveSnippetPopup() => this.SaveSnippetPopupVisible = true;
+        private void ShowSaveSnippetPopup()
+        {
+            this.UpdateActiveCodeFileContent();
+
+            this.SaveSnippetPopupVisible = true;
+        }
 
         private void HandleTabActivate(string name)
         {
@@ -241,10 +274,43 @@
 
             this.CodeFiles.TryAdd(name, newCodeFile);
 
-            // TODO: update method name when refactoring the coded editor JS module
+            // TODO: update method name when refactoring the code editor JS module
             this.JsRuntime.InvokeVoid(
                 "App.Repl.setCodeEditorContainerHeight",
                 newCodeFile.Type == CodeFileType.CSharp ? "csharp" : "razor");
+        }
+
+        private void HandleScaffoldStartupSettingClick()
+        {
+            this.UpdateActiveCodeFileContent();
+
+            if (!this.CodeFiles.TryGetValue(CoreConstants.StartupClassFilePath, out var startupCodeFile))
+            {
+                startupCodeFile = new CodeFile
+                {
+                    Path = CoreConstants.StartupClassFilePath,
+                    Content = CoreConstants.StartupClassDefaultFileContent,
+                };
+
+                this.CodeFiles.Add(CoreConstants.StartupClassFilePath, startupCodeFile);
+
+                this.CodeFileNames = this.CodeFiles.Keys.ToList();
+            }
+
+            this.activeCodeFile = startupCodeFile;
+
+            // TODO: update method name when refactoring the code editor JS module
+            this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
+        }
+
+        private async Task HandleActivityManagerVisibleChangedAsync(bool activityManagerVisible)
+        {
+            this.SplittableContainerClass = activityManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
+
+            this.StateHasChanged();
+            await Task.Delay(1); // Ensure rendering has time to be called
+
+            this.CodeEditorComponent.Resize();
         }
 
         private void UpdateActiveCodeFileContent()
@@ -263,8 +329,7 @@
             this.LoaderText = loaderText;
 
             this.StateHasChanged();
-
-            return Task.Delay(10); // Ensure rendering has time to be called
+            return Task.Delay(1); // Ensure rendering has time to be called
         }
     }
 }

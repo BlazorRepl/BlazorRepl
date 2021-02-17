@@ -11,11 +11,11 @@
     // (Approach: https://github.com/dotnet/aspnetcore/issues/13452#issuecomment-632660280)
     public class HandleCriticalUserComponentExceptionsLogger : ILogger
     {
-        private readonly IJSUnmarshalledRuntime unmarshalledJsRuntime;
+        private readonly IJSInProcessRuntime jsRuntime;
 
-        public HandleCriticalUserComponentExceptionsLogger(IJSUnmarshalledRuntime unmarshalledJsRuntime)
+        public HandleCriticalUserComponentExceptionsLogger(IJSInProcessRuntime jsRuntime)
         {
-            this.unmarshalledJsRuntime = unmarshalledJsRuntime;
+            this.jsRuntime = jsRuntime;
         }
 
         public void Log<TState>(
@@ -27,9 +27,9 @@
         {
             if (exception?.ToString()?.Contains(CompilationService.DefaultRootNamespace) ?? false)
             {
-                this.unmarshalledJsRuntime.InvokeUnmarshalled<byte[], object>(
-                    "App.Repl.updateUserAssemblyInCacheStorage",
-                    Convert.FromBase64String(CoreConstants.DefaultUserComponentsAssemblyBytes));
+                this.jsRuntime.InvokeVoid(
+                    "App.CodeExecution.updateUserComponentsDll",
+                    CoreConstants.DefaultUserComponentsAssemblyBytes);
             }
         }
 

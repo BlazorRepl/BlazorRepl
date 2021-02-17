@@ -1,0 +1,85 @@
+﻿<div class="package-manager" style="@DisplayStyle">
+    <div class="toast-header package-manager-header">
+        <h4 class="m-auto">Package Manager</h4>
+    </div>
+
+    <PackageLicensePopup Visible="@LicensePopupVisible"
+                         PackagesToAcceptLicense="@PackagesToAcceptLicense"
+                         OnAccept="@AcceptPackageLicenseAsync"
+                         OnDecline="@DeclinePackageLicense"></PackageLicensePopup>
+
+    @foreach (var package in NuGetPackageManagementService.InstalledPackages)
+    {
+        <div class="package-container">
+            <span class="font-weight-bold package-title" title="@package.Name">@package.Name</span>
+            <span>
+                <span title="Installed"><i class="icon-checkmark2"></i></span>
+                @package.Version
+            </span>
+        </div>
+    }
+
+    @if (PackagesToRestore?.Any() ?? false)
+    {
+        @foreach (var package in PackagesToRestore)
+        {
+            <div class="package-container">
+                <span class="font-weight-bold package-title" title="@package.Name">@package.Name</span>
+                <span>
+                    <span title="Pending restore"><i class="icon-spinner6"></i></span>
+                    @package.Version
+                </span>
+            </div>
+        }
+
+        <div class="text-right">
+            <button class="btn btn-sm btn-br-primary" @onclick="(() => RestorePackagesAsync(true))">
+                <i class="icon-cloud-download"></i> Restore Packages
+            </button>
+        </div>
+    }
+
+    <h5 class="text-center mt-3">Browse</h5>
+    <form class="search-package-wrapper mt-1" @onsubmit="@SearchPackagesAsync">
+        <input @bind="@PackageSearchQuery" class="form-control manager-search-input" />
+        <button type="submit" class="btn btn-br-primary" title="Search">
+            <i class="icon-search2"></i>
+        </button>
+    </form>
+
+    @if (string.IsNullOrEmpty(SelectedPackageName))
+    {
+        var allInstalledPackages = GetInstalledPackages();
+        @foreach (var package in PackageSearchResults)
+        {
+            var alreadyInstalled = allInstalledPackages.Any(p => p.Name == package);
+
+            <div class="package-container">
+                <span class="font-weight-bold package-title" title="@package">@package</span>
+                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))" title="Select" disabled="@alreadyInstalled">
+                    <i class="icon-arrow-right"></i>
+                </button>
+            </div>
+        }
+
+        if (PackageSearchResultsFetched && !PackageSearchResults.Any())
+        {
+            <div>No packages found.</div>
+        }
+    }
+    else
+    {
+        <label for="version-select">Version</label>
+        <div class="search-package-wrapper">
+            <select class="form-control" id="version-select" @bind="@SelectedPackageVersion">
+                @foreach (var version in SelectedPackageVersions)
+                {
+                    <option value="@version">@version</option>
+                }
+            </select>
+            <button class="btn btn-br-primary" @onclick="@PreparePackageToInstallAsync" title="Install">
+                <i class="icon-download32"></i>
+            </button>
+        </div>
+    }
+</div>

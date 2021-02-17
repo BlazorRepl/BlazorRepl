@@ -2,11 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using BlazorRepl.Client.Services;
     using BlazorRepl.Core;
+    using BlazorRepl.Core.PackageInstallation;
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
@@ -33,10 +33,13 @@
         public string InvokerId { get; set; }
 
         [Parameter]
-        public IEnumerable<CodeFile> CodeFiles { get; set; } = Enumerable.Empty<CodeFile>();
+        public IEnumerable<CodeFile> CodeFiles { get; set; }
 
         [Parameter]
-        public Action UpdateActiveCodeFileContentAction { get; set; }
+        public IEnumerable<Package> InstalledPackages { get; set; }
+
+        [Parameter]
+        public StaticAssets StaticAssets { get; set; }
 
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
@@ -56,7 +59,6 @@
         public void Dispose()
         {
             this.dotNetInstance?.Dispose();
-            this.PageNotificationsComponent?.Dispose();
 
             this.JsRuntime.InvokeVoid("App.SaveSnippetPopup.dispose");
         }
@@ -92,9 +94,7 @@
 
             try
             {
-                this.UpdateActiveCodeFileContentAction?.Invoke();
-
-                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles);
+                var snippetId = await this.SnippetsService.SaveSnippetAsync(this.CodeFiles, this.InstalledPackages, this.StaticAssets);
 
                 var urlBuilder = new UriBuilder(this.NavigationManager.BaseUri) { Path = $"repl/{snippetId}" };
                 var url = urlBuilder.Uri.ToString();
