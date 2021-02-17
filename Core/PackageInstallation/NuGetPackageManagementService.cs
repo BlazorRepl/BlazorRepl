@@ -93,11 +93,10 @@
             {
                 var result = new PackagesContentsResult();
 
-                const string NuGetPackageDownloadEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.{1}.nupkg";
-
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
                     // Get byte[] instead of Stream because for some reason the stream later (when storing) is not the same
+                    const string NuGetPackageDownloadEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.{1}.nupkg";
                     var packageBytes = await this.httpClient.GetByteArrayAsync(
                         string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
 

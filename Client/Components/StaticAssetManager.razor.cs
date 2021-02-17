@@ -84,7 +84,7 @@
                 return;
             }
 
-            var fileExtension = Path.GetExtension(uri.AbsolutePath);
+            var fileExtension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
                 this.PageNotificationsComponent.AddNotification(
