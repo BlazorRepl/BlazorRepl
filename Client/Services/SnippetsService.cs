@@ -197,7 +197,7 @@
 
         private static StaticAssets ExtractStaticAssetsFromResponse(HttpResponseMessage snippetResponse)
         {
-            if (snippetResponse.Headers.TryGetValues("x-ms-meta-static-assets", out var staticAssetsHeaderValue) &&
+            if (snippetResponse.Headers.TryGetValues("x-ms-meta-staticassets", out var staticAssetsHeaderValue) &&
                 staticAssetsHeaderValue.Any())
             {
                 var staticAssets = JsonSerializer.Deserialize<StaticAssets>(staticAssetsHeaderValue.First());
