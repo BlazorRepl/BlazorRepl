@@ -213,6 +213,7 @@ app {
 
     .activity-option:hover:after {
         opacity: 1;
+        z-index: 100;
         transform: scale(1);
     }
 
