@@ -6,7 +6,8 @@
                 if (newSrc && iFrame.src !== `${window.location.origin}${newSrc}`) {
                     iFrame.src = newSrc;
                 } else {
-                    iFrame.contentWindow.location.reload();
+                    // Make sure we refresh actual src, not only internal iframe location
+                    iFrame.src += '';
                 }
             }
         },
