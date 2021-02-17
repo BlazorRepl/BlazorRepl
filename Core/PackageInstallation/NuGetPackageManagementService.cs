@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -61,14 +60,12 @@
                 new VersionRange(new NuGetVersion(packageVersion)),
                 LibraryDependencyTarget.Package);
 
-            var sw = Stopwatch.StartNew();
             await this.remoteDependencyWalker.WalkAsync(
                 libraryRange,
                 framework: FrameworkConstants.CommonFrameworks.Net50,
                 runtimeIdentifier: null,
                 runtimeGraph: null,
                 recursive: true);
-            Console.WriteLine($"remoteDependencyWalker.WalkAsync - {sw.Elapsed}");
 
             this.currentlyInstallingPackage = new Package { Name = packageName, Version = packageVersion };
 
@@ -94,20 +91,15 @@
 
             try
             {
-                var sw = new Stopwatch();
                 var result = new PackagesContentsResult();
 
                 const string NuGetPackageDownloadEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.{1}.nupkg";
 
                 foreach (var package in this.remoteDependencyProvider.PackagesToInstall)
                 {
-                    sw.Restart();
-
                     // Get byte[] instead of Stream because for some reason the stream later (when storing) is not the same
                     var packageBytes = await this.httpClient.GetByteArrayAsync(
                         string.Format(NuGetPackageDownloadEndpointFormat, package.Library.Name, package.Library.Version));
-
-                    Console.WriteLine($"{package.Library.Name} nupkg download - {sw.Elapsed}");
 
                     using var memoryStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(memoryStream);
@@ -246,8 +238,6 @@
                 var entryBytes = memoryStream.ToArray();
 
                 result.Add(entry.Name, entryBytes);
-
-                Console.WriteLine($"Package entry: {entry.FullName} - {entryBytes.Length / 1024d} KB");
             }
 
             return result;

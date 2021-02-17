@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
@@ -101,7 +100,6 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 var errorMessage = ex is NotSupportedException
@@ -125,9 +123,8 @@
             {
                 this.PackageSearchResults = await this.NuGetPackageManagementService.SearchPackagesAsync(this.PackageSearchQuery);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while searching packages. Please try again later.");
@@ -145,9 +142,8 @@
             {
                 this.SelectedPackageVersions = await this.NuGetPackageManagementService.GetPackageVersionsAsync(selectedPackage);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex);
                 this.PageNotificationsComponent.AddNotification(
                     NotificationType.Error,
                     content: "Error while getting package versions. Please try again later.");
@@ -171,7 +167,6 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 var errorMessage = ex is NotSupportedException
@@ -218,9 +213,8 @@
                     NotificationType.Info,
                     $"{this.SelectedPackageName} package is successfully installed.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex);
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
                 this.PageNotificationsComponent.AddNotification(
@@ -244,16 +238,10 @@
 
         private async Task InstallPackageAsync()
         {
-            var sw = Stopwatch.StartNew();
-
             var packagesContents = await this.NuGetPackageManagementService.DownloadPackagesContentsAsync();
-            Console.WriteLine($"NuGetPackageManager.DownloadPackagesContentsAsync - {sw.Elapsed}");
 
-            sw.Restart();
             this.CompilationService.AddAssemblyReferences(packagesContents.DllFiles.Values);
-            Console.WriteLine($"CompilationService.AddAssemblyReferences - {sw.Elapsed}");
 
-            sw.Restart();
             var allPackageFiles = packagesContents.DllFiles.Concat(packagesContents.JavaScriptFiles).Concat(packagesContents.CssFiles);
             foreach (var (fileName, fileBytes) in allPackageFiles)
             {
@@ -263,8 +251,6 @@
                     fileName,
                     fileBytes);
             }
-
-            Console.WriteLine($"App.CodeExecution.storePackageFile - {sw.Elapsed}");
         }
 
         private Task ToggleLoaderAsync(bool value)

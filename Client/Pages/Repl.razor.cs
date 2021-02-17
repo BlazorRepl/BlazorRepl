@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -165,8 +164,6 @@
 
         private async Task CompileAsync()
         {
-            var sw = Stopwatch.StartNew();
-
             this.ShowLoader = true;
             this.LoaderText = "Processing";
 
@@ -198,10 +195,8 @@
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
                 this.AreDiagnosticsShown = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex);
-
                 this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
             }
             finally
@@ -226,8 +221,6 @@
                 // TODO: Add error page in iframe
                 this.JsRuntime.InvokeVoid("App.reloadIFrame", "user-page-window", userPagePath);
             }
-
-            Console.WriteLine($"FULL RUN: {sw.Elapsed}");
         }
 
         private void ShowSaveSnippetPopup()

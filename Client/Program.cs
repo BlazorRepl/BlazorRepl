@@ -2,7 +2,6 @@ namespace BlazorRepl.Client
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Net.Http;
@@ -94,8 +93,6 @@ namespace BlazorRepl.Client
                 return;
             }
 
-            var sw = Stopwatch.StartNew();
-
             jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadResources", sessionId);
 
             IEnumerable<byte[]> dllsBytes;
@@ -110,15 +107,10 @@ namespace BlazorRepl.Client
                 await Task.Delay(50);
             }
 
-            Console.WriteLine($"loadPackageFiles: {sw.Elapsed}");
-
-            sw.Restart();
             foreach (var dllBytes in dllsBytes)
             {
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
             }
-
-            Console.WriteLine($"loading DLLs: {sw.Elapsed}");
         }
 
         private static bool TryExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
@@ -145,7 +137,6 @@ namespace BlazorRepl.Client
             }
 
             configureMethod.Invoke(obj: null, new object[] { builder });
-            Console.WriteLine("Startup.Configure() done!");
 
             return true;
         }
