@@ -2,13 +2,18 @@
     return {
         reloadIFrame: function (id, newSrc) {
             const iFrame = document.getElementById(id);
-            if (iFrame) {
-                if (newSrc && iFrame.src !== `${window.location.origin}${newSrc}`) {
-                    iFrame.src = newSrc;
-                } else {
-                    // Make sure we refresh actual src, not only internal iframe location
-                    iFrame.src += '';
-                }
+            if (!iFrame) {
+                return;
+            }
+
+            if (!newSrc) {
+                iFrame.contentWindow.location.reload();
+            } else if (iFrame.src !== `${window.location.origin}${newSrc}`) {
+                iFrame.src = newSrc;
+            } else {
+                // There needs to be some change so the iFrame is actually reloaded
+                iFrame.src = '';
+                setTimeout(() => iFrame.src = newSrc);
             }
         },
         changeDisplayUrl: function (url) {
