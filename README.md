@@ -9,15 +9,15 @@
 ## Features
 - Write and run Blazor components
 - Save and share code snippets
-- Support multiple components
+- Write multiple components
+- Install NuGet packages
+- Override configurations and introduce new services
 - View build diagnostics
 - Hightlights and simple autocomplete for user code
 - Customize REPL page layout
 
 ## Future work
 - Enable REPL page integration in external sites (iframe)
-- Support overriding configurations and introducing new services
-- Support installing NuGet packages
 - [More...](https://github.com/BlazorRepl/BlazorRepl/issues)
 
 ## Authors
