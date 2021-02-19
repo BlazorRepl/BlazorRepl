@@ -102,7 +102,7 @@
             {
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
-                var errorMessage = ex is NotSupportedException
+                var errorMessage = ex is InvalidOperationException
                     ? ex.Message
                     : "Error while restoring packages. Please try again later.";
 
@@ -169,7 +169,7 @@
             {
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
-                var errorMessage = ex is NotSupportedException
+                var errorMessage = ex is InvalidOperationException
                     ? ex.Message
                     : "Error while installing package. Please try again later.";
 

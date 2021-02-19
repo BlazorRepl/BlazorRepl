@@ -19,7 +19,7 @@
 
     public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
-        private static readonly ConcurrentDictionary<string, LibraryDependencyInfo> LibraryDependencyCache = new();
+        private static readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> Cache = new();
 
         private readonly HttpClient httpClient;
 
@@ -36,6 +36,8 @@
 
         internal ICollection<PackageLicenseInfo> PackagesToAcceptLicense { get; } = new List<PackageLicenseInfo>();
 
+        internal string SourcePackage { get; set; }
+
         public static void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
         {
             if (assemblyPackageVersionMappings == null)
@@ -45,10 +47,7 @@
 
             foreach (var (packageName, packageVersion) in assemblyPackageVersionMappings)
             {
-                var libraryIdentity = new LibraryIdentity(
-                    packageName,
-                    new NuGetVersion(packageVersion),
-                    LibraryType.Package);
+                var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);
 
                 var libraryDependencyInfo = new LibraryDependencyInfo(
                     libraryIdentity,
@@ -56,7 +55,8 @@
                     FrameworkConstants.CommonFrameworks.Net50,
                     Array.Empty<LibraryDependency>());
 
-                LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo);
+                // App packages are marked with null source package
+                Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
             }
         }
 
@@ -81,29 +81,30 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            if (LibraryDependencyCache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            if (Cache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
-                // TODO: handle the case when the constraint is not >=
-                if (dependencyInfo.Library.Version >= libraryIdentity.Version)
+                var dependencyLibrary = dependencyInfo.Dependency.Library;
+                if (dependencyLibrary.Version >= libraryIdentity.Version)
                 {
-                    return dependencyInfo;
+                    return dependencyInfo.Dependency;
                 }
 
-                throw new NotSupportedException(
-                    $"Installing package '{dependencyInfo.Library.Name}' v{libraryIdentity.Version} is not currently supported because v{dependencyInfo.Library.Version} is already installed.");
+                if (string.IsNullOrWhiteSpace(dependencyInfo.SourcePackage))
+                {
+                    throw new InvalidOperationException(
+                        $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because v{dependencyLibrary.Version} is directly installed to the app.");
+                }
 
-                // Some thoughts:
-                // differentiate the deps which comes from the project from those which comes from the current walking
+                if (Cache.Values.Any(x => x.SourcePackage == libraryIdentity.Name))
+                {
+                    throw new InvalidOperationException(
+                        $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because lower v{dependencyLibrary.Version} is already installed. You can manually update the package.");
+                }
 
-                // we should separate the cache in 3 different collection
-                // 1. libraries from project
-                // 2. libraries from different nuget installations
-                // 3. libraries from current walking
+                // Remove the old version from cache and try again
+                Cache.TryRemove(libraryIdentity.Name, out _);
 
-                // if we have downgrade from the versions in type 1 -> throw
-                // if we have downgrade from the versions in type 2 -> check if the outside package can work with the current version that the current walking want to install.
-                //    if yes -> download new version, change the version of collection type 2 in the cache and flag this library. After the process is finished, we should get the marked libraries and change the sources in the cache
-                //    if not -> throw
+                return await this.GetDependenciesAsync(libraryIdentity, targetFramework, cacheContext, logger, cancellationToken);
             }
 
             const string NuGetNuspecEndpointFormat = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.nuspec";
@@ -127,7 +128,7 @@
                 dependencyGroup?.TargetFramework ?? NuGetFramework.AnyFramework,
                 dependencies ?? Enumerable.Empty<LibraryDependency>());
 
-            if (LibraryDependencyCache.TryAdd(libraryIdentity.Name, libraryDependencyInfo))
+            if (Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, this.SourcePackage)))
             {
                 this.PackagesToInstall.Add(libraryDependencyInfo);
 
@@ -174,7 +175,7 @@
             {
                 foreach (var package in this.PackagesToInstall)
                 {
-                    LibraryDependencyCache.TryRemove(package.Library.Name, out _);
+                    Cache.TryRemove(package.Library.Name, out _);
                 }
             }
 

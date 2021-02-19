@@ -60,12 +60,21 @@
                 new VersionRange(new NuGetVersion(packageVersion)),
                 LibraryDependencyTarget.Package);
 
-            await this.remoteDependencyWalker.WalkAsync(
-                libraryRange,
-                framework: FrameworkConstants.CommonFrameworks.Net50,
-                runtimeIdentifier: null,
-                runtimeGraph: null,
-                recursive: true);
+            this.remoteDependencyProvider.SourcePackage = packageName;
+
+            try
+            {
+                await this.remoteDependencyWalker.WalkAsync(
+                    libraryRange,
+                    framework: FrameworkConstants.CommonFrameworks.Net50,
+                    runtimeIdentifier: null,
+                    runtimeGraph: null,
+                    recursive: true);
+            }
+            finally
+            {
+                this.remoteDependencyProvider.SourcePackage = null;
+            }
 
             this.currentlyInstallingPackage = new Package { Name = packageName, Version = packageVersion };
 
