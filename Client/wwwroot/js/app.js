@@ -407,7 +407,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         loadResources: async function (rawSessionId) {
             if (!rawSessionId) {
                 // Prevent endless loop on getting the loaded DLLs
-                _loadedPackageDlls = [];
+                _loadedPackageDlls = jsArrayToDotNetArray([]);
                 return;
             }
 
@@ -416,7 +416,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const cacheExists = await caches.has(cacheName);
             if (!cacheExists) {
                 // Prevent endless loop on getting the loaded DLLs
-                _loadedPackageDlls = [];
+                _loadedPackageDlls = jsArrayToDotNetArray([]);
                 return;
             }
 
