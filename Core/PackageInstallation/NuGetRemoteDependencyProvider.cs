@@ -37,14 +37,19 @@
 
         internal ICollection<PackageLicenseInfo> PackagesToAcceptLicense { get; } = new List<PackageLicenseInfo>();
 
-        public static void AddAssemblyDependenciesToCache(IEnumerable<AssemblyIdentity> assemblyNames)
+        public static void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
         {
-            foreach (var assemblyName in assemblyNames ?? Enumerable.Empty<AssemblyIdentity>())
+            if (assemblyPackageVersionMappings == null)
+            {
+                return;
+            }
+
+            foreach (var (packageName, packageVersion) in assemblyPackageVersionMappings)
             {
                 var libraryIdentity = new LibraryIdentity(
-                    assemblyName.Name,
-                    new NuGetVersion(assemblyName.Version),
-                    LibraryType.Assembly);
+                    packageName,
+                    new NuGetVersion(packageVersion),
+                    LibraryType.Package);
 
                 var libraryDependencyInfo = new LibraryDependencyInfo(
                     libraryIdentity,
