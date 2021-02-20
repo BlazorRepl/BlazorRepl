@@ -106,7 +106,7 @@
                     ? ex.Message
                     : "Error while restoring packages. Please try again later.";
 
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage);
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
             }
 
             if (handleLoading)
@@ -173,7 +173,7 @@
                     ? ex.Message
                     : "Error while installing package. Please try again later.";
 
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage);
+                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
 
                 return;
             }
