@@ -7,6 +7,8 @@
 
     public partial class PageNotifications : IDisposable
     {
+        private const int DefaultAutoCloseTimeoutSeconds = 7;
+
         private readonly IList<PageNotification> notifications = new List<PageNotification>();
         private readonly IList<Timer> autoCloseNotificationTimers = new List<Timer>();
 
@@ -18,7 +20,11 @@
             }
         }
 
-        internal void AddNotification(NotificationType type, string content, string title = null, int autoCloseTimeoutSeconds = 7)
+        internal void AddNotification(
+            NotificationType type,
+            string content,
+            string title = null,
+            int autoCloseTimeoutSeconds = DefaultAutoCloseTimeoutSeconds)
         {
             if (!string.IsNullOrWhiteSpace(content))
             {
