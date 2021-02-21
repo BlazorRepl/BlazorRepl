@@ -66,7 +66,11 @@
 
         private bool SaveSnippetPopupVisible { get; set; }
 
-        private string SplittableContainerClass { get; set; } = "splittable-container-full";
+        private string ActivitySidebarExpandedClass =>
+            this.PackageManagerVisible || this.StaticAssetManagerVisible ? "activity-sidebar-expanded" : string.Empty;
+
+        private string SplittableContainerClass =>
+            this.PackageManagerVisible || this.StaticAssetManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
 
         private IReadOnlyCollection<CompilationDiagnostic> Diagnostics { get; set; } = Array.Empty<CompilationDiagnostic>();
 
@@ -330,8 +334,6 @@
                 default:
                     return;
             }
-
-            this.SplittableContainerClass = eventArgs.Visible ? "splittable-container-shrunk" : "splittable-container-full";
 
             this.StateHasChanged();
             await Task.Delay(1); // Ensure rendering has time to be called
