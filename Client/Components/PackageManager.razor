@@ -49,7 +49,7 @@
 
     @if (string.IsNullOrEmpty(SelectedPackageName))
     {
-        var allInstalledPackages = GetInstalledPackages();
+        var allInstalledPackages = PackageSearchResults.Any() ? GetInstalledPackages() : null;
         @foreach (var package in PackageSearchResults)
         {
             var alreadyInstalled = allInstalledPackages.Any(p => p.Name == package);

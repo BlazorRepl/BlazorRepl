@@ -6,10 +6,9 @@
 
             @if (PackagesCount > 0)
             {
-                <span class="packages-count-label">
-                    @PackagesCount
-                </span>
+                <span class="packages-count-label">@PackagesCount</span>
             }
+
             <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image">
         </div>
         <div class="activity-option @StaticAssetManagerActivityActiveClass"
@@ -21,11 +20,11 @@
     </div>
 
     <PackageManager @ref="PackageManagerComponent"
+                    @bind-Visible="@PackageManagerVisible"
+                    PackagesToRestore="PackagesToRestore"
                     ShowLoader="@ShowLoader"
                     ShowLoaderChanged="@ShowLoaderChanged"
-                    @bind-Visible="@PackageManagerVisible"
                     UpdateLoaderTextFunc="UpdateLoaderTextAsync"
-                    PackagesToRestore="PackagesToRestore"
                     SessionId="@SessionId"></PackageManager>
 
     <StaticAssetManager @bind-Visible="@StaticAssetManagerVisible"
