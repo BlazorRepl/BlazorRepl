@@ -31,7 +31,8 @@
                 Message="@LoaderText"></ReplLoader>
 
     <div>
-        <ActivityBar OnActivityToggle="HandleActivityToggleAsync"></ActivityBar>
+        <ActivityBar OnActivityToggle="HandleActivityToggleAsync"
+                     PackagesCount="InstalledPackagesCount"></ActivityBar>
 
         <PackageManager @ref="PackageManagerComponent"
                         @bind-ShowLoader="@ShowLoader"

@@ -51,8 +51,10 @@
 
         private PackageManager PackageManagerComponent { get; set; }
 
-        private IEnumerable<Package> InstalledPackages =>
-            this.PackageManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
+        private IReadOnlyCollection<Package> InstalledPackages =>
+            this.PackageManagerComponent?.GetInstalledPackages() ?? Array.Empty<Package>();
+
+        private int InstalledPackagesCount => this.InstalledPackages.Count;
 
         private ICollection<Package> PackagesToRestore { get; set; } = new List<Package>();
 
@@ -309,6 +311,11 @@
 
         private async Task HandleActivityToggleAsync(ActivityToggleEventArgs eventArgs)
         {
+            if (eventArgs == null)
+            {
+                return;
+            }
+
             switch (eventArgs.Activity)
             {
                 case nameof(PackageManager):
