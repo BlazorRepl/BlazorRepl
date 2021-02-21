@@ -52,11 +52,21 @@
         var allInstalledPackages = PackageSearchResults.Any() ? GetInstalledPackages() : null;
         @foreach (var package in PackageSearchResults)
         {
-            var alreadyInstalled = allInstalledPackages.Any(p => p.Name == package);
+            var isBaseAssemblyPackage = BaseAssemblyPackages.Contains(package);
+            var alreadyInstalled = isBaseAssemblyPackage ? true : allInstalledPackages.Any(p => p.Name == package);
+            var title = alreadyInstalled
+                ? isBaseAssemblyPackage
+                    ? "Package is included by default and you can use it in your code"
+                    : "Package is already installed"
+                : "Select";
 
             <div class="package-container">
                 <span class="font-weight-bold package-title" title="@package">@package</span>
-                <button class="btn btn-br-primary" @onclick="@(() => SelectPackageAsync(package))" title="Select" disabled="@alreadyInstalled">
+                <button class="btn btn-br-primary"
+                        @onclick="@(() => SelectPackageAsync(package))"
+                        title="@title"
+                        disabled="@alreadyInstalled">
+
                     <i class="icon-arrow-right"></i>
                 </button>
             </div>

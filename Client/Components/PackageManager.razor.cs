@@ -45,6 +45,8 @@
         [CascadingParameter]
         private PageNotifications PageNotificationsComponent { get; set; }
 
+        private ISet<string> BaseAssemblyPackages { get; } = CompilationService.BaseAssemblyPackageVersionMappings.Keys.ToHashSet();
+
         private string PackageSearchQuery { get; set; }
 
         private bool PackageSearchResultsFetched { get; set; }
