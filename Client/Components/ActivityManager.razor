@@ -1,7 +1,7 @@
 ﻿<div class="activity-manager @ActivityVisibleClass">
     <div class="activity-options-wrapper">
         <div class="activity-option @PackageManagerActivityActiveClass"
-             @onclick="@(() => TogglePackageManagerAsync())"
+             @onclick="@(() => TogglePackageManagerActivityAsync())"
              title="Package Manager">
 
             @if (PackagesCount > 0)
@@ -12,23 +12,10 @@
             <img src="./img/nuget-logo.png" alt="NuGet logo" class="nuget-package-image">
         </div>
         <div class="activity-option @StaticAssetManagerActivityActiveClass"
-             @onclick="@(() => ToggleStaticAssetManagerAsync())"
+             @onclick="@(() => ToggleStaticAssetManagerActivityAsync())"
              title="Static Asset Manager">
 
             <span class="activity-icon icon-files-empty"></span>
         </div>
     </div>
-
-    <PackageManager @ref="PackageManagerComponent"
-                    @bind-Visible="@PackageManagerVisible"
-                    PackagesToRestore="PackagesToRestore"
-                    ShowLoader="@ShowLoader"
-                    ShowLoaderChanged="@ShowLoaderChanged"
-                    UpdateLoaderTextFunc="UpdateLoaderTextAsync"
-                    SessionId="@SessionId"></PackageManager>
-
-    <StaticAssetManager @bind-Visible="@StaticAssetManagerVisible"
-                        Scripts="StaticAssets.Scripts"
-                        Styles="StaticAssets.Styles"
-                        SessionId="@SessionId"></StaticAssetManager>
 </div>

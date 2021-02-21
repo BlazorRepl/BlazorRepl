@@ -49,14 +49,18 @@
 
         private CodeFileType CodeFileType => this.activeCodeFile?.Type ?? CodeFileType.Razor;
 
-        private ActivityManager ActivityManagerComponent { get; set; }
+        private PackageManager PackageManagerComponent { get; set; }
 
         private IEnumerable<Package> InstalledPackages =>
-            this.ActivityManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
+            this.PackageManagerComponent?.GetInstalledPackages() ?? Enumerable.Empty<Package>();
 
         private ICollection<Package> PackagesToRestore { get; set; } = new List<Package>();
 
         private StaticAssets StaticAssets { get; } = new();
+
+        private bool PackageManagerVisible { get; set; }
+
+        private bool StaticAssetManagerVisible { get; set; }
 
         private bool SaveSnippetPopupVisible { get; set; }
 
@@ -171,7 +175,7 @@
 
             if (this.PackagesToRestore.Any())
             {
-                await this.ActivityManagerComponent.RestorePackagesAsync();
+                await this.PackageManagerComponent.RestorePackagesAsync();
             }
 
             CompileToAssemblyResult compilationResult = null;
@@ -303,9 +307,24 @@
             this.JsRuntime.InvokeVoid("App.Repl.setCodeEditorContainerHeight", "csharp");
         }
 
-        private async Task HandleActivityManagerVisibleChangedAsync(bool activityManagerVisible)
+        private async Task HandleActivityToggleAsync(ActivityToggleEventArgs eventArgs)
         {
-            this.SplittableContainerClass = activityManagerVisible ? "splittable-container-shrunk" : "splittable-container-full";
+            switch (eventArgs.Activity)
+            {
+                case ActivityManager.PackageManagerActivityName:
+                    this.PackageManagerVisible = eventArgs.Visible;
+                    this.StaticAssetManagerVisible = false;
+                    break;
+
+                case ActivityManager.StaticAssetManagerActivityName:
+                    this.StaticAssetManagerVisible = eventArgs.Visible;
+                    this.PackageManagerVisible = false;
+                    break;
+                default:
+                    return;
+            }
+
+            this.SplittableContainerClass = eventArgs.Visible ? "splittable-container-shrunk" : "splittable-container-full";
 
             this.StateHasChanged();
             await Task.Delay(1); // Ensure rendering has time to be called

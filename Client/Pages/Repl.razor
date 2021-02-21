@@ -30,13 +30,21 @@
     <ReplLoader Show="@ShowLoader"
                 Message="@LoaderText"></ReplLoader>
 
-    <ActivityManager @ref="ActivityManagerComponent"
-                     VisibleChanged="HandleActivityManagerVisibleChangedAsync"
-                     PackagesToRestore="@PackagesToRestore"
-                     StaticAssets="@StaticAssets"
-                     UpdateLoaderTextAsync="@UpdateLoaderTextAsync"
-                     @bind-ShowLoader="@ShowLoader"
-                     SessionId="@SessionId"></ActivityManager>
+    <div>
+        <ActivityManager OnActivityToggle="HandleActivityToggleAsync"></ActivityManager>
+
+        <PackageManager @ref="PackageManagerComponent"
+                        @bind-ShowLoader="@ShowLoader"
+                        UpdateLoaderTextFunc="UpdateLoaderTextAsync"
+                        Visible="@PackageManagerVisible"
+                        PackagesToRestore="PackagesToRestore"
+                        SessionId="@SessionId"></PackageManager>
+
+        <StaticAssetManager Visible="@StaticAssetManagerVisible"
+                            Scripts="StaticAssets.Scripts"
+                            Styles="StaticAssets.Styles"
+                            SessionId="@SessionId"></StaticAssetManager>
+    </div>
 
     <div class="flex @SplittableContainerClass">
         <div id="user-code-editor-container">
