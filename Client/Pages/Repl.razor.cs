@@ -311,12 +311,12 @@
         {
             switch (eventArgs.Activity)
             {
-                case ActivityManager.PackageManagerActivityName:
+                case nameof(PackageManager):
                     this.PackageManagerVisible = eventArgs.Visible;
                     this.StaticAssetManagerVisible = false;
                     break;
 
-                case ActivityManager.StaticAssetManagerActivityName:
+                case nameof(StaticAssetManager):
                     this.StaticAssetManagerVisible = eventArgs.Visible;
                     this.PackageManagerVisible = false;
                     break;

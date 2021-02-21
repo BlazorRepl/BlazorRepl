@@ -166,17 +166,10 @@ app {
     animation: spinner-border .75s linear infinite;
 }
 
-/* Activity Manager*/
-.activity-manager {
+/* Activity Bar */
+.activity-bar {
     display: flex;
     align-items: stretch;
-}
-
-.activity-manager-expanded {
-    width: calc(18% + 50px);
-}
-
-.activity-manager-collapsed {
     width: 50px;
 }
 

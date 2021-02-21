@@ -4,12 +4,8 @@
     using BlazorRepl.Client.Models;
     using Microsoft.AspNetCore.Components;
 
-    // TODO: extract components to caller component and have only the logic for activity show/hide here (rename to "bar")
-    public partial class ActivityManager
+    public partial class ActivityBar
     {
-        internal const string PackageManagerActivityName = "PackageManager";
-        internal const string StaticAssetManagerActivityName = "StaticAssetManager";
-
         [Parameter]
         public EventCallback<ActivityToggleEventArgs> OnActivityToggle { get; set; }
 
@@ -19,10 +15,6 @@
         private bool PackageManagerVisible { get; set; }
 
         private bool StaticAssetManagerVisible { get; set; }
-
-        private bool ActivityVisible => this.PackageManagerVisible || this.StaticAssetManagerVisible;
-
-        private string ActivityVisibleClass => this.ActivityVisible ? "activity-manager-expanded" : "activity-manager-collapsed";
 
         private string PackageManagerActivityActiveClass => this.PackageManagerVisible ? "active-activity-option" : string.Empty;
 
@@ -40,7 +32,7 @@
             if (!calledByOtherActivityToggle)
             {
                 await this.OnActivityToggle.InvokeAsync(
-                    new ActivityToggleEventArgs { Activity = PackageManagerActivityName, Visible = this.PackageManagerVisible });
+                    new ActivityToggleEventArgs { Activity = nameof(PackageManager), Visible = this.PackageManagerVisible });
             }
         }
 
@@ -56,7 +48,7 @@
             if (!calledByOtherActivityToggle)
             {
                 await this.OnActivityToggle.InvokeAsync(
-                    new ActivityToggleEventArgs { Activity = StaticAssetManagerActivityName, Visible = this.StaticAssetManagerVisible });
+                    new ActivityToggleEventArgs { Activity = nameof(StaticAssetManager), Visible = this.StaticAssetManagerVisible });
             }
         }
     }
