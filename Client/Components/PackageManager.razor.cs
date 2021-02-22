@@ -25,9 +25,6 @@
         public bool Visible { get; set; }
 
         [Parameter]
-        public EventCallback<bool> VisibleChanged { get; set; }
-
-        [Parameter]
         public string SessionId { get; set; }
 
         [Parameter]

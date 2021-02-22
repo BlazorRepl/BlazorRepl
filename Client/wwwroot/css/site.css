@@ -166,22 +166,9 @@ app {
     animation: spinner-border .75s linear infinite;
 }
 
-/* Activity Manager*/
-.activity-manager {
-    display: flex;
-    align-items: stretch;
-}
-
-.activity-manager-expanded {
-    width: calc(18% + 50px);
-}
-
-.activity-manager-collapsed {
+/* Activity Bar */
+.activity-bar {
     width: 50px;
-}
-
-.activity-options-wrapper {
-    width: 50px
 }
 
 .active-activity-option {
@@ -240,6 +227,17 @@ app {
     .activity-option .nuget-package-image {
         width: 34px;
     }
+
+/* Activity Sidebar */
+.activity-sidebar {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.activity-sidebar-expanded {
+    width: calc(18% + 50px);
+}
 
 /* User Page */
 #user-page-window {
@@ -507,7 +505,7 @@ app {
 .package-license-overlay {
     width: 100%;
     height: 100%;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     z-index: 100;

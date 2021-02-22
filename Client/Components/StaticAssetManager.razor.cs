@@ -22,9 +22,6 @@
         public bool Visible { get; set; }
 
         [Parameter]
-        public EventCallback<bool> VisibleChanged { get; set; }
-
-        [Parameter]
         public ISet<string> Scripts { get; set; } = new HashSet<string>();
 
         [Parameter]
