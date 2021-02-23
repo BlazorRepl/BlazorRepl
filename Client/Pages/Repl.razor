@@ -32,7 +32,8 @@
 
     <div class="activity-sidebar @ActivitySidebarExpandedClass">
         <ActivityBar OnActivityToggle="HandleActivityToggleAsync"
-                     PackagesCount="InstalledPackagesCount"></ActivityBar>
+                     PackagesCount="InstalledPackagesCount"
+                     StaticAssetsCount="StaticAssetsCount"></ActivityBar>
 
         <PackageManager @ref="PackageManagerComponent"
                         @bind-ShowLoader="@ShowLoader"
@@ -44,6 +45,7 @@
         <StaticAssetManager Visible="@StaticAssetManagerVisible"
                             Scripts="StaticAssets.Scripts"
                             Styles="StaticAssets.Styles"
+                            OnStaticAssetsUpdated="HandleStaticAssetsUpdated"
                             SessionId="@SessionId"></StaticAssetManager>
     </div>
 

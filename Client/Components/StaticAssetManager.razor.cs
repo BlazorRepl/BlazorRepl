@@ -28,6 +28,9 @@
         public ISet<string> Styles { get; set; } = new HashSet<string>();
 
         [Parameter]
+        public EventCallback OnStaticAssetsUpdated { get; set; }
+
+        [Parameter]
         public string SessionId { get; set; }
 
         [CascadingParameter]
@@ -115,6 +118,8 @@
             }
 
             await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
+
+            await this.OnStaticAssetsUpdated.InvokeAsync();
 
             this.StaticAssetUrl = null;
         }

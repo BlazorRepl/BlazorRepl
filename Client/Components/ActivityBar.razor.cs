@@ -12,6 +12,9 @@
         [Parameter]
         public int PackagesCount { get; set; }
 
+        [Parameter]
+        public int StaticAssetsCount { get; set; }
+
         private bool PackageManagerVisible { get; set; }
 
         private bool StaticAssetManagerVisible { get; set; }

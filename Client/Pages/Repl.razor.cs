@@ -60,6 +60,8 @@
 
         private StaticAssets StaticAssets { get; } = new();
 
+        private int StaticAssetsCount { get; set; }
+
         private bool PackageManagerVisible { get; set; }
 
         private bool StaticAssetManagerVisible { get; set; }
@@ -140,9 +142,12 @@
                     else
                     {
                         this.activeCodeFile = this.CodeFiles.First().Value;
+
                         this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList() ?? new List<Package>();
+
                         this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts ?? new HashSet<string>();
                         this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles ?? new HashSet<string>();
+                        this.HandleStaticAssetsUpdated();
 
                         this.StateHasChanged();
                     }
@@ -224,7 +229,7 @@
                 // Make sure the DLL is updated before reloading the user page
                 await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateUserComponentsDll", compilationResult.AssemblyBytes);
 
-                var userPagePath = this.InstalledPackages.Any() || this.StaticAssets.Scripts.Any() || this.StaticAssets.Styles.Any()
+                var userPagePath = this.InstalledPackagesCount > 0 || this.StaticAssetsCount > 0
                     ? $"{MainUserPagePath}#{this.SessionId}"
                     : MainUserPagePath;
 
@@ -340,6 +345,9 @@
 
             this.CodeEditorComponent.Resize();
         }
+
+        private void HandleStaticAssetsUpdated() =>
+            this.StaticAssetsCount = (this.StaticAssets.Scripts?.Count ?? 0) + (this.StaticAssets.Styles?.Count ?? 0);
 
         private void UpdateActiveCodeFileContent()
         {
