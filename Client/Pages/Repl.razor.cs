@@ -320,12 +320,7 @@
 
         private async Task HandleActivityToggleAsync(ActivityToggleEventArgs eventArgs)
         {
-            if (eventArgs == null)
-            {
-                return;
-            }
-
-            switch (eventArgs.Activity)
+            switch (eventArgs?.Activity)
             {
                 case nameof(PackageManager):
                     this.PackageManagerVisible = eventArgs.Visible;
@@ -336,6 +331,7 @@
                     this.StaticAssetManagerVisible = eventArgs.Visible;
                     this.PackageManagerVisible = false;
                     break;
+
                 default:
                     return;
             }
