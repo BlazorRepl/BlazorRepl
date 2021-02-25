@@ -250,6 +250,11 @@
                     fileName,
                     fileBytes);
             }
+
+            while (!this.UnmarshalledJsRuntime.InvokeUnmarshalled<bool>("App.CodeExecution.areAllPackageFilesStored"))
+            {
+                await Task.Delay(10);
+            }
         }
 
         private Task ToggleLoaderAsync(bool value)

@@ -324,6 +324,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
     const STATIC_ASSETS_FILE_NAME = '__static-assets.json';
 
     let _loadedPackageDlls = null;
+    let _storedPackageFiles = {};
 
     function jsArrayToDotNetArray(jsArray) {
         jsArray = jsArray || [];
@@ -399,10 +400,27 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const fileName = BINDING.conv_string(rawFileName);
             const fileBytes = Blazor.platform.toUint8Array(rawFileBytes);
 
+            _storedPackageFiles[fileName] = false;
+
             const cacheName = CACHE_NAME_PREFIX + sessionId;
             const cache = await caches.open(cacheName);
 
             await putInCacheStorage(cache, fileName, fileBytes);
+
+            _storedPackageFiles[fileName] = true;
+        },
+        areAllPackageFilesStored: function () {
+            const fileNames = Object.getOwnPropertyNames(_storedPackageFiles);
+            if (!fileNames.length) {
+                return true;
+            }
+
+            const result = fileNames.every(fileName => _storedPackageFiles[fileName]);
+            if (result) {
+                _storedPackageFiles = {};
+            }
+
+            return result;
         },
         loadResources: async function (rawSessionId) {
             if (!rawSessionId) {
