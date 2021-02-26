@@ -19,9 +19,6 @@ namespace BlazorRepl.Client
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.JSInterop;
-    using NuGet.Common;
-    using NuGet.DependencyResolver;
-    using NuGet.Protocol.Core.Types;
 
     public class Program
     {
@@ -37,27 +34,17 @@ namespace BlazorRepl.Client
 
             builder.Services.AddTransient<CompilationService>();
 
-            builder.Services.AddTransient<NuGetRemoteDependencyProvider>();
-            builder.Services.AddTransient<NuGetPackageManagementService>();
-            builder.Services.AddTransient(serviceProvider =>
-            {
-                var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
-
-                var remoteDependencyProvider = serviceProvider.GetRequiredService<NuGetRemoteDependencyProvider>();
-                remoteWalkContext.RemoteLibraryProviders.Add(remoteDependencyProvider);
-
-                return new RemoteDependencyWalker(remoteWalkContext);
-            });
-
             builder.Services.AddSingleton<SnippetsService>();
             builder.Services
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));
 
+            builder.Services.AddTransient<NuGetRemoteDependencyProvider>();
+            builder.Services.AddTransient<NuGetPackageManagementService>();
+
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
             var jsRuntime = GetJsRuntime();
-
             try
             {
                 var hasLoadedPackageDll = await LoadResourcesAsync(jsRuntime);

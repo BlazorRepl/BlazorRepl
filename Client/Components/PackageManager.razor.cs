@@ -10,7 +10,7 @@
     using Microsoft.AspNetCore.Components;
     using Microsoft.JSInterop;
 
-    public partial class PackageManager : IDisposable
+    public partial class PackageManager
     {
         [Inject]
         public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
@@ -113,8 +113,6 @@
                 await this.ToggleLoaderAsync(false);
             }
         }
-
-        public void Dispose() => this.NuGetPackageManagementService?.Dispose();
 
         private async Task SearchPackagesAsync()
         {

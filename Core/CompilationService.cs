@@ -19,6 +19,9 @@
     using Microsoft.CodeAnalysis.Razor;
     using Microsoft.JSInterop;
 
+    /// <remarks>
+    /// Must be registered in DI container as transient because of the base compilation and the method for adding assembly references to it
+    /// </remarks>
     public class CompilationService
     {
         public const string DefaultRootNamespace = "BlazorRepl.UserComponents";
@@ -105,7 +108,7 @@
 
         public CompilationService(HttpClient httpClient)
         {
-            Console.WriteLine("CompilationService: " + Guid.NewGuid());
+            Console.WriteLine("new CompilationService");
 
             this.httpClient = httpClient;
         }

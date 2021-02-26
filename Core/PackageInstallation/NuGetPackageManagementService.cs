@@ -8,10 +8,12 @@
     using System.Net.Http;
     using System.Net.Http.Json;
     using System.Threading.Tasks;
+    using NuGet.Common;
     using NuGet.DependencyResolver;
     using NuGet.Frameworks;
     using NuGet.LibraryModel;
     using NuGet.Packaging;
+    using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
     public class NuGetPackageManagementService
@@ -19,21 +21,20 @@
         private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
         private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
 
-        private readonly RemoteDependencyWalker remoteDependencyWalker;
         private readonly NuGetRemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
         private readonly List<Package> installedPackages = new();
 
+        private RemoteDependencyWalker remoteDependencyWalker;
         private Package currentlyInstallingPackage;
 
-        public NuGetPackageManagementService(
-            RemoteDependencyWalker remoteDependencyWalker,
-            NuGetRemoteDependencyProvider remoteDependencyProvider,
-            HttpClient httpClient)
+        public NuGetPackageManagementService(NuGetRemoteDependencyProvider remoteDependencyProvider, HttpClient httpClient)
         {
-            this.remoteDependencyWalker = remoteDependencyWalker;
+            Console.WriteLine("new NuGetPackageManagementService");
             this.remoteDependencyProvider = remoteDependencyProvider;
             this.httpClient = httpClient;
+
+            this.InitializeRemoteDependencyWalker();
         }
 
         public IReadOnlyCollection<Package> InstalledPackages => this.installedPackages;
@@ -242,6 +243,14 @@
             }
 
             return result;
+        }
+
+        private void InitializeRemoteDependencyWalker()
+        {
+            var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
+            remoteWalkContext.RemoteLibraryProviders.Add(this.remoteDependencyProvider);
+
+            this.remoteDependencyWalker = new RemoteDependencyWalker(remoteWalkContext);
         }
     }
 }

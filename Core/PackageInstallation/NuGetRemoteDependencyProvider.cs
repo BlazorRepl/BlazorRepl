@@ -17,14 +17,21 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
+    /// <remarks>
+    /// Must be registered in DI container as transient because of the internal cache
+    /// </remarks>
     public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
-        private readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache = new();
         private readonly HttpClient httpClient;
+        private readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache = new();
 
         public NuGetRemoteDependencyProvider(HttpClient httpClient)
         {
+            Console.WriteLine("new NuGetRemoteDependencyProvider");
+
             this.httpClient = httpClient;
+
+            this.AddBaseAssemblyPackageDependenciesToCache();
         }
 
         public bool IsHttp { get; } = true;
@@ -36,28 +43,6 @@
         internal ICollection<PackageLicenseInfo> PackagesToAcceptLicense { get; } = new List<PackageLicenseInfo>();
 
         internal string SourcePackage { get; set; }
-
-        public void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
-        {
-            if (assemblyPackageVersionMappings == null)
-            {
-                return;
-            }
-
-            foreach (var (packageName, packageVersion) in assemblyPackageVersionMappings)
-            {
-                var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);
-
-                var libraryDependencyInfo = new LibraryDependencyInfo(
-                    libraryIdentity,
-                    resolved: true,
-                    FrameworkConstants.CommonFrameworks.Net50,
-                    Array.Empty<LibraryDependency>());
-
-                // App packages are marked with null source package
-                this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
-            }
-        }
 
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
@@ -180,6 +165,23 @@
 
             this.PackagesToInstall.Clear();
             this.PackagesToAcceptLicense.Clear();
+        }
+
+        private void AddBaseAssemblyPackageDependenciesToCache()
+        {
+            foreach (var (packageName, packageVersion) in CompilationService.BaseAssemblyPackageVersionMappings)
+            {
+                var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);
+
+                var libraryDependencyInfo = new LibraryDependencyInfo(
+                    libraryIdentity,
+                    resolved: true,
+                    FrameworkConstants.CommonFrameworks.Net50,
+                    Array.Empty<LibraryDependency>());
+
+                // App packages are marked with null source package
+                this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
+            }
         }
     }
 }

@@ -126,6 +126,8 @@
 
         protected override async Task OnInitializedAsync()
         {
+            await this.CompilationService.InitializeAsync();
+
             this.PageNotificationsComponent?.Clear();
 
             if (!string.IsNullOrWhiteSpace(this.SnippetId))
