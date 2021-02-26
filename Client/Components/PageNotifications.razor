@@ -3,7 +3,7 @@
     {
         var notification = notifications[i];
         var alertClass = GetAlertClass(notification.Type);
-        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+        <div class="alert @alertClass alert-dismissible fade show" role="alert" style="word-break: break-all;">
             @if (!string.IsNullOrWhiteSpace(notification.Title))
             {
                 <strong class="font-weight-bold">@(notification.Title)</strong> <br />
