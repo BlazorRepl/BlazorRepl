@@ -34,7 +34,9 @@ namespace BlazorRepl.Client
             builder.Services.AddSingleton(serviceProvider => (IJSUnmarshalledRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
             builder.Services.AddSingleton(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddSingleton<SnippetsService>();
-            builder.Services.AddSingleton<CompilationService>();
+
+            builder.Services.AddScoped<CompilationService>();
+
             builder.Services.AddSingleton<NuGetRemoteDependencyProvider>();
             builder.Services.AddTransient<NuGetPackageManagementService>();
             builder.Services.AddSingleton(serviceProvider =>
