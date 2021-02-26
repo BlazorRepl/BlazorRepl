@@ -57,14 +57,14 @@ namespace BlazorRepl.Client
 
             try
             {
-                var hasLoadedPackageDll = await TryLoadResourcesAsync(jsRuntime);
+                var hasLoadedPackageDll = await LoadResourcesAsync(jsRuntime);
 
                 ExecuteUserDefinedConfiguration(builder);
 
                 if (hasLoadedPackageDll)
                 {
-                    // If we have loaded package DLLs in the app domain, we should reset the user components DLL in the storage for the
-                    // next app load, so we are sure the user will use the default user components DLL when he/she loads the app next time
+                    // If we have loaded any package DLL in the app domain, we should reset the user components DLL in storage
+                    // so we are sure the user will use the default user components DLL when he/she loads the app next time
                     jsRuntime.InvokeUnmarshalled<string, object>(
                         "App.CodeExecution.updateUserComponentsDll",
                         CoreConstants.DefaultUserComponentsAssemblyBytes);
@@ -85,7 +85,7 @@ namespace BlazorRepl.Client
             await builder.Build().RunAsync();
         }
 
-        private static async Task<bool> TryLoadResourcesAsync(IJSUnmarshalledRuntime jsRuntime)
+        private static async Task<bool> LoadResourcesAsync(IJSUnmarshalledRuntime jsRuntime)
         {
             var sessionId = jsRuntime.InvokeUnmarshalled<string>("App.getUrlFragmentValue");
 
