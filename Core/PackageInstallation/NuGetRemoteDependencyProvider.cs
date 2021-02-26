@@ -19,8 +19,7 @@
 
     public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
-        private static readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> Cache = new();
-
+        private readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache = new();
         private readonly HttpClient httpClient;
 
         public NuGetRemoteDependencyProvider(HttpClient httpClient)
@@ -38,7 +37,7 @@
 
         internal string SourcePackage { get; set; }
 
-        public static void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
+        public void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
         {
             if (assemblyPackageVersionMappings == null)
             {
@@ -56,7 +55,7 @@
                     Array.Empty<LibraryDependency>());
 
                 // App packages are marked with null source package
-                Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
+                this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
             }
         }
 
@@ -81,7 +80,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            if (Cache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            if (this.cache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
                 var dependencyLibrary = dependencyInfo.Dependency.Library;
                 if (dependencyLibrary.Version >= libraryIdentity.Version)
@@ -95,14 +94,14 @@
                         $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because v{dependencyLibrary.Version} is directly installed to the app.");
                 }
 
-                if (Cache.Values.Any(x => x.SourcePackage == libraryIdentity.Name))
+                if (this.cache.Values.Any(x => x.SourcePackage == libraryIdentity.Name))
                 {
                     throw new InvalidOperationException(
                         $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because lower v{dependencyLibrary.Version} is already installed. You can manually update the package.");
                 }
 
                 // Remove the old version from cache and try again
-                Cache.TryRemove(libraryIdentity.Name, out _);
+                this.cache.TryRemove(libraryIdentity.Name, out _);
 
                 return await this.GetDependenciesAsync(libraryIdentity, targetFramework, cacheContext, logger, cancellationToken);
             }
@@ -128,7 +127,7 @@
                 dependencyGroup?.TargetFramework ?? NuGetFramework.AnyFramework,
                 dependencies ?? Enumerable.Empty<LibraryDependency>());
 
-            if (Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, this.SourcePackage)))
+            if (this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, this.SourcePackage)))
             {
                 this.PackagesToInstall.Add(libraryDependencyInfo);
 
@@ -175,7 +174,7 @@
             {
                 foreach (var package in this.PackagesToInstall)
                 {
-                    Cache.TryRemove(package.Library.Name, out _);
+                    this.cache.TryRemove(package.Library.Name, out _);
                 }
             }
 

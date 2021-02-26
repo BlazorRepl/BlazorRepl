@@ -14,7 +14,7 @@
     using NuGet.Packaging;
     using NuGet.Versioning;
 
-    public class NuGetPackageManagementService : IDisposable
+    public class NuGetPackageManagementService
     {
         private static readonly string LibFolderPrefix = $"lib{Path.DirectorySeparatorChar}";
         private static readonly string StaticWebAssetsFolderPrefix = $"staticwebassets{Path.DirectorySeparatorChar}";
@@ -170,13 +170,6 @@
                 string.Format(NuGetPackageVersionsEndpointFormat, packageName));
 
             return result?.Data?.Reverse().ToList() ?? Enumerable.Empty<string>();
-        }
-
-        public void Dispose()
-        {
-            this.currentlyInstallingPackage = null;
-            this.installedPackages.Clear();
-            this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
         }
 
         // TODO: Abstract .NET 5.0 hard-coded stuff everywhere

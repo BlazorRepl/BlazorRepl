@@ -32,14 +32,14 @@ namespace BlazorRepl.Client
 
             builder.Services.AddSingleton(serviceProvider => (IJSInProcessRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
             builder.Services.AddSingleton(serviceProvider => (IJSUnmarshalledRuntime)serviceProvider.GetRequiredService<IJSRuntime>());
+
             builder.Services.AddSingleton(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-            builder.Services.AddSingleton<SnippetsService>();
 
-            builder.Services.AddScoped<CompilationService>();
+            builder.Services.AddTransient<CompilationService>();
 
-            builder.Services.AddSingleton<NuGetRemoteDependencyProvider>();
+            builder.Services.AddTransient<NuGetRemoteDependencyProvider>();
             builder.Services.AddTransient<NuGetPackageManagementService>();
-            builder.Services.AddSingleton(serviceProvider =>
+            builder.Services.AddTransient(serviceProvider =>
             {
                 var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
 
@@ -49,6 +49,7 @@ namespace BlazorRepl.Client
                 return new RemoteDependencyWalker(remoteWalkContext);
             });
 
+            builder.Services.AddSingleton<SnippetsService>();
             builder.Services
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));

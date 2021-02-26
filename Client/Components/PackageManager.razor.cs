@@ -16,10 +16,10 @@
         public IJSUnmarshalledRuntime UnmarshalledJsRuntime { get; set; }
 
         [Inject]
-        public CompilationService CompilationService { get; set; }
-
-        [Inject]
         public NuGetPackageManagementService NuGetPackageManagementService { get; set; }
+
+        [Parameter]
+        public CompilationService CompilationService { get; set; }
 
         [Parameter]
         public bool Visible { get; set; }

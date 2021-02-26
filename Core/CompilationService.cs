@@ -102,24 +102,22 @@
         // Creating the initial compilation + reading references is taking a lot of time without caching
         // so making sure it doesn't happen for each run.
         private CSharpCompilation baseCompilation;
-        private bool isInitialized;
 
         public CompilationService(HttpClient httpClient)
         {
-            Console.WriteLine("here");
-            Console.WriteLine(Guid.NewGuid().ToString());
+            Console.WriteLine("CompilationService: " + Guid.NewGuid());
 
             this.httpClient = httpClient;
         }
 
         public async Task InitializeAsync()
         {
-            if (this.isInitialized)
+            if (this.baseCompilation != null)
             {
                 return;
             }
 
-            var basicReferenceAssemblyRoots = new[]
+            var referenceAssemblyRoots = new[]
             {
                 typeof(Console).Assembly, // System.Console
                 typeof(Uri).Assembly, // System.Private.Uri
@@ -133,7 +131,7 @@
                 typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 
-            var assemblyNames = basicReferenceAssemblyRoots
+            var assemblyNames = referenceAssemblyRoots
                 .SelectMany(assembly => assembly.GetReferencedAssemblies().Concat(new[] { assembly.GetName() }))
                 .Select(x => x.Name)
                 .Distinct()
@@ -143,17 +141,17 @@
 
             var allReferenceAssemblies = assemblyStreams.ToDictionary(a => a.Key, a => MetadataReference.CreateFromStream(a.Value));
 
-            var basicReferenceAssemblies = allReferenceAssemblies
-                .Where(a => basicReferenceAssemblyRoots
+            var referenceAssemblies = allReferenceAssemblies
+                .Where(a => referenceAssemblyRoots
                     .Select(x => x.GetName().Name)
-                    .Union(basicReferenceAssemblyRoots.SelectMany(y => y.GetReferencedAssemblies().Select(z => z.Name)))
+                    .Union(referenceAssemblyRoots.SelectMany(y => y.GetReferencedAssemblies().Select(z => z.Name)))
                     .Any(n => n == a.Key))
                 .Select(a => a.Value)
                 .ToList();
 
             this.baseCompilation = CSharpCompilation.Create(
                 "BlazorRepl.UserComponents",
-                references: basicReferenceAssemblies,
+                references: referenceAssemblies,
                 options: new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
@@ -164,11 +162,8 @@
                         new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress),
                         new KeyValuePair<string, ReportDiagnostic>("CS1702", ReportDiagnostic.Suppress),
                     }));
-
-            this.isInitialized = true;
         }
 
-        // TODO: think about removal of packages
         public void AddAssemblyReferences(IEnumerable<byte[]> dllsBytes)
         {
             if (dllsBytes == null)
@@ -378,7 +373,7 @@
 
         private void ThrowIfNotInitialized()
         {
-            if (!this.isInitialized)
+            if (this.baseCompilation == null)
             {
                 throw new InvalidOperationException(
                     $"{nameof(CompilationService)} is not initialized. Please call {nameof(this.InitializeAsync)} to initialize it.");
