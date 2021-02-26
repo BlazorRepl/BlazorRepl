@@ -57,12 +57,14 @@ namespace BlazorRepl.Client
 
             try
             {
-                await LoadResourcesAsync(jsRuntime);
+                var hasLoadedPackageDll = await TryLoadResourcesAsync(jsRuntime);
 
-                if (TryExecuteUserDefinedConfiguration(builder))
+                ExecuteUserDefinedConfiguration(builder);
+
+                if (hasLoadedPackageDll)
                 {
-                    // If the user defined configuration code has executed, the user components DLL is now
-                    // loaded in the app domain so we reset the DLL in the storage for the next app load
+                    // If we have loaded package DLLs in the app domain, we should reset the user components DLL in the storage for the
+                    // next app load, so we are sure the user will use the default user components DLL when he/she loads the app next time
                     jsRuntime.InvokeUnmarshalled<string, object>(
                         "App.CodeExecution.updateUserComponentsDll",
                         CoreConstants.DefaultUserComponentsAssemblyBytes);
@@ -83,14 +85,14 @@ namespace BlazorRepl.Client
             await builder.Build().RunAsync();
         }
 
-        private static async Task LoadResourcesAsync(IJSUnmarshalledRuntime jsRuntime)
+        private static async Task<bool> TryLoadResourcesAsync(IJSUnmarshalledRuntime jsRuntime)
         {
             var sessionId = jsRuntime.InvokeUnmarshalled<string>("App.getUrlFragmentValue");
 
             // We use timestamps for session ID and care only about DLLs in caches that contain timestamps
             if (!ulong.TryParse(sessionId, out _))
             {
-                return;
+                return false;
             }
 
             jsRuntime.InvokeUnmarshalled<string, object>("App.CodeExecution.loadResources", sessionId);
@@ -107,13 +109,18 @@ namespace BlazorRepl.Client
                 await Task.Delay(50);
             }
 
+            var hasLoadedPackageDll = false;
             foreach (var dllBytes in dllsBytes)
             {
                 AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(dllBytes));
+
+                hasLoadedPackageDll = true;
             }
+
+            return hasLoadedPackageDll;
         }
 
-        private static bool TryExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
+        private static void ExecuteUserDefinedConfiguration(WebAssemblyHostBuilder builder)
         {
             var userComponentsAssembly = typeof(__Main).Assembly;
             var startupType = userComponentsAssembly.GetType("Startup", throwOnError: false, ignoreCase: true)
@@ -121,24 +128,22 @@ namespace BlazorRepl.Client
 
             if (startupType == null)
             {
-                return false;
+                return;
             }
 
             var configureMethod = startupType.GetMethod("Configure", BindingFlags.Static | BindingFlags.Public);
             if (configureMethod == null)
             {
-                return false;
+                return;
             }
 
             var configureMethodParams = configureMethod.GetParameters();
             if (configureMethodParams.Length != 1 || configureMethodParams[0].ParameterType != typeof(WebAssemblyHostBuilder))
             {
-                return false;
+                return;
             }
 
             configureMethod.Invoke(obj: null, new object[] { builder });
-
-            return true;
         }
 
         private static IJSUnmarshalledRuntime GetJsRuntime()
