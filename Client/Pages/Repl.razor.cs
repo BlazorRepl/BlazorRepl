@@ -120,6 +120,8 @@
         {
             await this.CompilationService.InitializeAsync();
 
+            this.GetPageNotificationsComponent().Clear();
+
             if (!string.IsNullOrWhiteSpace(this.SnippetId))
             {
                 try
