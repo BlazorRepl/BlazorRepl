@@ -34,13 +34,13 @@ namespace BlazorRepl.Client
 
             builder.Services.AddTransient<CompilationService>();
 
+            builder.Services.AddTransient<NuGetRemoteDependencyProvider>();
+            builder.Services.AddTransient<NuGetPackageManagementService>();
+
             builder.Services.AddSingleton<SnippetsService>();
             builder.Services
                 .AddOptions<SnippetsOptions>()
                 .Configure<IConfiguration>((options, configuration) => configuration.GetSection("Snippets").Bind(options));
-
-            builder.Services.AddTransient<NuGetRemoteDependencyProvider>();
-            builder.Services.AddTransient<NuGetPackageManagementService>();
 
             builder.Logging.Services.AddSingleton<ILoggerProvider, HandleCriticalUserComponentExceptionsLoggerProvider>();
 
