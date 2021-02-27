@@ -23,7 +23,8 @@
     public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
         private readonly HttpClient httpClient;
-        private readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache = new();
+
+        private ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache;
 
         public NuGetRemoteDependencyProvider(HttpClient httpClient)
         {
@@ -31,7 +32,7 @@
 
             this.httpClient = httpClient;
 
-            this.AddBaseAssemblyPackageDependenciesToCache();
+            this.InitializeCache();
         }
 
         public bool IsHttp { get; } = true;
@@ -167,8 +168,10 @@
             this.PackagesToAcceptLicense.Clear();
         }
 
-        private void AddBaseAssemblyPackageDependenciesToCache()
+        private void InitializeCache()
         {
+            this.cache = new();
+
             foreach (var (packageName, packageVersion) in CompilationService.BaseAssemblyPackageVersionMappings)
             {
                 var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);

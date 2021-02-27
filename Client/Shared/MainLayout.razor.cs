@@ -7,6 +7,15 @@
     {
         private PageNotifications PageNotificationsComponent { get; set; }
 
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
+
         public void Dispose() => this.PageNotificationsComponent?.Dispose();
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            this.GetPageNotificationsComponent = () => this.PageNotificationsComponent;
+        }
     }
 }

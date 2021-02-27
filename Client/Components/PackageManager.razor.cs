@@ -40,7 +40,7 @@
         public Func<string, Task> UpdateLoaderTextFunc { get; set; }
 
         [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
         private ISet<string> BaseAssemblyPackages { get; } = CompilationService.BaseAssemblyPackageVersionMappings.Keys.ToHashSet();
 
@@ -105,7 +105,7 @@
                     ? ex.Message
                     : "Error while restoring packages. Please try again later.";
 
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
             }
 
             if (handleLoading)
@@ -122,7 +122,7 @@
             }
             catch (Exception)
             {
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Error,
                     content: "Error while searching packages. Please try again later.");
 
@@ -141,7 +141,7 @@
             }
             catch (Exception)
             {
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Error,
                     content: "Error while getting package versions. Please try again later.");
 
@@ -170,7 +170,7 @@
                     ? ex.Message
                     : "Error while installing package. Please try again later.";
 
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, errorMessage, autoCloseTimeoutSeconds: 15);
 
                 return;
             }
@@ -206,7 +206,7 @@
             {
                 await this.InstallPackageAsync();
 
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Info,
                     $"{this.SelectedPackageName} package is successfully installed.");
             }
@@ -214,7 +214,7 @@
             {
                 this.NuGetPackageManagementService.CancelPackageInstallation();
 
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Error,
                     content: "Error while installing package. Please try again later.");
 

@@ -42,7 +42,7 @@
         public StaticAssets StaticAssets { get; set; }
 
         [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
         private bool Loading { get; set; }
 
@@ -104,11 +104,11 @@
             }
             catch (InvalidOperationException ex)
             {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: ex.Message);
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, content: ex.Message);
             }
             catch (Exception)
             {
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Error,
                     content: "Error while saving snippet. Please try again later.");
             }

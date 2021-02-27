@@ -19,7 +19,6 @@
         private const string MainUserPagePath = "/__main";
 
         private DotNetObjectReference<Repl> dotNetInstance;
-        private string errorMessage;
         private CodeFile activeCodeFile;
 
         [Inject]
@@ -35,7 +34,7 @@
         public string SnippetId { get; set; }
 
         [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
         private CodeEditor CodeEditorComponent { get; set; }
 
@@ -96,7 +95,7 @@
         {
             this.dotNetInstance?.Dispose();
 
-            this.PageNotificationsComponent?.Dispose();
+            this.GetPageNotificationsComponent()?.Dispose();
 
             this.JsRuntime.InvokeVoid("App.Repl.dispose", this.SessionId);
         }
@@ -114,21 +113,12 @@
                     this.dotNetInstance);
             }
 
-            if (!string.IsNullOrWhiteSpace(this.errorMessage) && this.PageNotificationsComponent != null)
-            {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: this.errorMessage);
-
-                this.errorMessage = null;
-            }
-
             base.OnAfterRender(firstRender);
         }
 
         protected override async Task OnInitializedAsync()
         {
             await this.CompilationService.InitializeAsync();
-
-            this.PageNotificationsComponent?.Clear();
 
             if (!string.IsNullOrWhiteSpace(this.SnippetId))
             {
@@ -139,7 +129,7 @@
                     this.CodeFiles = snippetResponse.Files?.ToDictionary(f => f.Path, f => f) ?? new Dictionary<string, CodeFile>();
                     if (!this.CodeFiles.Any())
                     {
-                        this.errorMessage = "No files in snippet.";
+                        this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "No files in snippet.");
                     }
                     else
                     {
@@ -156,11 +146,13 @@
                 }
                 catch (ArgumentException)
                 {
-                    this.errorMessage = "Invalid Snippet ID.";
+                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Invalid Snippet ID.");
                 }
                 catch (Exception)
                 {
-                    this.errorMessage = "Unable to get snippet content. Please try again later.";
+                    this.GetPageNotificationsComponent().AddNotification(
+                        NotificationType.Error,
+                        "Unable to get snippet content. Please try again later.");
                 }
             }
 
@@ -214,7 +206,7 @@
             }
             catch (Exception)
             {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, content: "Error while compiling the code.");
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, content: "Error while compiling the code.");
             }
             finally
             {
@@ -351,7 +343,7 @@
         {
             if (this.activeCodeFile == null)
             {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, "No active file to update.");
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "No active file to update.");
                 return;
             }
 
