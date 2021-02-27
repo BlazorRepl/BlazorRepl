@@ -28,8 +28,6 @@
 
         public NuGetRemoteDependencyProvider(HttpClient httpClient)
         {
-            Console.WriteLine("new NuGetRemoteDependencyProvider");
-
             this.httpClient = httpClient;
 
             this.InitializeCache();

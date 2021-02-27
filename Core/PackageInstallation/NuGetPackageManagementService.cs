@@ -30,7 +30,6 @@
 
         public NuGetPackageManagementService(NuGetRemoteDependencyProvider remoteDependencyProvider, HttpClient httpClient)
         {
-            Console.WriteLine("new NuGetPackageManagementService");
             this.remoteDependencyProvider = remoteDependencyProvider;
             this.httpClient = httpClient;
 

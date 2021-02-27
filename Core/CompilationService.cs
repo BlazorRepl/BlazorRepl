@@ -108,8 +108,6 @@
 
         public CompilationService(HttpClient httpClient)
         {
-            Console.WriteLine("new CompilationService");
-
             this.httpClient = httpClient;
         }
 
