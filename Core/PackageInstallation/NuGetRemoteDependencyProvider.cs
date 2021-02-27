@@ -17,15 +17,20 @@
     using NuGet.Protocol.Core.Types;
     using NuGet.Versioning;
 
+    /// <remarks>
+    /// Must be registered in DI container as transient because of the internal cache
+    /// </remarks>
     public class NuGetRemoteDependencyProvider : IRemoteDependencyProvider
     {
-        private static readonly ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> Cache = new();
-
         private readonly HttpClient httpClient;
+
+        private ConcurrentDictionary<string, (LibraryDependencyInfo Dependency, string SourcePackage)> cache;
 
         public NuGetRemoteDependencyProvider(HttpClient httpClient)
         {
             this.httpClient = httpClient;
+
+            this.InitializeCache();
         }
 
         public bool IsHttp { get; } = true;
@@ -37,28 +42,6 @@
         internal ICollection<PackageLicenseInfo> PackagesToAcceptLicense { get; } = new List<PackageLicenseInfo>();
 
         internal string SourcePackage { get; set; }
-
-        public static void AddBaseAssemblyPackageDependenciesToCache(IDictionary<string, string> assemblyPackageVersionMappings)
-        {
-            if (assemblyPackageVersionMappings == null)
-            {
-                return;
-            }
-
-            foreach (var (packageName, packageVersion) in assemblyPackageVersionMappings)
-            {
-                var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);
-
-                var libraryDependencyInfo = new LibraryDependencyInfo(
-                    libraryIdentity,
-                    resolved: true,
-                    FrameworkConstants.CommonFrameworks.Net50,
-                    Array.Empty<LibraryDependency>());
-
-                // App packages are marked with null source package
-                Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
-            }
-        }
 
         public Task<LibraryIdentity> FindLibraryAsync(
             LibraryRange libraryRange,
@@ -81,7 +64,7 @@
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            if (Cache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
+            if (this.cache.TryGetValue(libraryIdentity.Name, out var dependencyInfo))
             {
                 var dependencyLibrary = dependencyInfo.Dependency.Library;
                 if (dependencyLibrary.Version >= libraryIdentity.Version)
@@ -95,14 +78,14 @@
                         $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because v{dependencyLibrary.Version} is directly installed to the app.");
                 }
 
-                if (Cache.Values.Any(x => x.SourcePackage == libraryIdentity.Name))
+                if (this.cache.Values.Any(x => x.SourcePackage == libraryIdentity.Name))
                 {
                     throw new InvalidOperationException(
                         $"Cannot install package '{dependencyLibrary.Name}' v{libraryIdentity.Version} because lower v{dependencyLibrary.Version} is already installed. You can manually update the package.");
                 }
 
                 // Remove the old version from cache and try again
-                Cache.TryRemove(libraryIdentity.Name, out _);
+                this.cache.TryRemove(libraryIdentity.Name, out _);
 
                 return await this.GetDependenciesAsync(libraryIdentity, targetFramework, cacheContext, logger, cancellationToken);
             }
@@ -128,7 +111,7 @@
                 dependencyGroup?.TargetFramework ?? NuGetFramework.AnyFramework,
                 dependencies ?? Enumerable.Empty<LibraryDependency>());
 
-            if (Cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, this.SourcePackage)))
+            if (this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, this.SourcePackage)))
             {
                 this.PackagesToInstall.Add(libraryDependencyInfo);
 
@@ -175,12 +158,31 @@
             {
                 foreach (var package in this.PackagesToInstall)
                 {
-                    Cache.TryRemove(package.Library.Name, out _);
+                    this.cache.TryRemove(package.Library.Name, out _);
                 }
             }
 
             this.PackagesToInstall.Clear();
             this.PackagesToAcceptLicense.Clear();
+        }
+
+        private void InitializeCache()
+        {
+            this.cache = new();
+
+            foreach (var (packageName, packageVersion) in CompilationService.BaseAssemblyPackageVersionMappings)
+            {
+                var libraryIdentity = new LibraryIdentity(packageName, new NuGetVersion(packageVersion), LibraryType.Package);
+
+                var libraryDependencyInfo = new LibraryDependencyInfo(
+                    libraryIdentity,
+                    resolved: true,
+                    FrameworkConstants.CommonFrameworks.Net50,
+                    Array.Empty<LibraryDependency>());
+
+                // App packages are marked with null source package
+                this.cache.TryAdd(libraryIdentity.Name, (libraryDependencyInfo, null));
+            }
         }
     }
 }

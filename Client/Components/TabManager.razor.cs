@@ -1,5 +1,6 @@
 ﻿namespace BlazorRepl.Client.Components
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
@@ -35,7 +36,7 @@
         public EventCallback OnScaffoldStartupSettingClick { get; set; }
 
         [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
         private int ActiveIndex { get; set; } = DefaultActiveIndex;
 
@@ -133,7 +134,7 @@
             {
                 if (this.previousInvalidTab != this.newTab)
                 {
-                    this.PageNotificationsComponent.AddNotification(NotificationType.Error, error ?? "File already exists.");
+                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, error ?? "File already exists.");
                     this.previousInvalidTab = this.newTab;
                 }
 

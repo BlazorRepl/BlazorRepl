@@ -34,7 +34,7 @@
         public string SessionId { get; set; }
 
         [CascadingParameter]
-        private PageNotifications PageNotificationsComponent { get; set; }
+        private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
         private IDictionary<string, string> ScriptUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
 
@@ -80,14 +80,14 @@
 
             if (!Uri.TryCreate(this.StaticAssetUrl, UriKind.Absolute, out var uri))
             {
-                this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Invalid static file URL.");
+                this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Invalid static file URL.");
                 return;
             }
 
             var fileExtension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
-                this.PageNotificationsComponent.AddNotification(
+                this.GetPageNotificationsComponent().AddNotification(
                     NotificationType.Error,
                     $"Static assets with extension '{fileExtension}' are not supported. Supported extensions: {string.Join(", ", SupportedStaticAssetFileExtensions)}");
 
@@ -98,7 +98,7 @@
             {
                 if (this.Scripts.Contains(uri.AbsoluteUri))
                 {
-                    this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
+                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
@@ -109,7 +109,7 @@
             {
                 if (this.Styles.Contains(uri.AbsoluteUri))
                 {
-                    this.PageNotificationsComponent.AddNotification(NotificationType.Error, "Static asset already added.");
+                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 

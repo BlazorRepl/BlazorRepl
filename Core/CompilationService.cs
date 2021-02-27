@@ -19,6 +19,9 @@
     using Microsoft.CodeAnalysis.Razor;
     using Microsoft.JSInterop;
 
+    /// <remarks>
+    /// Must be registered in DI container as transient because of the base compilation and the method for adding assembly references to it
+    /// </remarks>
     public class CompilationService
     {
         public const string DefaultRootNamespace = "BlazorRepl.UserComponents";
@@ -97,13 +100,25 @@
         private static readonly CSharpParseOptions CSharpParseOptions = new(LanguageVersion.Preview);
         private static readonly RazorProjectFileSystem RazorProjectFileSystem = new VirtualRazorProjectFileSystem();
 
-        // Creating the initial compilation + reading references is on the order of 250ms without caching
-        // so making sure it doesn't happen for each run.
-        private static CSharpCompilation baseCompilation;
+        private readonly HttpClient httpClient;
 
-        public static async Task InitAsync(HttpClient httpClient)
+        // Creating the initial compilation + reading references is taking a lot of time without caching
+        // so making sure it doesn't happen for each run.
+        private CSharpCompilation baseCompilation;
+
+        public CompilationService(HttpClient httpClient)
         {
-            var basicReferenceAssemblyRoots = new[]
+            this.httpClient = httpClient;
+        }
+
+        public async Task InitializeAsync()
+        {
+            if (this.baseCompilation != null)
+            {
+                return;
+            }
+
+            var referenceAssemblyRoots = new[]
             {
                 typeof(Console).Assembly, // System.Console
                 typeof(Uri).Assembly, // System.Private.Uri
@@ -117,27 +132,27 @@
                 typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 
-            var assemblyNames = basicReferenceAssemblyRoots
+            var assemblyNames = referenceAssemblyRoots
                 .SelectMany(assembly => assembly.GetReferencedAssemblies().Concat(new[] { assembly.GetName() }))
                 .Select(x => x.Name)
                 .Distinct()
                 .ToList();
 
-            var assemblyStreams = await GetStreamFromHttpAsync(httpClient, assemblyNames);
+            var assemblyStreams = await GetStreamFromHttpAsync(this.httpClient, assemblyNames);
 
             var allReferenceAssemblies = assemblyStreams.ToDictionary(a => a.Key, a => MetadataReference.CreateFromStream(a.Value));
 
-            var basicReferenceAssemblies = allReferenceAssemblies
-                .Where(a => basicReferenceAssemblyRoots
+            var referenceAssemblies = allReferenceAssemblies
+                .Where(a => referenceAssemblyRoots
                     .Select(x => x.GetName().Name)
-                    .Union(basicReferenceAssemblyRoots.SelectMany(y => y.GetReferencedAssemblies().Select(z => z.Name)))
+                    .Union(referenceAssemblyRoots.SelectMany(y => y.GetReferencedAssemblies().Select(z => z.Name)))
                     .Any(n => n == a.Key))
                 .Select(a => a.Value)
                 .ToList();
 
-            baseCompilation = CSharpCompilation.Create(
+            this.baseCompilation = CSharpCompilation.Create(
                 "BlazorRepl.UserComponents",
-                references: basicReferenceAssemblies,
+                references: referenceAssemblies,
                 options: new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
                     optimizationLevel: OptimizationLevel.Release,
@@ -150,7 +165,6 @@
                     }));
         }
 
-        // TODO: think about removal of packages
         public void AddAssemblyReferences(IEnumerable<byte[]> dllsBytes)
         {
             if (dllsBytes == null)
@@ -158,9 +172,11 @@
                 throw new ArgumentNullException(nameof(dllsBytes));
             }
 
+            this.ThrowIfNotInitialized();
+
             var references = dllsBytes.Select(x => MetadataReference.CreateFromImage(x, MetadataReferenceProperties.Assembly));
 
-            baseCompilation = baseCompilation.AddReferences(references);
+            this.baseCompilation = this.baseCompilation.AddReferences(references);
         }
 
         public async Task<CompileToAssemblyResult> CompileToAssemblyAsync(
@@ -172,9 +188,11 @@
                 throw new ArgumentNullException(nameof(codeFiles));
             }
 
+            this.ThrowIfNotInitialized();
+
             var cSharpResults = await this.CompileToCSharpAsync(codeFiles, updateStatusFunc);
 
-            var result = CompileToAssembly(cSharpResults);
+            var result = this.CompileToAssembly(cSharpResults);
 
             return result;
         }
@@ -196,44 +214,6 @@
                 }));
 
             return streams;
-        }
-
-        private static CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
-        {
-            if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
-            {
-                return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
-            }
-
-            var syntaxTrees = new SyntaxTree[cSharpResults.Count];
-            for (var i = 0; i < cSharpResults.Count; i++)
-            {
-                var cSharpResult = cSharpResults[i];
-                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResult.Code, CSharpParseOptions, cSharpResult.FilePath);
-            }
-
-            var finalCompilation = baseCompilation.AddSyntaxTrees(syntaxTrees);
-
-            var compilationDiagnostics = finalCompilation.GetDiagnostics().Where(d => d.Severity > DiagnosticSeverity.Info);
-
-            var result = new CompileToAssemblyResult
-            {
-                Compilation = finalCompilation,
-                Diagnostics = compilationDiagnostics
-                    .Select(CompilationDiagnostic.FromCSharpDiagnostic)
-                    .Concat(cSharpResults.SelectMany(r => r.Diagnostics))
-                    .ToList(),
-            };
-
-            if (result.Diagnostics.All(x => x.Severity != DiagnosticSeverity.Error))
-            {
-                using var peStream = new MemoryStream();
-                finalCompilation.Emit(peStream);
-
-                result.AssemblyBytes = peStream.ToArray();
-            }
-
-            return result;
         }
 
         private static RazorProjectItem CreateRazorProjectItem(string fileName, string fileContent)
@@ -270,6 +250,44 @@
                 b.Features.Add(new CompilationTagHelperFeature());
                 b.Features.Add(new DefaultMetadataReferenceFeature { References = references });
             });
+
+        private CompileToAssemblyResult CompileToAssembly(IReadOnlyList<CompileToCSharpResult> cSharpResults)
+        {
+            if (cSharpResults.Any(r => r.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error)))
+            {
+                return new CompileToAssemblyResult { Diagnostics = cSharpResults.SelectMany(r => r.Diagnostics).ToList() };
+            }
+
+            var syntaxTrees = new SyntaxTree[cSharpResults.Count];
+            for (var i = 0; i < cSharpResults.Count; i++)
+            {
+                var cSharpResult = cSharpResults[i];
+                syntaxTrees[i] = CSharpSyntaxTree.ParseText(cSharpResult.Code, CSharpParseOptions, cSharpResult.FilePath);
+            }
+
+            var finalCompilation = this.baseCompilation.AddSyntaxTrees(syntaxTrees);
+
+            var compilationDiagnostics = finalCompilation.GetDiagnostics().Where(d => d.Severity > DiagnosticSeverity.Info);
+
+            var result = new CompileToAssemblyResult
+            {
+                Compilation = finalCompilation,
+                Diagnostics = compilationDiagnostics
+                    .Select(CompilationDiagnostic.FromCSharpDiagnostic)
+                    .Concat(cSharpResults.SelectMany(r => r.Diagnostics))
+                    .ToList(),
+            };
+
+            if (result.Diagnostics.All(x => x.Severity != DiagnosticSeverity.Error))
+            {
+                using var peStream = new MemoryStream();
+                finalCompilation.Emit(peStream);
+
+                result.AssemblyBytes = peStream.ToArray();
+            }
+
+            return result;
+        }
 
         private async Task<IReadOnlyList<CompileToCSharpResult>> CompileToCSharpAsync(
             ICollection<CodeFile> codeFiles,
@@ -314,7 +332,7 @@
             }
 
             // Result of doing 'temp' compilation
-            var tempAssembly = CompileToAssembly(declarations);
+            var tempAssembly = this.CompileToAssembly(declarations);
             if (tempAssembly.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
                 return new[] { new CompileToCSharpResult { Diagnostics = tempAssembly.Diagnostics } };
@@ -323,7 +341,7 @@
             await (updateStatusFunc?.Invoke("Compiling Assembly") ?? Task.CompletedTask);
 
             // Add the 'temp' compilation as a metadata reference
-            var references = new List<MetadataReference>(baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
+            var references = new List<MetadataReference>(this.baseCompilation.References) { tempAssembly.Compilation.ToMetadataReference() };
             projectEngine = CreateRazorProjectEngine(references);
 
             var results = new CompileToCSharpResult[declarations.Length];
@@ -352,6 +370,15 @@
             }
 
             return results;
+        }
+
+        private void ThrowIfNotInitialized()
+        {
+            if (this.baseCompilation == null)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(CompilationService)} is not initialized. Please call {nameof(this.InitializeAsync)} to initialize it.");
+            }
         }
     }
 }
