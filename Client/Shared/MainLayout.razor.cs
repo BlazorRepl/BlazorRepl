@@ -13,9 +13,9 @@
 
         protected override void OnInitialized()
         {
-            base.OnInitialized();
-
             this.GetPageNotificationsComponent = () => this.PageNotificationsComponent;
+
+            base.OnInitialized();
         }
     }
 }
