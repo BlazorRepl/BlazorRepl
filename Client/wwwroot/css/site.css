@@ -660,6 +660,10 @@ app {
     width: 400px;
 }
 
+.page-notification {
+    word-break: break-word;
+}
+
 /* Tabs Manager */
 .tabs-wrapper .nav-tabs {
     width: 90%;
