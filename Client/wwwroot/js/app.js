@@ -97,6 +97,8 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
                     monaco.editor.setModelLanguage(_editor.getModel(), language);
                     _currentLanguage = language;
                 }
+
+                _editor.setScrollPosition({ scrollTop: 0 });
             } else {
                 _overrideValue = value;
                 _currentLanguage = language || _currentLanguage;
