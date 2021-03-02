@@ -403,9 +403,9 @@ app {
     width: 82%;
 }
 
-/* Editor */
-.overflowingContentWidgets {
-    display: none;
+/* Code Editor */
+#user-code-editor-container {
+    overflow: hidden;
 }
 
 #user-code-editor {

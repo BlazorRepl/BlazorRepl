@@ -149,7 +149,7 @@ window.App.Repl = window.App.Repl || (function () {
                 height -= document.getElementsByClassName('tabs-wrapper')[0].offsetHeight;
             }
 
-            const heightString = `${height - 2}px`;
+            const heightString = `${height - 1}px`;
             element.style.height = heightString;
 
             return oldHeight !== heightString;
