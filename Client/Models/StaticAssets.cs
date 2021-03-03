@@ -4,8 +4,8 @@
 
     public class StaticAssets
     {
-        public ISet<string> Scripts { get; set; } = new HashSet<string>();
+        public IDictionary<string, bool> Scripts { get; set; } = new Dictionary<string, bool>();
 
-        public ISet<string> Styles { get; set; } = new HashSet<string>();
+        public IDictionary<string, bool> Styles { get; set; } = new Dictionary<string, bool>();
     }
 }

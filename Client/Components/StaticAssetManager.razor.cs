@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using Microsoft.AspNetCore.Components;
@@ -22,10 +23,10 @@
         public bool Visible { get; set; }
 
         [Parameter]
-        public ISet<string> Scripts { get; set; } = new HashSet<string>();
+        public IDictionary<string, bool> Scripts { get; set; } = new Dictionary<string, bool>();
 
         [Parameter]
-        public ISet<string> Styles { get; set; } = new HashSet<string>();
+        public IDictionary<string, bool> Styles { get; set; } = new Dictionary<string, bool>();
 
         [Parameter]
         public EventCallback OnStaticAssetsUpdated { get; set; }
@@ -51,18 +52,56 @@
             var updateStaticAssets = false;
             if (this.Scripts != null && this.Scripts.Any())
             {
-                this.ScriptUrlToFileNameMappings = this.Scripts.ToDictionary(a => a, Path.GetFileName);
+                this.ScriptUrlToFileNameMappings = this.Scripts.ToDictionary(a => a.Key, a => Path.GetFileName(a.Key));
                 updateStaticAssets = true;
             }
 
             if (this.Styles != null && this.Styles.Any())
             {
-                this.StyleUrlToFileNameMappings = this.Styles.ToDictionary(a => a, Path.GetFileName);
+                this.StyleUrlToFileNameMappings = this.Styles.ToDictionary(a => a.Key, a => Path.GetFileName(a.Key));
                 updateStaticAssets = true;
             }
 
             if (updateStaticAssets)
             {
+                await this.JsRuntime.InvokeVoidAsync(
+                    "App.CodeExecution.updateStaticAssets",
+                    this.SessionId,
+                    this.Scripts,
+                    this.Styles);
+            }
+        }
+
+        private async Task ToggleStyle(string url, bool enable)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return;
+            }
+
+            if (this.Styles.ContainsKey(url))
+            {
+                this.Styles[url] = enable;
+
+                await this.JsRuntime.InvokeVoidAsync(
+                    "App.CodeExecution.updateStaticAssets",
+                    this.SessionId,
+                    this.Scripts,
+                    this.Styles);
+            }
+        }
+
+        private async Task ToggleScript(string url, bool enable)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return;
+            }
+
+            if (this.Scripts.ContainsKey(url))
+            {
+                this.Scripts[url] = enable;
+
                 await this.JsRuntime.InvokeVoidAsync(
                     "App.CodeExecution.updateStaticAssets",
                     this.SessionId,
@@ -96,24 +135,24 @@
 
             if (fileExtension == JsFileExtension)
             {
-                if (this.Scripts.Contains(uri.AbsoluteUri))
+                if (this.Scripts.ContainsKey(uri.AbsoluteUri))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Scripts.Add(uri.AbsoluteUri);
+                this.Scripts.Add(uri.AbsoluteUri, true);
                 this.ScriptUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
             }
             else
             {
-                if (this.Styles.Contains(uri.AbsoluteUri))
+                if (this.Styles.ContainsKey(uri.AbsoluteUri))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Styles.Add(uri.AbsoluteUri);
+                this.Styles.Add(uri.AbsoluteUri, true);
                 this.StyleUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
             }
 

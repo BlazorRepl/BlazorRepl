@@ -461,9 +461,25 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
                     const fileContent = new TextDecoder().decode(fileBytes);
                     const staticAssets = fileContent && JSON.parse(fileContent) || {};
 
+                    var scriptKeys = staticAssets.scripts && Object.keys(staticAssets.scripts);
+                    scriptKeys && scriptKeys.length && scriptKeys.forEach(key => {
+                        if (!staticAssets.scripts[key]) {
+                            delete staticAssets.scripts[key];
+                        }
+                    });
+                    const scriptUrls = Object.keys(staticAssets.scripts || {});
+
+                    var styleKeys = staticAssets.styles && Object.keys(staticAssets.styles);
+                    styleKeys && styleKeys.length && styleKeys.forEach(key => {
+                        if (!staticAssets.styles[key]) {
+                            delete staticAssets.styles[key];
+                        }
+                    });
+                    const styleUrls = Object.keys(staticAssets.styles || {});
+
                     // Place static assets as first
-                    (staticAssets.scripts || []).reverse().forEach(s => scripts.unshift(s));
-                    (staticAssets.styles || []).reverse().forEach(s => styles.unshift(s));
+                    (scriptUrls || []).reverse().forEach(s => scripts.unshift(s));
+                    (styleUrls || []).reverse().forEach(s => styles.unshift(s));
                 } else {
                     // Use js_typed_array_to_array instead of jsArrayToDotNetArray so we get a byte[] instead of object[] in .NET code.
                     dlls.push(BINDING.js_typed_array_to_array(fileBytes));
@@ -498,7 +514,7 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
             const cacheName = CACHE_NAME_PREFIX + sessionId;
             const cache = await caches.open(cacheName);
 
-            if ((scripts && scripts.length) || (styles && styles.length)) {
+            if ((scripts && Object.keys(scripts).length) || (styles && Object.keys(styles).length)) {
                 const fileBytes = new TextEncoder().encode(JSON.stringify({ scripts: scripts, styles: styles }));
 
                 await putInCacheStorage(cache, STATIC_ASSETS_FILE_NAME, fileBytes, 'application/json');

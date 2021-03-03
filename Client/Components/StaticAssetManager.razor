@@ -9,8 +9,19 @@
             Scripts:
             @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
             {
+                var enabled = Scripts[url];
+                var id = Guid.NewGuid().ToString();
                 <div class="static-asset-container">
                     <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <div class="custom-control custom-switch">
+                        <input @onchange="@(eventArgs => ToggleScript(url, (bool)eventArgs.Value))" 
+                               type="checkbox" 
+                               class="custom-control-input" 
+                               title="Toggle the asset" 
+                               checked="@enabled"
+                               id="@id">
+                        <label class="custom-control-label" for="@id"></label>
+                    </div>
                 </div>
             }
         </div>
@@ -22,8 +33,19 @@
             Styles:
             @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
             {
+                var enabled = Styles[url];
+                var id = Guid.NewGuid().ToString();
                 <div class="static-asset-container">
                     <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <div class="custom-control custom-switch">
+                        <input @onchange="@(eventArgs => ToggleStyle(url, (bool)eventArgs.Value))"
+                               type="checkbox" 
+                               class="custom-control-input" 
+                               title="Toggle the asset"  
+                               checked="@enabled"
+                               id="@id">
+                        <label class="custom-control-label" for="@id"></label>
+                    </div>
                 </div>
             }
         </div>

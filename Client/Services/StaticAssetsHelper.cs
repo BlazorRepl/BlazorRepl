@@ -1,7 +1,7 @@
 ﻿namespace BlazorRepl.Client.Services
 {
     using System;
-    using System.Linq;
+    using System.Collections.Generic;
     using BlazorRepl.Client.Models;
 
     public static class StaticAssetsHelper
@@ -13,19 +13,25 @@
                 return null;
             }
 
-            foreach (var url in staticAssets.Scripts ?? Enumerable.Empty<string>())
+            if (staticAssets.Scripts != null)
             {
-                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                foreach (var script in staticAssets.Scripts ?? new Dictionary<string, bool>())
                 {
-                    return $"Invalid JS file URL: {url}";
+                    if (!Uri.TryCreate(script.Key, UriKind.Absolute, out _))
+                    {
+                        return $"Invalid JS file URL: {script.Key}";
+                    }
                 }
             }
 
-            foreach (var url in staticAssets.Styles ?? Enumerable.Empty<string>())
+            if (staticAssets.Styles != null)
             {
-                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                foreach (var style in staticAssets.Styles)
                 {
-                    return $"Invalid CSS file URL: {url}";
+                    if (!Uri.TryCreate(style.Key, UriKind.Absolute, out _))
+                    {
+                        return $"Invalid CSS file URL: {style.Key}";
+                    }
                 }
             }
 
