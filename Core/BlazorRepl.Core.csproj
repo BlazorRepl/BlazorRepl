@@ -7,6 +7,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="5.0.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.9.54">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="NuGet.DependencyResolver.Core" Version="5.8.1" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />

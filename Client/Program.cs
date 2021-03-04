@@ -65,7 +65,7 @@ namespace BlazorRepl.Client
                 // We shouldn't throw during app start so just give the user the info that an exception has been thrown,
                 // update the user components DLL to make sure the app will run on reload and continue the app execution
                 var actualException = ex is TargetInvocationException tie ? tie.InnerException : ex;
-                Console.Error.WriteLine($"Error on app startup: {actualException}");
+                await Console.Error.WriteLineAsync($"Error on app startup: {actualException}");
 
                 jsRuntime.InvokeUnmarshalled<string, object>(
                     "App.CodeExecution.updateUserComponentsDll",
