@@ -297,13 +297,26 @@ app {
         width: 283px;
     }
 
-.package-container,
-.static-asset-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: 2px;
-}
+    .static-assets-manager .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #4aca85;
+        background-color: #4aca85;
+    }
+
+    .static-assets-manager .custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
+        border-color: rgba(74, 202, 133, .5);
+    }
+
+    .static-assets-manager .custom-control-input:focus ~ .custom-control-label::before {
+        box-shadow: 0 0 0 0.2rem rgba(74, 202, 133, .25);
+    }
+
+    .package-container,
+    .static-asset-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 2px;
+    }
 
     .package-container .package-title {
         overflow: hidden;
