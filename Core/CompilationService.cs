@@ -17,7 +17,6 @@
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Razor;
-    using Microsoft.JSInterop;
 
     /// <remarks>
     /// Must be registered in DI container as transient because of the base compilation and the method for adding assembly references to it
@@ -120,15 +119,14 @@
 
             var referenceAssemblyRoots = new[]
             {
-                typeof(Console).Assembly, // System.Console
-                typeof(Uri).Assembly, // System.Private.Uri
                 typeof(AssemblyTargetedPatchBandAttribute).Assembly, // System.Private.CoreLib
-                typeof(NavLink).Assembly, // Microsoft.AspNetCore.Components.Web
+                typeof(Uri).Assembly, // System.Private.Uri
+                typeof(Console).Assembly, // System.Console
                 typeof(IQueryable).Assembly, // System.Linq.Expressions
-                typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(HttpClient).Assembly, // System.Net.Http
-                typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
+                typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                typeof(NavLink).Assembly, // Microsoft.AspNetCore.Components.Web
                 typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 
