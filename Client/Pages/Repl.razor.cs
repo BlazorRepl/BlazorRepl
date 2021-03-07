@@ -186,22 +186,29 @@
             }
 
             CompileToAssemblyResult compilationResult = null;
-            CodeFile mainComponent = null;
-            string originalMainComponentContent = null;
             try
             {
                 this.UpdateActiveCodeFileContent();
 
-                // Add the necessary main component code prefix and store the original content so we can revert right after compilation.
-                if (this.CodeFiles.TryGetValue(CoreConstants.MainComponentFilePath, out mainComponent))
+                this.CodeFiles.TryGetValue(CoreConstants.MainComponentFilePath, out var mainComponent);
+                if (mainComponent == null)
                 {
-                    originalMainComponentContent = mainComponent.Content;
-                    mainComponent.Content = MainComponentCodePrefix + originalMainComponentContent;
+                    this.GetPageNotificationsComponent().AddNotification(
+                        NotificationType.Error,
+                        content: "Invalid set of code files for compilation. Please reload the app.");
+
+                    return;
                 }
 
-                compilationResult = await this.CompilationService.CompileToAssemblyAsync(
-                    this.CodeFiles.Values,
-                    this.UpdateLoaderTextAsync);
+                var codeFiles = new List<CodeFile>(this.CodeFiles.Count)
+                {
+                    // Add the necessary code prefix to main component
+                    new() { Path = mainComponent.Path, Content = MainComponentCodePrefix + mainComponent.Content },
+                };
+
+                codeFiles.AddRange(this.CodeFiles.Values.Where(f => f.Path != CoreConstants.MainComponentFilePath));
+
+                compilationResult = await this.CompilationService.CompileToAssemblyAsync(codeFiles, this.UpdateLoaderTextAsync);
 
                 this.Diagnostics = compilationResult.Diagnostics.OrderByDescending(x => x.Severity).ThenBy(x => x.Code).ToList();
                 this.AreDiagnosticsShown = true;
@@ -212,11 +219,6 @@
             }
             finally
             {
-                if (mainComponent != null)
-                {
-                    mainComponent.Content = originalMainComponentContent;
-                }
-
                 this.ShowLoader = false;
             }
 
