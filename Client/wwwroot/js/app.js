@@ -92,13 +92,19 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
         },
         setValue: function (value, language) {
             if (_editor) {
-                _editor.setValue(value || '');
+                const isValueChanging = _editor.getValue() !== value;
+                if (isValueChanging) {
+                    _editor.setValue(value || '');
+                }
+
                 if (language && language !== _currentLanguage) {
                     monaco.editor.setModelLanguage(_editor.getModel(), language);
                     _currentLanguage = language;
                 }
 
-                _editor.setScrollPosition({ scrollTop: 0 });
+                if (isValueChanging) {
+                    _editor.setScrollPosition({ scrollTop: 0 });
+                }
             } else {
                 _overrideValue = value;
                 _currentLanguage = language || _currentLanguage;
