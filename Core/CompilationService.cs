@@ -10,6 +10,7 @@
     using System.Net.Http.Json;
     using System.Runtime;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -82,6 +83,7 @@
             ["System.Text.Encoding.Extensions"] = "5.0.0.0",
             ["System.Text.Encodings.Web"] = "5.0.0.0",
             ["System.Text.Json"] = "5.0.1.0",
+            ["System.Text.RegularExpressions"] = "5.0.0.0",
             ["System.Threading"] = "5.0.0.0",
             ["System.Threading.Channels"] = "5.0.0.0",
         };
@@ -126,6 +128,7 @@
                 typeof(HttpClient).Assembly, // System.Net.Http
                 typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                typeof(Regex).Assembly, // System.Text.RegularExpressions
                 typeof(NavLink).Assembly, // Microsoft.AspNetCore.Components.Web
                 typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
