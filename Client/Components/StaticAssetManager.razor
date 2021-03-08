@@ -1,24 +1,27 @@
-﻿<div class="static-assets-manager" style="@DisplayStyle">
+﻿@using System.IO
+
+<div class="static-assets-manager" style="@DisplayStyle">
     <div class="toast-header static-assets-manager-header">
         <h4 class="m-auto">Static Asset Manager</h4>
     </div>
 
-    @if (ScriptUrlToFileNameMappings.Any())
+    @if (Styles?.Any() ?? false)
     {
         <div>
-            Scripts:
-            @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
+            Styles:
+            @for (int i = 0; i < Styles.Count; i++)
             {
-                var enabled = Scripts[url];
-                var id = Guid.NewGuid().ToString();
+                var style = Styles[i];
+                var fileName = Path.GetFileName(style.Url);
+                var id = $"style-{i}";
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <span class="font-weight-bold static-asset" title="@style.Url">@fileName</span>
                     <div class="custom-control custom-switch">
-                        <input @onchange="@(eventArgs => ToggleScript(url, (bool)eventArgs.Value))" 
-                               type="checkbox" 
-                               class="custom-control-input" 
-                               title="Toggle the asset" 
-                               checked="@enabled"
+                        <input @onchange="@(eventArgs => ToggleAsync(style, (bool)eventArgs.Value))"
+                               type="checkbox"
+                               class="custom-control-input"
+                               title="Toggle the asset"
+                               checked="@style.Enabled"
                                id="@id">
                         <label class="custom-control-label" for="@id"></label>
                     </div>
@@ -27,22 +30,23 @@
         </div>
     }
 
-    @if (StyleUrlToFileNameMappings.Any())
+    @if (Scripts?.Any() ?? false)
     {
         <div>
-            Styles:
-            @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
+            Scripts:
+            @for (int i = 0; i < Scripts.Count; i++)
             {
-                var enabled = Styles[url];
-                var id = Guid.NewGuid().ToString();
+                var script = Scripts[i];
+                var fileName = Path.GetFileName(script.Url);
+                var id = $"script-{i}";
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <span class="font-weight-bold static-asset" title="@script.Url">@fileName</span>
                     <div class="custom-control custom-switch">
-                        <input @onchange="@(eventArgs => ToggleStyle(url, (bool)eventArgs.Value))"
-                               type="checkbox" 
-                               class="custom-control-input" 
-                               title="Toggle the asset"  
-                               checked="@enabled"
+                        <input @onchange="@(eventArgs => ToggleAsync(script, (bool)eventArgs.Value))"
+                               type="checkbox"
+                               class="custom-control-input"
+                               title="Toggle the asset"
+                               checked="@script.Enabled"
                                id="@id">
                         <label class="custom-control-label" for="@id"></label>
                     </div>

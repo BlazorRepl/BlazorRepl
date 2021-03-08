@@ -139,8 +139,8 @@
 
                         this.PackagesToRestore = snippetResponse.InstalledPackages?.ToList() ?? new List<Package>();
 
-                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts ?? new Dictionary<string, bool>();
-                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles ?? new Dictionary<string, bool>();
+                        this.StaticAssets.Scripts = snippetResponse.StaticAssets?.Scripts ?? new List<StaticAsset>();
+                        this.StaticAssets.Styles = snippetResponse.StaticAssets?.Styles ?? new List<StaticAsset>();
                         this.HandleStaticAssetsUpdated();
 
                         this.StateHasChanged();

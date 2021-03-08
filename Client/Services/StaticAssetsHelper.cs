@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using BlazorRepl.Client.Models;
 
     public static class StaticAssetsHelper
@@ -15,22 +16,24 @@
 
             if (staticAssets.Scripts != null)
             {
-                foreach (var script in staticAssets.Scripts ?? new Dictionary<string, bool>())
+                // TODO: Handle duplicates
+                foreach (var script in staticAssets.Scripts ?? Enumerable.Empty<StaticAsset>())
                 {
-                    if (!Uri.TryCreate(script.Key, UriKind.Absolute, out _))
+                    if (!Uri.TryCreate(script.Url, UriKind.Absolute, out _))
                     {
-                        return $"Invalid JS file URL: {script.Key}";
+                        return $"Invalid JS file URL: {script.Url}";
                     }
                 }
             }
 
             if (staticAssets.Styles != null)
             {
-                foreach (var style in staticAssets.Styles)
+                // TODO: Handle duplicates
+                foreach (var style in staticAssets.Styles ?? Enumerable.Empty<StaticAsset>())
                 {
-                    if (!Uri.TryCreate(style.Key, UriKind.Absolute, out _))
+                    if (!Uri.TryCreate(style.Url, UriKind.Absolute, out _))
                     {
-                        return $"Invalid CSS file URL: {style.Key}";
+                        return $"Invalid CSS file URL: {style.Url}";
                     }
                 }
             }

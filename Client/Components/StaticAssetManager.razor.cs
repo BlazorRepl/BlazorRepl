@@ -23,10 +23,10 @@
         public bool Visible { get; set; }
 
         [Parameter]
-        public IDictionary<string, bool> Scripts { get; set; } = new Dictionary<string, bool>();
+        public IList<StaticAsset> Scripts { get; set; } = new List<StaticAsset>();
 
         [Parameter]
-        public IDictionary<string, bool> Styles { get; set; } = new Dictionary<string, bool>();
+        public IList<StaticAsset> Styles { get; set; } = new List<StaticAsset>();
 
         [Parameter]
         public EventCallback OnStaticAssetsUpdated { get; set; }
@@ -37,77 +37,35 @@
         [CascadingParameter]
         private Func<PageNotifications> GetPageNotificationsComponent { get; set; }
 
-        private IDictionary<string, string> ScriptUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
-
-        private IDictionary<string, string> StyleUrlToFileNameMappings { get; set; } = new Dictionary<string, string>();
-
         private string StaticAssetUrl { get; set; }
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
 
-        public override async Task SetParametersAsync(ParameterView parameters)
+        protected override async Task OnParametersSetAsync()
         {
-            await base.SetParametersAsync(parameters);
-
-            var updateStaticAssets = false;
-            if (this.Scripts != null && this.Scripts.Any())
-            {
-                this.ScriptUrlToFileNameMappings = this.Scripts.ToDictionary(a => a.Key, a => Path.GetFileName(a.Key));
-                updateStaticAssets = true;
-            }
-
-            if (this.Styles != null && this.Styles.Any())
-            {
-                this.StyleUrlToFileNameMappings = this.Styles.ToDictionary(a => a.Key, a => Path.GetFileName(a.Key));
-                updateStaticAssets = true;
-            }
-
+            var updateStaticAssets = (this.Scripts != null && this.Scripts.Any()) || (this.Styles != null && this.Styles.Any());
             if (updateStaticAssets)
             {
+                // TODO: check why this function is called multiple times on render and when toggle
                 await this.JsRuntime.InvokeVoidAsync(
                     "App.CodeExecution.updateStaticAssets",
                     this.SessionId,
                     this.Scripts,
                     this.Styles);
             }
+
+            await base.OnParametersSetAsync();
         }
 
-        private async Task ToggleStyle(string url, bool enable)
+        private async Task ToggleAsync(StaticAsset asset, bool enabled)
         {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                return;
-            }
+            asset.Enabled = enabled;
 
-            if (this.Styles.ContainsKey(url))
-            {
-                this.Styles[url] = enable;
-
-                await this.JsRuntime.InvokeVoidAsync(
-                    "App.CodeExecution.updateStaticAssets",
-                    this.SessionId,
-                    this.Scripts,
-                    this.Styles);
-            }
-        }
-
-        private async Task ToggleScript(string url, bool enable)
-        {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                return;
-            }
-
-            if (this.Scripts.ContainsKey(url))
-            {
-                this.Scripts[url] = enable;
-
-                await this.JsRuntime.InvokeVoidAsync(
-                    "App.CodeExecution.updateStaticAssets",
-                    this.SessionId,
-                    this.Scripts,
-                    this.Styles);
-            }
+            await this.JsRuntime.InvokeVoidAsync(
+                "App.CodeExecution.updateStaticAssets",
+                this.SessionId,
+                this.Scripts,
+                this.Styles);
         }
 
         private async Task AddStaticAssetAsync()
@@ -135,25 +93,33 @@
 
             if (fileExtension == JsFileExtension)
             {
-                if (this.Scripts.ContainsKey(uri.AbsoluteUri))
+                if (this.Scripts.Any(a => a.Url == uri.AbsoluteUri))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Scripts.Add(uri.AbsoluteUri, true);
-                this.ScriptUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
+                this.Scripts.Add(new StaticAsset
+                {
+                    Url = uri.AbsoluteUri,
+                    Source = StaticAssetSource.Cdn,
+                    Enabled = true,
+                });
             }
             else
             {
-                if (this.Styles.ContainsKey(uri.AbsoluteUri))
+                if (this.Styles.Any(a => a.Url == uri.AbsoluteUri))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Styles.Add(uri.AbsoluteUri, true);
-                this.StyleUrlToFileNameMappings.Add(uri.AbsoluteUri, Path.GetFileName(uri.AbsolutePath));
+                this.Styles.Add(new StaticAsset
+                {
+                    Url = uri.AbsoluteUri,
+                    Source = StaticAssetSource.Cdn,
+                    Enabled = true,
+                });
             }
 
             await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
