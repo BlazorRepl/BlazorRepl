@@ -6,14 +6,12 @@
                 return;
             }
 
-            if (!newSrc) {
-                iFrame.contentWindow.location.reload();
-            } else if (iFrame.src !== `${window.location.origin}${newSrc}`) {
-                iFrame.src = newSrc;
-            } else {
+            if (newSrc) {
                 // There needs to be some change so the iFrame is actually reloaded
                 iFrame.src = '';
                 setTimeout(() => iFrame.src = newSrc);
+            } else {
+                iFrame.contentWindow.location.reload();
             }
         },
         changeDisplayUrl: function (url) {
