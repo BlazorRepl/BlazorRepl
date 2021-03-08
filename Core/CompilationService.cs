@@ -10,6 +10,7 @@
     using System.Net.Http.Json;
     using System.Runtime;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -17,7 +18,6 @@
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Razor;
-    using Microsoft.JSInterop;
 
     /// <remarks>
     /// Must be registered in DI container as transient because of the base compilation and the method for adding assembly references to it
@@ -83,6 +83,7 @@
             ["System.Text.Encoding.Extensions"] = "5.0.0.0",
             ["System.Text.Encodings.Web"] = "5.0.0.0",
             ["System.Text.Json"] = "5.0.1.0",
+            ["System.Text.RegularExpressions"] = "5.0.0.0",
             ["System.Threading"] = "5.0.0.0",
             ["System.Threading.Channels"] = "5.0.0.0",
         };
@@ -120,15 +121,15 @@
 
             var referenceAssemblyRoots = new[]
             {
-                typeof(Console).Assembly, // System.Console
-                typeof(Uri).Assembly, // System.Private.Uri
                 typeof(AssemblyTargetedPatchBandAttribute).Assembly, // System.Private.CoreLib
-                typeof(NavLink).Assembly, // Microsoft.AspNetCore.Components.Web
+                typeof(Uri).Assembly, // System.Private.Uri
+                typeof(Console).Assembly, // System.Console
                 typeof(IQueryable).Assembly, // System.Linq.Expressions
-                typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(HttpClient).Assembly, // System.Net.Http
-                typeof(IJSRuntime).Assembly, // Microsoft.JSInterop
+                typeof(HttpClientJsonExtensions).Assembly, // System.Net.Http.Json
                 typeof(RequiredAttribute).Assembly, // System.ComponentModel.Annotations
+                typeof(Regex).Assembly, // System.Text.RegularExpressions
+                typeof(NavLink).Assembly, // Microsoft.AspNetCore.Components.Web
                 typeof(WebAssemblyHostBuilder).Assembly, // Microsoft.AspNetCore.Components.WebAssembly
             };
 

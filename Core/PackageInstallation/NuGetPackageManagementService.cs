@@ -23,9 +23,10 @@
 
         private readonly NuGetRemoteDependencyProvider remoteDependencyProvider;
         private readonly HttpClient httpClient;
+        private readonly RemoteDependencyWalker remoteDependencyWalker;
+        private readonly RemoteWalkContext remoteWalkContext;
         private readonly List<Package> installedPackages = new();
 
-        private RemoteDependencyWalker remoteDependencyWalker;
         private Package currentlyInstallingPackage;
 
         public NuGetPackageManagementService(NuGetRemoteDependencyProvider remoteDependencyProvider, HttpClient httpClient)
@@ -33,7 +34,10 @@
             this.remoteDependencyProvider = remoteDependencyProvider;
             this.httpClient = httpClient;
 
-            this.InitializeRemoteDependencyWalker();
+            this.remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
+            this.remoteWalkContext.RemoteLibraryProviders.Add(this.remoteDependencyProvider);
+
+            this.remoteDependencyWalker = new RemoteDependencyWalker(this.remoteWalkContext);
         }
 
         public IReadOnlyCollection<Package> InstalledPackages => this.installedPackages;
@@ -89,6 +93,8 @@
             this.currentlyInstallingPackage = null;
 
             this.remoteDependencyProvider.ClearPackagesToInstall(clearFromCache: true);
+
+            this.remoteWalkContext.FindLibraryEntryCache.Clear();
         }
 
         public async Task<PackagesContentsResult> DownloadPackagesContentsAsync()
@@ -242,14 +248,6 @@
             }
 
             return result;
-        }
-
-        private void InitializeRemoteDependencyWalker()
-        {
-            var remoteWalkContext = new RemoteWalkContext(NullSourceCacheContext.Instance, NullLogger.Instance);
-            remoteWalkContext.RemoteLibraryProviders.Add(this.remoteDependencyProvider);
-
-            this.remoteDependencyWalker = new RemoteDependencyWalker(remoteWalkContext);
         }
     }
 }

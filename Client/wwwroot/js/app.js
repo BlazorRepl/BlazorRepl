@@ -6,14 +6,12 @@
                 return;
             }
 
-            if (!newSrc) {
-                iFrame.contentWindow.location.reload();
-            } else if (iFrame.src !== `${window.location.origin}${newSrc}`) {
-                iFrame.src = newSrc;
-            } else {
+            if (newSrc) {
                 // There needs to be some change so the iFrame is actually reloaded
                 iFrame.src = '';
                 setTimeout(() => iFrame.src = newSrc);
+            } else {
+                iFrame.contentWindow.location.reload();
             }
         },
         changeDisplayUrl: function (url) {
@@ -92,13 +90,19 @@ window.App.CodeEditor = window.App.CodeEditor || (function () {
         },
         setValue: function (value, language) {
             if (_editor) {
-                _editor.setValue(value || '');
+                const isValueChanging = _editor.getValue() !== value;
+                if (isValueChanging) {
+                    _editor.setValue(value || '');
+                }
+
                 if (language && language !== _currentLanguage) {
                     monaco.editor.setModelLanguage(_editor.getModel(), language);
                     _currentLanguage = language;
                 }
 
-                _editor.setScrollPosition({ scrollTop: 0 });
+                if (isValueChanging) {
+                    _editor.setScrollPosition({ scrollTop: 0 });
+                }
             } else {
                 _overrideValue = value;
                 _currentLanguage = language || _currentLanguage;
@@ -135,7 +139,7 @@ window.App.Repl = window.App.Repl || (function () {
     let _resultContainerId;
     let _originalHistoryPushStateFunction;
 
-    function setElementHeight(elementId, excludeTabsHeight) {
+    function setElementHeight(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
             const oldHeight = element.style.height;
@@ -144,10 +148,6 @@ window.App.Repl = window.App.Repl || (function () {
             let height =
                 window.innerHeight -
                 document.getElementsByClassName('repl-navbar')[0].offsetHeight;
-
-            if (excludeTabsHeight) {
-                height -= document.getElementsByClassName('tabs-wrapper')[0].offsetHeight;
-            }
 
             const heightString = `${height - 1}px`;
             element.style.height = heightString;
@@ -180,7 +180,7 @@ window.App.Repl = window.App.Repl || (function () {
 
     function onWindowResize() {
         setElementHeight(_resultContainerId);
-        setElementHeight(_editorContainerId, true);
+        setElementHeight(_editorContainerId);
         window.App.CodeEditor.resize();
     }
 
@@ -237,7 +237,7 @@ window.App.Repl = window.App.Repl || (function () {
             throttleLastTimeFuncNameMappings['compile'] = new Date();
 
             setElementHeight(resultContainerId);
-            setElementHeight(editorContainerId, true);
+            setElementHeight(editorContainerId);
 
             initReplSplitter();
 
@@ -247,7 +247,7 @@ window.App.Repl = window.App.Repl || (function () {
             enableNavigateAwayConfirmation();
         },
         setCodeEditorContainerHeight: function (newLanguage) {
-            setElementHeight(_editorContainerId, true);
+            setElementHeight(_editorContainerId);
             window.App.CodeEditor.setLanguage(newLanguage);
             window.App.CodeEditor.resize();
         },
