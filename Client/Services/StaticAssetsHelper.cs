@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using BlazorRepl.Client.Models;
 
     public static class StaticAssetsHelper
@@ -16,25 +15,39 @@
 
             if (staticAssets.Scripts != null)
             {
-                // TODO: Handle duplicates
-                foreach (var script in staticAssets.Scripts ?? Enumerable.Empty<StaticAsset>())
+                var uniqueScripts = new HashSet<string>();
+                foreach (var script in staticAssets.Scripts)
                 {
                     if (!Uri.TryCreate(script.Url, UriKind.Absolute, out _))
                     {
                         return $"Invalid JS file URL: {script.Url}";
                     }
+
+                    if (uniqueScripts.Contains(script.Url))
+                    {
+                        return $"Script '{script.Url}' is duplicated.";
+                    }
+
+                    uniqueScripts.Add(script.Url);
                 }
             }
 
             if (staticAssets.Styles != null)
             {
-                // TODO: Handle duplicates
-                foreach (var style in staticAssets.Styles ?? Enumerable.Empty<StaticAsset>())
+                var uniqueStyles = new HashSet<string>();
+                foreach (var style in staticAssets.Styles)
                 {
                     if (!Uri.TryCreate(style.Url, UriKind.Absolute, out _))
                     {
                         return $"Invalid CSS file URL: {style.Url}";
                     }
+
+                    if (uniqueStyles.Contains(style.Url))
+                    {
+                        return $"Style '{style.Url}' is duplicated.";
+                    }
+
+                    uniqueStyles.Add(style.Url);
                 }
             }
 
