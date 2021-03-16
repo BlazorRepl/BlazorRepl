@@ -50,6 +50,8 @@
 
         private PackageManager PackageManagerComponent { get; set; }
 
+        private StaticAssetManager StaticAssetManagerComponent { get; set; }
+
         private IReadOnlyCollection<Package> InstalledPackages =>
             this.PackageManagerComponent?.GetInstalledPackages() ?? Array.Empty<Package>();
 
@@ -338,6 +340,14 @@
             await Task.Delay(1); // Ensure rendering has time to be called
 
             this.CodeEditorComponent.Resize();
+        }
+
+        private async Task HandlePackageStaticFilesInstalledAsync(IEnumerable<string> packageStaticFileNames)
+        {
+            foreach (var packageStaticFileName in packageStaticFileNames ?? Enumerable.Empty<string>())
+            {
+                await this.StaticAssetManagerComponent.AddPackageStaticAssetAsync(packageStaticFileName);
+            }
         }
 
         private void HandleStaticAssetsUpdated() =>

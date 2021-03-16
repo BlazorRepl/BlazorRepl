@@ -118,19 +118,19 @@
                     using var memoryStream = new MemoryStream(packageBytes);
                     using var archive = new ZipArchive(memoryStream);
 
-                    var dlls = ExtractDlls(archive.Entries, package.Framework);
+                    var dlls = ExtractDlls(archive.Entries, package.Framework, package.Library.Name);
                     foreach (var file in dlls)
                     {
                         result.DllFiles.Add(file);
                     }
 
-                    var scripts = ExtractStaticContents(archive.Entries, ".js");
+                    var scripts = ExtractStaticContents(archive.Entries, ".js", package.Library.Name);
                     foreach (var file in scripts)
                     {
                         result.JavaScriptFiles.Add(file);
                     }
 
-                    var styles = ExtractStaticContents(archive.Entries, ".css");
+                    var styles = ExtractStaticContents(archive.Entries, ".css", package.Library.Name);
                     foreach (var file in styles)
                     {
                         result.CssFiles.Add(file);
@@ -179,7 +179,10 @@
         }
 
         // TODO: Abstract .NET 5.0 hard-coded stuff everywhere
-        private static IDictionary<string, byte[]> ExtractDlls(IEnumerable<ZipArchiveEntry> entries, NuGetFramework framework)
+        private static IDictionary<string, byte[]> ExtractDlls(
+            IEnumerable<ZipArchiveEntry> entries,
+            NuGetFramework framework,
+            string packageName)
         {
             var allDllEntries = entries.Where(e =>
                 Path.GetExtension(e.FullName) == ".dll" &&
@@ -221,19 +224,22 @@
                 return parsedFramework == wantedFramework;
             });
 
-            return GetEntriesContent(dllEntries);
+            return GetEntriesContent(dllEntries, packageName);
         }
 
-        private static IDictionary<string, byte[]> ExtractStaticContents(IEnumerable<ZipArchiveEntry> entries, string extension)
+        private static IDictionary<string, byte[]> ExtractStaticContents(
+            IEnumerable<ZipArchiveEntry> entries,
+            string extension,
+            string packageName)
         {
             var staticContentEntries = entries.Where(e =>
                 Path.GetExtension(e.Name) == extension &&
                 e.FullName.StartsWith(StaticWebAssetsFolderPrefix, StringComparison.OrdinalIgnoreCase));
 
-            return GetEntriesContent(staticContentEntries);
+            return GetEntriesContent(staticContentEntries, packageName);
         }
 
-        private static IDictionary<string, byte[]> GetEntriesContent(IEnumerable<ZipArchiveEntry> entries)
+        private static IDictionary<string, byte[]> GetEntriesContent(IEnumerable<ZipArchiveEntry> entries, string packageName)
         {
             var result = new Dictionary<string, byte[]>();
             foreach (var entry in entries)
@@ -244,7 +250,7 @@
                 entryStream.CopyTo(memoryStream);
                 var entryBytes = memoryStream.ToArray();
 
-                result.Add(entry.Name, entryBytes);
+                result.Add(Path.Combine(packageName, entry.Name), entryBytes);
             }
 
             return result;

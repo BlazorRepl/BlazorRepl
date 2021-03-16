@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using BlazorRepl.Client.Models;
     using Microsoft.AspNetCore.Components;
@@ -41,6 +40,16 @@
 
         private string DisplayStyle => this.Visible ? string.Empty : "display:none;";
 
+        public Task AddPackageStaticAssetAsync(string packageFileName)
+        {
+            if (string.IsNullOrWhiteSpace(packageFileName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageFileName));
+            }
+
+            return this.AddStaticAssetInternalAsync(packageFileName, StaticAssetSource.Package);
+        }
+
         protected override async Task OnParametersSetAsync()
         {
             var updateStaticAssets = (this.Scripts != null && this.Scripts.Any()) || (this.Styles != null && this.Styles.Any());
@@ -68,43 +77,29 @@
                 this.Styles);
         }
 
-        public Task AddPackageStaticAssetAsync(string packageName, string fileName)
-        {
-            if (string.IsNullOrWhiteSpace(packageName))
-            {
-                throw new ArgumentOutOfRangeException(nameof(packageName));
-            }
-
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                throw new ArgumentOutOfRangeException(nameof(fileName));
-            }
-
-            return AddStaticAssetAsync(StaticAssetSource.Package);
-        }
-
-        private async Task AddStaticAssetAsync(StaticAssetSource source = StaticAssetSource.Cdn)
+        private async Task AddCdnStaticAssetAsync()
         {
             if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
             {
                 return;
             }
 
-            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
-            await this.OnStaticAssetsUpdated.InvokeAsync();
+            await this.AddStaticAssetInternalAsync(this.StaticAssetUrl, StaticAssetSource.Cdn);
 
             this.StaticAssetUrl = null;
         }
 
         private async Task AddStaticAssetInternalAsync(string staticAssetUrl, StaticAssetSource source)
         {
-            if (!Uri.TryCreate(staticAssetUrl, UriKind.Absolute, out var uri))
+            var uriKind = source == StaticAssetSource.Package ? UriKind.Relative : UriKind.Absolute;
+            if (!Uri.TryCreate(staticAssetUrl, uriKind, out var uri))
             {
                 this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Invalid static file URL.");
                 return;
             }
 
-            var fileExtension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+            var actualUrl = uri.ToString();
+            var fileExtension = Path.GetExtension(actualUrl).ToLowerInvariant();
             if (!SupportedStaticAssetFileExtensions.Contains(fileExtension))
             {
                 this.GetPageNotificationsComponent().AddNotification(
@@ -116,34 +111,28 @@
 
             if (fileExtension == JsFileExtension)
             {
-                if (this.Scripts.Any(a => a.Url == uri.AbsoluteUri))
+                if (this.Scripts.Any(a => a.Url == actualUrl))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Scripts.Add(new StaticAsset
-                {
-                    Url = uri.AbsoluteUri,
-                    Source = StaticAssetSource.Cdn,
-                    Enabled = true,
-                });
+                this.Scripts.Add(new StaticAsset { Url = actualUrl, Source = source, Enabled = true });
             }
             else
             {
-                if (this.Styles.Any(a => a.Url == uri.AbsoluteUri))
+                if (this.Styles.Any(a => a.Url == actualUrl))
                 {
                     this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
                     return;
                 }
 
-                this.Styles.Add(new StaticAsset
-                {
-                    Url = uri.AbsoluteUri,
-                    Source = StaticAssetSource.Cdn,
-                    Enabled = true,
-                });
+                this.Styles.Add(new StaticAsset { Url = actualUrl, Source = source, Enabled = true });
             }
+
+            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
+
+            await this.OnStaticAssetsUpdated.InvokeAsync();
         }
     }
 }
