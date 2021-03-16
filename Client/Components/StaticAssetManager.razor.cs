@@ -68,14 +68,37 @@
                 this.Styles);
         }
 
-        private async Task AddStaticAssetAsync()
+        public Task AddPackageStaticAssetAsync(string packageName, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(packageName));
+            }
+
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(fileName));
+            }
+
+            return AddStaticAssetAsync(StaticAssetSource.Package);
+        }
+
+        private async Task AddStaticAssetAsync(StaticAssetSource source = StaticAssetSource.Cdn)
         {
             if (string.IsNullOrWhiteSpace(this.StaticAssetUrl))
             {
                 return;
             }
 
-            if (!Uri.TryCreate(this.StaticAssetUrl, UriKind.Absolute, out var uri))
+            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
+            await this.OnStaticAssetsUpdated.InvokeAsync();
+
+            this.StaticAssetUrl = null;
+        }
+
+        private async Task AddStaticAssetInternalAsync(string staticAssetUrl, StaticAssetSource source)
+        {
+            if (!Uri.TryCreate(staticAssetUrl, UriKind.Absolute, out var uri))
             {
                 this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Invalid static file URL.");
                 return;
@@ -121,12 +144,6 @@
                     Enabled = true,
                 });
             }
-
-            await this.JsRuntime.InvokeVoidAsync("App.CodeExecution.updateStaticAssets", this.SessionId, this.Scripts, this.Styles);
-
-            await this.OnStaticAssetsUpdated.InvokeAsync();
-
-            this.StaticAssetUrl = null;
         }
     }
 }
