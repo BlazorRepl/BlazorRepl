@@ -14,16 +14,21 @@
                 var style = Styles[i];
                 var fileName = Path.GetFileName(style.Url);
                 var id = $"style-{i}";
+                var source = style.Source.ToString().ToLowerInvariant();
+
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@style.Url">@fileName</span>
-                    <div class="custom-control custom-switch">
-                        <input @onchange="@(eventArgs => ToggleAsync(style, (bool)eventArgs.Value))"
-                               type="checkbox"
-                               class="custom-control-input"
-                               title="Toggle the asset"
-                               checked="@style.Enabled"
-                               id="@id">
-                        <label class="custom-control-label" for="@id"></label>
+                    <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
+                    <div class="static-asset-file-wrapper">
+                        <span class="font-weight-bold static-asset" title="@style.Url">@fileName</span>
+                        <div class="custom-control custom-switch">
+                            <input @onchange="@(eventArgs => ToggleAsync(style, (bool)eventArgs.Value))"
+                                   type="checkbox"
+                                   class="custom-control-input"
+                                   title="Toggle the asset"
+                                   checked="@style.Enabled"
+                                   id="@id">
+                            <label class="custom-control-label" for="@id"></label>
+                        </div>
                     </div>
                 </div>
             }
@@ -39,16 +44,21 @@
                 var script = Scripts[i];
                 var fileName = Path.GetFileName(script.Url);
                 var id = $"script-{i}";
+                var source = script.Source.ToString().ToLowerInvariant();
+
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@script.Url">@fileName</span>
-                    <div class="custom-control custom-switch">
-                        <input @onchange="@(eventArgs => ToggleAsync(script, (bool)eventArgs.Value))"
-                               type="checkbox"
-                               class="custom-control-input"
-                               title="Toggle the asset"
-                               checked="@script.Enabled"
-                               id="@id">
-                        <label class="custom-control-label" for="@id"></label>
+                    <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
+                    <div class="static-asset-file-wrapper">
+                        <span class="font-weight-bold static-asset" title="@script.Url">@fileName</span>
+                        <div class="custom-control custom-switch">
+                            <input @onchange="@(eventArgs => ToggleAsync(script, (bool)eventArgs.Value))"
+                                   type="checkbox"
+                                   class="custom-control-input"
+                                   title="Toggle the asset"
+                                   checked="@script.Enabled"
+                                   id="@id">
+                            <label class="custom-control-label" for="@id"></label>
+                        </div>
                     </div>
                 </div>
             }
