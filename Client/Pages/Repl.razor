@@ -41,7 +41,7 @@
                         Visible="@PackageManagerVisible"
                         PackagesToRestore="PackagesToRestore"
                         CompilationService="CompilationService"
-                        StaticAssetsInstalled="HandlePackageStaticFilesInstalledAsync"
+                        OnStaticAssetsInstalled="HandlePackageStaticAssetsInstalledAsync"
                         SessionId="@SessionId"></PackageManager>
 
         <StaticAssetManager @ref="StaticAssetManagerComponent"

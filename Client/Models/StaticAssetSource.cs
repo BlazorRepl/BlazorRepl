@@ -2,8 +2,8 @@
 {
     public enum StaticAssetSource
     {
-        Package = 1,
+        Cdn = 1,
 
-        Cdn = 2,
+        Package = 2,
     }
 }

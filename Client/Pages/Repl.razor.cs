@@ -342,9 +342,9 @@
             this.CodeEditorComponent.Resize();
         }
 
-        private async Task HandlePackageStaticFilesInstalledAsync(IEnumerable<string> packageStaticFileNames)
+        private async Task HandlePackageStaticAssetsInstalledAsync(IEnumerable<string> packageStaticAssetFileNames)
         {
-            foreach (var packageStaticFileName in packageStaticFileNames ?? Enumerable.Empty<string>())
+            foreach (var packageStaticFileName in packageStaticAssetFileNames ?? Enumerable.Empty<string>())
             {
                 await this.StaticAssetManagerComponent.AddPackageStaticAssetAsync(packageStaticFileName);
             }

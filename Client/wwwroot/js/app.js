@@ -461,18 +461,18 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
 
             const packageScriptUrls = [];
             (staticAssets.scripts || []).filter(s => s && s.enabled).forEach(script => {
-                if (script.source === 1) { // Package
+                if (script.source === 2) { // Package
                     packageScriptUrls.push(`${location.origin}/${script.url}`);
-                } else if (script.source === 2) { // CDN
+                } else if (script.source === 1) { // CDN
                     scripts.push(script.url);
                 }
             });
 
             const packageStyleUrls = [];
             (staticAssets.styles || []).filter(s => s && s.enabled).forEach(style => {
-                if (style.source === 1) { // Package
+                if (style.source === 2) { // Package
                     packageStyleUrls.push(`${location.origin}/${style.url}`);
-                } else if (style.source === 2) { // CDN
+                } else if (style.source === 1) { // CDN
                     styles.push(style.url);
                 }
             });

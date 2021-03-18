@@ -113,7 +113,11 @@
             {
                 if (this.Scripts.Any(a => a.Url == actualUrl))
                 {
-                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
+                    if (source == StaticAssetSource.Cdn)
+                    {
+                        this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
+                    }
+
                     return;
                 }
 
@@ -123,7 +127,11 @@
             {
                 if (this.Styles.Any(a => a.Url == actualUrl))
                 {
-                    this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
+                    if (source == StaticAssetSource.Cdn)
+                    {
+                        this.GetPageNotificationsComponent().AddNotification(NotificationType.Error, "Static asset already added.");
+                    }
+
                     return;
                 }
 

@@ -37,7 +37,7 @@
         public EventCallback<bool> ShowLoaderChanged { get; set; }
 
         [Parameter]
-        public EventCallback<IEnumerable<string>> StaticAssetsInstalled { get; set; }
+        public EventCallback<IEnumerable<string>> OnStaticAssetsInstalled { get; set; }
 
         [Parameter]
         public Func<string, Task> UpdateLoaderTextFunc { get; set; }
@@ -260,7 +260,7 @@
             var packageStaticAssetFileNames = packagesContents.JavaScriptFiles.Concat(packagesContents.CssFiles).Select(f => f.Key).ToList();
             if (packageStaticAssetFileNames.Any())
             {
-                await this.StaticAssetsInstalled.InvokeAsync(packageStaticAssetFileNames);
+                await this.OnStaticAssetsInstalled.InvokeAsync(packageStaticAssetFileNames);
             }
         }
 

@@ -18,7 +18,11 @@
                 var uniqueScripts = new HashSet<string>();
                 foreach (var script in staticAssets.Scripts)
                 {
-                    if (!Uri.TryCreate(script.Url, UriKind.Absolute, out _))
+                    var isValidUrl = script.Source == StaticAssetSource.Cdn
+                        ? Uri.TryCreate(script.Url, UriKind.Absolute, out _)
+                        : Uri.TryCreate(script.Url, UriKind.Relative, out _);
+
+                    if (!isValidUrl)
                     {
                         return $"Invalid JS file URL: {script.Url}";
                     }
@@ -37,7 +41,11 @@
                 var uniqueStyles = new HashSet<string>();
                 foreach (var style in staticAssets.Styles)
                 {
-                    if (!Uri.TryCreate(style.Url, UriKind.Absolute, out _))
+                    var isValidUrl = style.Source == StaticAssetSource.Cdn
+                        ? Uri.TryCreate(style.Url, UriKind.Absolute, out _)
+                        : Uri.TryCreate(style.Url, UriKind.Relative, out _);
+
+                    if (!isValidUrl)
                     {
                         return $"Invalid CSS file URL: {style.Url}";
                     }
