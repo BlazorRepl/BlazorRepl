@@ -15,6 +15,7 @@
                 var fileName = Path.GetFileName(style.Url);
                 var id = $"style-{i}";
                 var source = style.Source.ToString().ToLowerInvariant();
+                var switchLabel = style.Enabled ? "Exclude asset from result page" : "Include asset in result page";
 
                 <div class="static-asset-container">
                     <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
@@ -27,7 +28,7 @@
                                    title="Toggle the asset"
                                    checked="@style.Enabled"
                                    id="@id">
-                            <label class="custom-control-label" for="@id"></label>
+                            <label class="custom-control-label" for="@id" title="@switchLabel"></label>
                         </div>
                     </div>
                 </div>
@@ -45,6 +46,7 @@
                 var fileName = Path.GetFileName(script.Url);
                 var id = $"script-{i}";
                 var source = script.Source.ToString().ToLowerInvariant();
+                var switchLabel = script.Enabled ? "Exclude asset from result page" : "Include asset in result page";
 
                 <div class="static-asset-container">
                     <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
@@ -57,7 +59,7 @@
                                    title="Toggle the asset"
                                    checked="@script.Enabled"
                                    id="@id">
-                            <label class="custom-control-label" for="@id"></label>
+                            <label class="custom-control-label" for="@id" title="@switchLabel"></label>
                         </div>
                     </div>
                 </div>
