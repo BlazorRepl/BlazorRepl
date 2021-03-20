@@ -371,6 +371,11 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
         return bytes;
     }
 
+    async function getBytesOfFileInCache(cache, fileUrl) {
+        const response = await cache.match(fileUrl);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+
     return {
         updateUserComponentsDll: async function (fileContent) {
             if (!fileContent) {
@@ -446,27 +451,43 @@ window.App.CodeExecution = window.App.CodeExecution || (function () {
 
             const cache = await caches.open(cacheName);
             const files = await cache.keys();
+
+            let staticAssets = {};
+            const staticAssetsFile = files.find(f => f.url.endsWith(STATIC_ASSETS_FILE_NAME));
+            if (staticAssetsFile) {
+                const fileContent = new TextDecoder().decode(await getBytesOfFileInCache(cache, staticAssetsFile.url));
+                staticAssets = fileContent && JSON.parse(fileContent) || {};
+            }
+
+            const packageScriptUrls = [];
+            (staticAssets.scripts || []).filter(s => s && s.enabled).forEach(script => {
+                if (script.source === 1) { // CDN
+                    scripts.push(script.url);
+                } else if (script.source === 2) { // Package
+                    packageScriptUrls.push(`${location.origin}/${script.url}`);
+                }
+            });
+
+            const packageStyleUrls = [];
+            (staticAssets.styles || []).filter(s => s && s.enabled).forEach(style => {
+                if (style.source === 1) { // CDN
+                    styles.push(style.url);
+                } else if (style.source === 2) { // Package
+                    packageStyleUrls.push(`${location.origin}/${style.url}`);
+                }
+            });
+
             for (const file of files) {
-                const response = await cache.match(file.url);
-                const fileBytes = new Uint8Array(await response.arrayBuffer());
                 const fileUrl = file.url.toLowerCase();
-
-                if (fileUrl.endsWith('.js')) {
-                    const fileContent = convertBytesToBase64String(fileBytes);
-                    scripts.push(`data:text/javascript;base64,${fileContent}`);
-                } else if (fileUrl.endsWith('.css')) {
-                    const fileContent = convertBytesToBase64String(fileBytes);
-                    styles.push(`data:text/css;base64,${fileContent}`);
-                } else if (fileUrl.endsWith(STATIC_ASSETS_FILE_NAME)) {
-                    const fileContent = new TextDecoder().decode(fileBytes);
-                    const staticAssets = fileContent && JSON.parse(fileContent) || {};
-
-                    // Place static assets as first
-                    (staticAssets.scripts || []).reverse().forEach(s => scripts.unshift(s));
-                    (staticAssets.styles || []).reverse().forEach(s => styles.unshift(s));
-                } else {
+                if (fileUrl.endsWith('.dll')) {
                     // Use js_typed_array_to_array instead of jsArrayToDotNetArray so we get a byte[] instead of object[] in .NET code.
-                    dlls.push(BINDING.js_typed_array_to_array(fileBytes));
+                    dlls.push(BINDING.js_typed_array_to_array(await getBytesOfFileInCache(cache, file.url)));
+                } else if (fileUrl.endsWith('.js') && packageScriptUrls.includes(file.url)) {
+                    const fileContent = convertBytesToBase64String(await getBytesOfFileInCache(cache, file.url));
+                    scripts.push(`data:text/javascript;base64,${fileContent}`);
+                } else if (fileUrl.endsWith('.css') && packageStyleUrls.includes(file.url)) {
+                    const fileContent = convertBytesToBase64String(await getBytesOfFileInCache(cache, file.url));
+                    styles.push(`data:text/css;base64,${fileContent}`);
                 }
             }
 

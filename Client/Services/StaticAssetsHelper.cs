@@ -1,7 +1,7 @@
 ﻿namespace BlazorRepl.Client.Services
 {
     using System;
-    using System.Linq;
+    using System.Collections.Generic;
     using BlazorRepl.Client.Models;
 
     public static class StaticAssetsHelper
@@ -13,19 +13,49 @@
                 return null;
             }
 
-            foreach (var url in staticAssets.Scripts ?? Enumerable.Empty<string>())
+            if (staticAssets.Scripts != null)
             {
-                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                var uniqueScripts = new HashSet<string>();
+                foreach (var script in staticAssets.Scripts)
                 {
-                    return $"Invalid JS file URL: {url}";
+                    var isValidUrl = script.Source == StaticAssetSource.Cdn
+                        ? Uri.TryCreate(script.Url, UriKind.Absolute, out _)
+                        : Uri.TryCreate(script.Url, UriKind.Relative, out _);
+
+                    if (!isValidUrl)
+                    {
+                        return $"Invalid JS file URL: {script.Url}";
+                    }
+
+                    if (uniqueScripts.Contains(script.Url))
+                    {
+                        return $"Script '{script.Url}' is duplicated.";
+                    }
+
+                    uniqueScripts.Add(script.Url);
                 }
             }
 
-            foreach (var url in staticAssets.Styles ?? Enumerable.Empty<string>())
+            if (staticAssets.Styles != null)
             {
-                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                var uniqueStyles = new HashSet<string>();
+                foreach (var style in staticAssets.Styles)
                 {
-                    return $"Invalid CSS file URL: {url}";
+                    var isValidUrl = style.Source == StaticAssetSource.Cdn
+                        ? Uri.TryCreate(style.Url, UriKind.Absolute, out _)
+                        : Uri.TryCreate(style.Url, UriKind.Relative, out _);
+
+                    if (!isValidUrl)
+                    {
+                        return $"Invalid CSS file URL: {style.Url}";
+                    }
+
+                    if (uniqueStyles.Contains(style.Url))
+                    {
+                        return $"Style '{style.Url}' is duplicated.";
+                    }
+
+                    uniqueStyles.Add(style.Url);
                 }
             }
 

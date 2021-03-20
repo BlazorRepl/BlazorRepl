@@ -1,36 +1,74 @@
-﻿<div class="static-assets-manager" style="@DisplayStyle">
+﻿@using System.IO
+
+<div class="static-assets-manager" style="@DisplayStyle">
     <div class="toast-header static-assets-manager-header">
         <h4 class="m-auto">Static Asset Manager</h4>
     </div>
 
-    @if (ScriptUrlToFileNameMappings.Any())
+    @if (Styles?.Any() ?? false)
     {
         <div>
-            Scripts:
-            @foreach (var (url, fileName) in ScriptUrlToFileNameMappings)
+            Styles:
+            @for (int i = 0; i < Styles.Count; i++)
             {
+                var style = Styles[i];
+                var fileName = Path.GetFileName(style.Url);
+                var id = $"style-{i}";
+                var source = style.Source.ToString().ToLowerInvariant();
+                var switchLabel = style.Enabled ? "Exclude asset from result page" : "Include asset in result page";
+
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
+                    <div class="static-asset-file-wrapper">
+                        <span class="font-weight-bold static-asset" title="@style.Url">@fileName</span>
+                        <div class="custom-control custom-switch">
+                            <input @onchange="@(eventArgs => ToggleAsync(style, (bool)eventArgs.Value))"
+                                   type="checkbox"
+                                   class="custom-control-input"
+                                   title="Toggle the asset"
+                                   checked="@style.Enabled"
+                                   id="@id">
+                            <label class="custom-control-label" for="@id" title="@switchLabel"></label>
+                        </div>
+                    </div>
                 </div>
             }
         </div>
     }
 
-    @if (StyleUrlToFileNameMappings.Any())
+    @if (Scripts?.Any() ?? false)
     {
         <div>
-            Styles:
-            @foreach (var (url, fileName) in StyleUrlToFileNameMappings)
+            Scripts:
+            @for (int i = 0; i < Scripts.Count; i++)
             {
+                var script = Scripts[i];
+                var fileName = Path.GetFileName(script.Url);
+                var id = $"script-{i}";
+                var source = script.Source.ToString().ToLowerInvariant();
+                var switchLabel = script.Enabled ? "Exclude asset from result page" : "Include asset in result page";
+
                 <div class="static-asset-container">
-                    <span class="font-weight-bold static-asset" title="@url">@fileName</span>
+                    <span class="badge badge-primary static-asset-badge static-asset-badge-@source">@source</span>
+                    <div class="static-asset-file-wrapper">
+                        <span class="font-weight-bold static-asset" title="@script.Url">@fileName</span>
+                        <div class="custom-control custom-switch">
+                            <input @onchange="@(eventArgs => ToggleAsync(script, (bool)eventArgs.Value))"
+                                   type="checkbox"
+                                   class="custom-control-input"
+                                   title="Toggle the asset"
+                                   checked="@script.Enabled"
+                                   id="@id">
+                            <label class="custom-control-label" for="@id" title="@switchLabel"></label>
+                        </div>
+                    </div>
                 </div>
             }
         </div>
     }
 
     <h5 class="text-center mt-3">Add</h5>
-    <form class="search-static-assets-wrapper mt-1" @onsubmit="@AddStaticAssetAsync">
+    <form class="search-static-assets-wrapper mt-1" @onsubmit="@AddCdnStaticAssetAsync">
         <input @bind="@StaticAssetUrl" class="form-control manager-search-input" placeholder="JS/CSS file URL" />
         <button type="submit" class="btn btn-br-primary" title="Add">
             <i class="icon-plus"></i>
